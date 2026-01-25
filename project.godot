@@ -29,6 +29,11 @@ window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[editor]
+
+version_control/plugin_name="GitPlugin"
+version_control/autoload_on_startup=true
+
 [internationalization]
 
 locale/translations=PackedStringArray("res://assets/Localization/cards_enemy.en.translation", "res://assets/Localization/cards_enemy.es.translation", "res://assets/Localization/cards_Hero.en.translation", "res://assets/Localization/cards_Hero.es.translation", "res://assets/Localization/game_text.en.translation", "res://assets/Localization/game_text.es.translation", "res://assets/Localization/traits_enemy.en.translation", "res://assets/Localization/traits_enemy.es.translation", "res://assets/Localization/traits_hero.en.translation", "res://assets/Localization/traits_hero.es.translation")
