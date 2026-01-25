@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://befk2jqj310fc"]
+
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/TraitResource.gd" id="1_65ir1"]
+
+[resource]
+script = ExtResource("1_65ir1")
+trait_id = "Enemy_Legion"
+display_name = "TRAIT_ENEMY_LEGION_NAME"
+description = "doubles enemy damage
+TRAIT_ENEMY_LEGION_DESRIPTION"
+enemy_damage_multiplier = 2.0

@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://cdhhrpsmgcbtj"
+
+[deps]
+
+files=["res://assets/Localization/traits_hero.en.translation", "res://assets/Localization/traits_hero.es.translation"]
+
+source_file="res://assets/Localization/traits_hero.csv"
+dest_files=["res://assets/Localization/traits_hero.en.translation", "res://assets/Localization/traits_hero.es.translation"]
+
+[params]
+
+compress=true
+delimiter=0

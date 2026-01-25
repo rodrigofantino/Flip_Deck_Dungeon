@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://dajaupftkywm1"]
+
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/TraitResource.gd" id="1_ueco1"]
+
+[resource]
+script = ExtResource("1_ueco1")
+trait_id = "Sharp_Edge"
+display_name = "TRAIT_SHARP_EDGE_NAME"
+description = "+60daño
+
+TRAIT_SHARP_EDGE_DESCRIPTION"
+hero_damage_bonus = 60

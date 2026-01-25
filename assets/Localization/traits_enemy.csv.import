@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://s6wi0l6jyhqe"
+
+[deps]
+
+files=["res://assets/Localization/traits_enemy.en.translation", "res://assets/Localization/traits_enemy.es.translation"]
+
+source_file="res://assets/Localization/traits_enemy.csv"
+dest_files=["res://assets/Localization/traits_enemy.en.translation", "res://assets/Localization/traits_enemy.es.translation"]
+
+[params]
+
+compress=true
+delimiter=0

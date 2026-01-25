@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://4soefvveoxi2"]
+
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/TraitResource.gd" id="1_5d77d"]
+
+[resource]
+script = ExtResource("1_5d77d")
+trait_id = "Cursed_Growth"
+display_name = "Cursed Growth"
+description = "triples enemy damage TRAIT__CURSED_GROWTH_DESCRIPTION
+"
+enemy_damage_multiplier = 3.0

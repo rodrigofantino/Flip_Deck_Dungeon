@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CardInstance" load_steps=2 format=3 uid="uid://b47jevn1xailf"]
+
+[ext_resource type="Script" uid="uid://7ny2d24d52h4" path="res://data/card_instance.gd" id="1_7e6p8"]
+
+[resource]
+script = ExtResource("1_7e6p8")
+instance_id = "test_001"
+definition_id = "slime"
+current_hp = 10
+metadata/_custom_type_script = "uid://7ny2d24d52h4"

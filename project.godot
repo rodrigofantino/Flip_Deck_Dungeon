@@ -1,0 +1,38 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Flip Deck Dungeon"
+run/main_scene="uid://b3dr60j30wwxu"
+config/features=PackedStringArray("4.5", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+LocalizationManager="*res://assets/Localization/LocalizationManager.gd"
+RunState="*res://data/run_manager.gd"
+TutorialManage="*res://scripts/game/tutorial_manager.gd"
+CardDatabase="*res://data/card_database.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://assets/Localization/cards_enemy.en.translation", "res://assets/Localization/cards_enemy.es.translation", "res://assets/Localization/cards_Hero.en.translation", "res://assets/Localization/cards_Hero.es.translation", "res://assets/Localization/game_text.en.translation", "res://assets/Localization/game_text.es.translation", "res://assets/Localization/traits_enemy.en.translation", "res://assets/Localization/traits_enemy.es.translation", "res://assets/Localization/traits_hero.en.translation", "res://assets/Localization/traits_hero.es.translation")
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0

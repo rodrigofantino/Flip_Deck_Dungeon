@@ -1,0 +1,29 @@
+id,en,es
+MAIN_MENU_BUTTON_PLAY,Play,Jugar
+MAIN_MENU_BUTTON_TUTORIAL,Tutorial,Tutorial
+MAIN_MENU_BUTTON_ENDLESS,Endless,Infinito
+MAIN_MENU_BUTTON_SHOP,Shop,Tienda
+MAIN_MENU_BUTTON_SETTINGS,Settings,Opciones
+CARD_VIEW_STATS_LEVEL,Lv, Nv
+CARD_VIEW_STATS_POWER,I, I
+CARD_VIEW_STATS_HP,HP, HP
+CARD_VIEW_STATS_DAMAGE,D, D
+BATTLE_HUD_LABEL_DANGER,Danger,Peligro
+BATTLE_HUD_LABEL_GOLD,Gold,Oro
+BATTLE_HUD_BUTTON_DRAW,Draw Enemy,Robar Enemigo
+BATTLE_HUD_BUTTON_COMBAT,Start Combat,Iniciar Combate
+BATTLE_HUD_CHECK_AUTO_DRAW,Auto Draw,Robar Automático
+BATTLE_HUD_CHECK_AUTO_COMBAT,Auto Combat,Combate Automático
+DEFEAT_POPUP_BUTTON_BACK,Back to Menu,Volver al Menú
+DEFEAT_POPUP_LABEL,Your hero has fallen,Tu héroe ha caido
+LEVEL_UP_POPUP_TITLE_LEVEL_REACHED,Level %d reached, Nivel %d alcanzado
+LEVEL_UP_POPUP_BUTTON_CONFIRM,Confirm,Confirmar
+LEVEL_UP_POPUP_COLUMN_HERO,Hero Trait,Rasgo del Héroe
+LEVEL_UP_POPUP_COLUMN_ENEMY,Enemy Trait,Rasgo del Enemigo
+LEVEL_UP_POPUP_LABEL_LEVELUP,Level up!,¡Has subido de nivel!
+XP_HUD_HERO_LEVEL,Lvl {level},Nivel {level}
+XP_HUD_XP_CURRENT,{value} XP,{value} XP
+XP_HUD_XP_NEXT,{value} XP,{value} XP
+SETTINGS_LANGUAGE_LABEL,Language,Idioma
+SETTINGS_LANGUAGE_BUTTON,Change Language,Cambiar Idioma
+SETTINGS_BACK_BUTTON,Back,Volver

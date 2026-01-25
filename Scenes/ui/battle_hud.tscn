@@ -1,0 +1,76 @@
+[gd_scene load_steps=2 format=3 uid="uid://b3kpwmfmlg8sc"]
+
+[ext_resource type="Script" uid="uid://bqjj1a46uw5su" path="res://scripts/UI/battle_hud.gd" id="1_wtsfo"]
+
+[node name="BattleHUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_wtsfo")
+
+[node name="TopBar" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 1.0
+offset_top = 3.0
+offset_right = 920.0
+offset_bottom = 123.0
+
+[node name="DangerLabel" type="Label" parent="TopBar"]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+text = "Danger LABEL"
+
+[node name="Spacer" type="Control" parent="TopBar"]
+custom_minimum_size = Vector2(5, 0)
+layout_mode = 2
+
+[node name="GoldLabel" type="Label" parent="TopBar"]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+text = "GOLD LABEL"
+
+[node name="Controls" type="Control" parent="."]
+anchors_preset = 0
+offset_left = 290.0
+offset_top = -7.0
+offset_right = 330.0
+offset_bottom = 33.0
+
+[node name="DrawButton" type="Button" parent="Controls"]
+layout_mode = 0
+offset_left = 654.0
+offset_top = 73.0
+offset_right = 704.0
+offset_bottom = 104.0
+text = "Draw
+"
+
+[node name="CombatButton" type="Button" parent="Controls"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 21.475
+anchor_top = 1.0
+anchor_right = 21.475
+anchor_bottom = 1.0
+offset_left = -209.0
+offset_top = -2.0
+offset_right = -140.0
+offset_bottom = 29.0
+text = "Combat"
+
+[node name="AutoDrawCheck" type="CheckButton" parent="Controls"]
+layout_mode = 0
+offset_left = 763.0
+offset_top = 77.0
+offset_right = 807.0
+offset_bottom = 101.0
+
+[node name="AutoCombatCheck" type="CheckButton" parent="Controls"]
+layout_mode = 0
+offset_left = 766.0
+offset_top = 42.0
+offset_right = 810.0
+offset_bottom = 66.0

@@ -1,0 +1,11 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://csalfsfxb4l4i"]
+
+[ext_resource type="FontFile" uid="uid://o831bjxon7k0" path="res://data/Halther.ttf" id="1_d225g"]
+
+[resource]
+default_base_scale = 0.92
+default_font = ExtResource("1_d225g")
+default_font_size = 5
+Label/colors/font_color = Color(0.64270234, 0.00030842185, 0.6426981, 1)
+Label/font_sizes/font_size = 10
+Label/fonts/font = ExtResource("1_d225g")

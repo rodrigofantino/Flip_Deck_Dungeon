@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://ctetxeh4paqcs"
+
+[deps]
+
+files=["res://assets/Localization/cards_Hero.en.translation", "res://assets/Localization/cards_Hero.es.translation"]
+
+source_file="res://assets/Localization/cards_Hero.csv"
+dest_files=["res://assets/Localization/cards_Hero.en.translation", "res://assets/Localization/cards_Hero.es.translation"]
+
+[params]
+
+compress=true
+delimiter=0

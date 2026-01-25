@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3 uid="uid://bs1p7qv7lmtjr"]
+
+[ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/CardDefinition.gd" id="1_e8p1m"]
+[ext_resource type="Texture2D" uid="uid://cobwt5jhr46cn" path="res://assets/cards/art/ForestSpitit.png" id="1_y4wcp"]
+
+[resource]
+script = ExtResource("1_e8p1m")
+definition_id = "forest_spirit"
+display_name = "TUTORIAL_FOREST_SPIRIT_NAM"
+description = "TUTORIAL_FOREST_SPIRIT_DESCRIPTION"
+art = ExtResource("1_y4wcp")
+level = 200
+max_hp = 30
+damage = 300
+card_type = "enemy"

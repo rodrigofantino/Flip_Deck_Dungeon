@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3 uid="uid://8uhw5s1lgeiy"]
+
+[ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/CardDefinition.gd" id="1_b88mt"]
+[ext_resource type="Texture2D" uid="uid://6y5nqx46u4ae" path="res://assets/cards/art/Spider.png" id="1_rv6wv"]
+
+[resource]
+script = ExtResource("1_b88mt")
+definition_id = "spider"
+display_name = "TUTORIAL_SPIDER_NAME"
+description = "TUTORIAL_SPIDER_DESCRIPTION"
+art = ExtResource("1_rv6wv")
+level = 200
+max_hp = 15
+damage = 30
+card_type = "enemy"

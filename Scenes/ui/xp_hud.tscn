@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3 uid="uid://buf3cc7nbc5w4"]
+
+[ext_resource type="Script" uid="uid://b3fbuqt7c1b2f" path="res://scripts/UI/xp_hud.gd" id="1_0wnux"]
+
+[node name="XP_HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0wnux")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 50.0
+grow_horizontal = 2
+alignment = 1
+
+[node name="XPCurrentLabel" type="Label" parent="HBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSeparator" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="XPBar" type="ProgressBar" parent="HBoxContainer"]
+custom_minimum_size = Vector2(600, 50)
+layout_mode = 2
+
+[node name="VSeparator2" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="XPNextLabel" type="Label" parent="HBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HeroLevelLabel" type="Label" parent="HBoxContainer"]
+layout_mode = 2

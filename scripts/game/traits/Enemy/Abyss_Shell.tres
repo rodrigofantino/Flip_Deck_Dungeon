@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://dhur1vjwra78u"]
+
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/TraitResource.gd" id="1_573mb"]
+
+[resource]
+script = ExtResource("1_573mb")
+trait_id = "Abyss_Shell"
+display_name = "TRAIT_ABYSS_SHELL_NAME"
+description = "Doubles enemy life TRAIT_ABYSS_SHELL_DESCRIPTION"
+enemy_hp_multiplier = 2.0
+enemy_add_flat_hp = 30

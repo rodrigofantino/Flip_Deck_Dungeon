@@ -1,0 +1,67 @@
+[gd_scene load_steps=6 format=3 uid="uid://cinlh5y24rud6"]
+
+[ext_resource type="Script" uid="uid://cnp4m15bflwr1" path="res://scripts/UI/trait_card.gd" id="1_f3ond"]
+[ext_resource type="Script" uid="uid://46ya5adlp6ec" path="res://scripts/UI/hover_tilt.gd" id="2_ciy0v"]
+[ext_resource type="Shader" uid="uid://drvu7g3tqytn7" path="res://shaders/folio_ui.gdshader" id="2_pe8pf"]
+[ext_resource type="Texture2D" uid="uid://bpce1qatafbe2" path="res://assets/shaders/white_shader.png" id="3_orh1m"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ciy0v"]
+shader = ExtResource("2_pe8pf")
+shader_parameter/distortion_strength = 0.0150000007125
+shader_parameter/reflect_strength = 0.06000000285
+shader_parameter/alpha_strength = 0.0430000020425
+shader_parameter/foil_dir = Vector2(0, 0)
+
+[node name="TraitCard" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 180.0
+offset_bottom = 250.0
+size_flags_horizontal = 3
+script = ExtResource("1_f3ond")
+
+[node name="HoverTilt" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 180.0
+offset_bottom = 250.0
+script = ExtResource("2_ciy0v")
+metadata/_custom_type_script = "uid://46ya5adlp6ec"
+
+[node name="PanelContainer" type="PanelContainer" parent="HoverTilt"]
+layout_mode = 0
+offset_right = 180.0
+offset_bottom = 250.0
+
+[node name="MarginContainer" type="MarginContainer" parent="HoverTilt/PanelContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HoverTilt/PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="HoverTilt/PanelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(160, 50)
+layout_mode = 2
+text = "name"
+horizontal_alignment = 1
+autowrap_mode = 2
+clip_text = true
+
+[node name="DescriptionLabel" type="Label" parent="HoverTilt/PanelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(160, 80)
+layout_mode = 2
+text = "label"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+autowrap_trim_flags = 128
+clip_text = true
+
+[node name="FolioOverlay" type="TextureRect" parent="HoverTilt"]
+material = SubResource("ShaderMaterial_ciy0v")
+layout_mode = 0
+offset_right = 180.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_orh1m")
+expand_mode = 1

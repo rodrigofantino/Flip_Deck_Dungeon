@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://btsqqhcceu0y8"]
+
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/TraitResource.gd" id="1_wp87q"]
+
+[resource]
+script = ExtResource("1_wp87q")
+trait_id = "Brute_Force"
+display_name = "TRAIT_BRUTE_FORCE_NAME"
+description = "+20 fuerza
+
+TRAIT_BRUTE_FORCE_DESCRIPTION"
+hero_damage_bonus = 20

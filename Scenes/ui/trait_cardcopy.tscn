@@ -1,0 +1,68 @@
+[gd_scene load_steps=7 format=3 uid="uid://dtbx0kej3g376"]
+
+[ext_resource type="Script" uid="uid://cnp4m15bflwr1" path="res://scripts/UI/trait_card.gd" id="1_sre6j"]
+[ext_resource type="Shader" uid="uid://drvu7g3tqytn7" path="res://shaders/folio_ui.gdshader" id="2_do2nj"]
+[ext_resource type="Texture2D" uid="uid://bpce1qatafbe2" path="res://assets/shaders/white_shader.png" id="3_2bn80"]
+[ext_resource type="Script" uid="uid://46ya5adlp6ec" path="res://scripts/UI/hover_tilt.gd" id="4_qvmol"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_orh1m"]
+shader = ExtResource("2_do2nj")
+shader_parameter/opacity = 0.15
+shader_parameter/gloss = 0.14800000703
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ciy0v"]
+shader = ExtResource("2_do2nj")
+shader_parameter/opacity = 0.08
+shader_parameter/gloss = 0.15
+
+[node name="TraitCard" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 260.0
+offset_bottom = 110.0
+size_flags_horizontal = 3
+script = ExtResource("1_sre6j")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+material = SubResource("ShaderMaterial_orh1m")
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="FolioOverlay" type="TextureRect" parent="PanelContainer/MarginContainer"]
+show_behind_parent = true
+material = SubResource("ShaderMaterial_ciy0v")
+layout_mode = 2
+texture = ExtResource("3_2bn80")
+expand_mode = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(50, 15)
+layout_mode = 2
+text = "name"
+horizontal_alignment = 1
+
+[node name="DescriptionLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(50, 100)
+layout_mode = 2
+text = "label"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_trim_flags = 128
+
+[node name="HoverTilt" type="Node" parent="PanelContainer/MarginContainer" node_paths=PackedStringArray("target")]
+script = ExtResource("4_qvmol")
+target = NodePath("../../..")

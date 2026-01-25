@@ -1,0 +1,137 @@
+[gd_scene load_steps=8 format=3 uid="uid://c6u72gt7nh3p4"]
+
+[ext_resource type="Script" uid="uid://266r1e7fm203" path="res://scripts/game/battle_table.gd" id="1_f743b"]
+[ext_resource type="PackedScene" uid="uid://dtt1b34yncqy2" path="res://Scenes/cards/card_view.tscn" id="2_udct1"]
+[ext_resource type="Texture2D" uid="uid://gswgi1ix5v7s" path="res://assets/stonefglordark.png" id="3_bvdcj"]
+[ext_resource type="PackedScene" uid="uid://b3kpwmfmlg8sc" path="res://Scenes/ui/battle_hud.tscn" id="4_udct1"]
+[ext_resource type="PackedScene" uid="uid://cg7apdsjsotgx" path="res://Scenes/ui/defeat_popup.tscn" id="5_tmutd"]
+[ext_resource type="PackedScene" uid="uid://buf3cc7nbc5w4" path="res://Scenes/ui/xp_hud.tscn" id="6_j8cen"]
+[ext_resource type="PackedScene" uid="uid://dbv8f10a2jvwh" path="res://Scenes/ui/level_up_popup.tscn" id="7_x57qr"]
+
+[node name="BattleTable" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(640, 360)
+script = ExtResource("1_f743b")
+defeat_popup_scene = ExtResource("5_tmutd")
+level_up_popup_scene = ExtResource("7_x57qr")
+card_view_scene = ExtResource("2_udct1")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -645.0
+offset_top = -360.0
+offset_right = 645.0
+offset_bottom = 360.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_bvdcj")
+stretch_mode = 2
+flip_h = true
+flip_v = true
+
+[node name="CardsLayer" type="Node2D" parent="."]
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EnemyArea" type="Control" parent="UI"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_right = 1.0
+offset_bottom = 174.0
+grow_horizontal = 2
+
+[node name="EnemyDeck" type="Control" parent="UI/EnemyArea"]
+custom_minimum_size = Vector2(120, 200)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 296.5
+offset_top = -48.0
+offset_right = 416.5
+offset_bottom = 152.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(60, 100)
+
+[node name="EnemySlots" type="Control" parent="UI/EnemyArea"]
+custom_minimum_size = Vector2(120, 200)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.5
+offset_top = -48.0
+offset_right = 59.5
+offset_bottom = 152.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(60, 100)
+
+[node name="HeroArea" type="Control" parent="UI"]
+custom_minimum_size = Vector2(120, 200)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -220.0
+offset_right = 60.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+pivot_offset = Vector2(60, 100)
+
+[node name="HeroAnchor" type="Control" parent="UI/HeroArea"]
+custom_minimum_size = Vector2(120, 200)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(60, 100)
+
+[node name="BattleHUD" parent="UI" instance=ExtResource("4_udct1")]
+layout_mode = 1
+anchors_preset = 10
+anchor_bottom = 0.0
+offset_bottom = 100.0
+grow_vertical = 1
+
+[node name="DefeatPopup" parent="UI" instance=ExtResource("5_tmutd")]
+layout_mode = 1
+
+[node name="XP_HUD" parent="UI" instance=ExtResource("6_j8cen")]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+offset_top = -52.0
+offset_bottom = -52.0
+grow_vertical = 0
+
+[node name="LevelUpPopup" parent="UI" instance=ExtResource("7_x57qr")]
+layout_mode = 1
