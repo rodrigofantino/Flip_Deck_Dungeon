@@ -8,4 +8,4 @@ trait_id = "Shadow_Presence"
 display_name = "TRAIT_SHADOW_PRESENCE_NAME"
 description = "+30 enemy damage
 TRAIT_SHADOW_PRESENCE_DESCRIPTION"
-ememy_add_flat_damage = 30
+trait_type = 1

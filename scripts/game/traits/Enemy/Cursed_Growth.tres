@@ -8,4 +8,5 @@ trait_id = "Cursed_Growth"
 display_name = "Cursed Growth"
 description = "triples enemy damage TRAIT__CURSED_GROWTH_DESCRIPTION
 "
+trait_type = 1
 enemy_damage_multiplier = 3.0

@@ -8,4 +8,5 @@ trait_id = "Enemy_Legion"
 display_name = "TRAIT_ENEMY_LEGION_NAME"
 description = "doubles enemy damage
 TRAIT_ENEMY_LEGION_DESRIPTION"
+trait_type = 1
 enemy_damage_multiplier = 2.0

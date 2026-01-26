@@ -3,7 +3,7 @@
 [sub_resource type="SystemFont" id="SystemFont_36jum"]
 
 [resource]
-Label/colors/font_color = Color(0.5347227, 0.2045457, 0.5345248, 1)
-Label/colors/font_outline_color = Color(0, 0, 0, 1)
-Label/font_sizes/font_size = 10
+Label/colors/font_color = Color(0, 0, 0, 1)
+Label/colors/font_outline_color = Color(1, 1, 1, 1)
+Label/font_sizes/font_size = 50
 Label/fonts/font = SubResource("SystemFont_36jum")

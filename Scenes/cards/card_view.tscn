@@ -2,10 +2,10 @@
 
 [ext_resource type="Theme" uid="uid://csalfsfxb4l4i" path="res://data/card_theme.tres" id="1_1glvy"]
 [ext_resource type="Script" uid="uid://cw4ptkrjbqbu3" path="res://scripts/game/card_view.gd" id="2_6x6fe"]
-[ext_resource type="Texture2D" uid="uid://cyi802mk3xnbv" path="res://assets/cards/back.png" id="3_bsu3w"]
-[ext_resource type="Texture2D" uid="uid://drpxofu1t64hm" path="res://assets/cards/art/CARD FRONT PSD with icons no art.png" id="3_f0mpd"]
+[ext_resource type="Texture2D" uid="uid://b0alsimpcjuyx" path="res://assets/cards/frame/card front final.png" id="3_f0mpd"]
 [ext_resource type="Theme" uid="uid://dvb51r2kvkod0" path="res://data/Variant_themes.tres" id="4_liruf"]
 [ext_resource type="Shader" uid="uid://xlrjtlyatv7" path="res://shaders/shader_platinadomuyblanco.gdshader" id="5_f0mpd"]
+[ext_resource type="Texture2D" uid="uid://bi4c1psr7e2pf" path="res://assets/cards/frame/card back final.png" id="5_nus5u"]
 [ext_resource type="Script" uid="uid://c3kl6cgmpigjq" path="res://scripts/UI/MotionTiltDriver.gd" id="6_by25d"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_nus5u"]
@@ -20,63 +20,68 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = -1160.0
-offset_bottom = -520.0
+offset_right = -660.0
+offset_bottom = 140.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_1glvy")
 script = ExtResource("2_6x6fe")
 
 [node name="Front" type="Control" parent="."]
-custom_minimum_size = Vector2(120, 200)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -0.5
+offset_right = -0.5
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Art" type="TextureRect" parent="Front"]
-custom_minimum_size = Vector2(50, 0)
 layout_mode = 1
-anchors_preset = -1
-offset_left = 11.0
-offset_top = 35.0
-offset_right = 142.0
-offset_bottom = 171.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -290.5
+offset_top = -341.0
+offset_right = 295.5
+offset_bottom = 211.0
+grow_horizontal = 2
+grow_vertical = 2
 expand_mode = 2
-stretch_mode = 6
 
 [node name="FrontFrame" type="TextureRect" parent="Front"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 80.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("3_f0mpd")
-expand_mode = 2
-stretch_mode = 4
+stretch_mode = 3
 
 [node name="Name" type="Label" parent="Front"]
-custom_minimum_size = Vector2(25, 2)
+custom_minimum_size = Vector2(400, 20)
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 22.0
-offset_top = 7.0
-offset_right = 12.0
-offset_bottom = -174.0
+offset_left = 43.0
+offset_top = 26.0
+offset_right = -52.0
+offset_bottom = -734.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 70
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
 
 [node name="Description" type="Label" parent="Front"]
-visible = false
 layout_mode = 0
 offset_left = 23.0
 offset_top = 133.0
@@ -90,79 +95,73 @@ autowrap_mode = 3
 position = Vector2(-213, -238)
 
 [node name="LevelLabel" type="Label" parent="Front/Stats"]
-custom_minimum_size = Vector2(25, 25)
-offset_left = 277.0
-offset_top = 257.0
-offset_right = 302.0
-offset_bottom = 282.0
+offset_left = 479.0
+offset_top = 807.0
+offset_right = 565.5
+offset_bottom = 899.0
 theme = ExtResource("4_liruf")
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5294118)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 70
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="PowerLabel" type="Label" parent="Front/Stats"]
-custom_minimum_size = Vector2(20, 20)
-offset_left = 291.0
-offset_top = 413.0
-offset_right = 315.0
-offset_bottom = 433.0
+anchors_preset = -1
+offset_left = 268.0
+offset_top = 821.0
+offset_right = 448.0
+offset_bottom = 911.0
 theme = ExtResource("4_liruf")
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="HPLabel" type="Label" parent="Front/Stats"]
-custom_minimum_size = Vector2(20, 20)
-offset_left = 248.0
-offset_top = 407.0
-offset_right = 273.0
-offset_bottom = 432.0
+offset_left = 332.0
+offset_top = 923.0
+offset_right = 714.0
+offset_bottom = 1056.0
 theme = ExtResource("4_liruf")
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="DamageLabel" type="Label" parent="Front/Stats"]
-custom_minimum_size = Vector2(25, 25)
-offset_left = 289.0
-offset_top = 401.0
-offset_right = 314.0
-offset_bottom = 426.0
+offset_left = 601.0
+offset_top = 820.0
+offset_right = 781.0
+offset_bottom = 910.0
 theme = ExtResource("4_liruf")
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="FoilLayer" type="Control" parent="Front"]
-material = SubResource("ShaderMaterial_nus5u")
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
 [node name="Back" type="Control" parent="."]
-visible = false
-custom_minimum_size = Vector2(120, 200)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -0.5
+offset_right = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="BackSprite" type="TextureRect" parent="Back"]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("3_bsu3w")
+texture = ExtResource("5_nus5u")
 expand_mode = 3
 
 [node name="MotionTiltDriver" type="Control" parent="." node_paths=PackedStringArray("target_control", "foil_layer")]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -175,4 +174,14 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("6_by25d")
 target_control = NodePath("..")
-foil_layer = NodePath("../Front/FoilLayer")
+foil_layer = NodePath("../FoilLayer")
+
+[node name="FoilLayer" type="Control" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_nus5u")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

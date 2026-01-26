@@ -23,6 +23,7 @@ var enemy_draw_queue: Array[Dictionary] = [] # orden real de robo
 
 signal gold_changed(new_gold: int)
 signal danger_level_changed(new_danger: int)
+signal enemy_stats_changed()
 
 # =========================
 # ESTADO ECONOMÍA / RIESGO
@@ -141,6 +142,8 @@ func recalc_card_stats(
 ) -> void:
 	var base_hp: int = card["base_hp"]
 	var base_damage: int = card["base_damage"]
+	var old_max_hp: int = int(card.get("max_hp", base_hp))
+	var old_current_hp: int = int(card.get("current_hp", base_hp))
 
 	var flat_hp := 0
 	var flat_damage := 0
@@ -169,7 +172,11 @@ func recalc_card_stats(
 
 	card["max_hp"] = new_max_hp
 	card["damage"] = new_damage
-	card["current_hp"] = min(card["current_hp"], new_max_hp)
+	if old_max_hp > 0 and new_max_hp > old_max_hp:
+		var ratio := float(old_current_hp) / float(old_max_hp)
+		card["current_hp"] = int(round(float(new_max_hp) * ratio))
+	else:
+		card["current_hp"] = min(old_current_hp, new_max_hp)
 
 
 ########################################
@@ -183,6 +190,7 @@ func draw_enemy_card() -> Dictionary:
 		return {}
 
 	var enemy: Dictionary = enemy_draw_queue.pop_front()
+	recalc_card_stats(enemy, active_enemy_traits)
 
 	print(
 		"[DRAW] TOP OF DECK →",
@@ -509,7 +517,13 @@ func apply_enemy_trait(trait_res: TraitResource) -> void:
 			continue
 		recalc_card_stats(card, active_enemy_traits)
 
+	for enemy in enemy_draw_queue:
+		if enemy.get("id", "") == "th":
+			continue
+		recalc_card_stats(enemy, active_enemy_traits)
+
 	recalculate_danger_level()
+	enemy_stats_changed.emit()
 
 
 

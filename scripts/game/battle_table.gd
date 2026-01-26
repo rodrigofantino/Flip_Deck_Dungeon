@@ -47,7 +47,9 @@ var combat_manager: CombatManager
 # ==========================================
 
 @export var card_view_scene: PackedScene
-@export var card_margin_factor: float = 0.85
+@export var card_margin_factor: float = 1.0
+@export var card_base_size: Vector2 = Vector2(620, 860)
+@export var card_display_size: Vector2 = Vector2(155, 215)
 
 const DECK_OFFSET_Y := -2.0
 
@@ -113,6 +115,7 @@ func _ready() -> void:
 	_connect_run_signals()
 	_update_hud_state()
 	RunState.hero_level_up.connect(_on_hero_level_up)
+	RunState.enemy_stats_changed.connect(_on_enemy_stats_changed)
 	
 	
 # ==========================================
@@ -157,7 +160,7 @@ func spawn_hero() -> void:
 		hero_card.flip_to_front()
 
 		# 🔑 Setear HP real inicial
-		hero_card_view.refresh_from_runtime(hero_data)
+		hero_card_view.refresh(hero_data)
 
 # ==========================================	
 # MAZO ENEMIGO (VISUAL)
@@ -211,13 +214,14 @@ func spawn_enemy_from_deck() -> void:
 		push_error("No CardView found for enemy: " + enemy_data.id)
 		return
 
-	# 3️⃣ REPARENT (deck → slot)
-	card.reparent(enemy_slot)
+	# 3️⃣ REPARENT (deck → slot) manteniendo posición global
+	card.reparent(enemy_slot, true)
 	card.show_back()
 
 	# 4️⃣ ANIMACIÓN
 	var slot_rect := enemy_slot.get_global_rect()
-	var end_pos := slot_rect.get_center()
+	var scaled_size := card_base_size * card.scale
+	var end_pos := slot_rect.get_center() - (scaled_size * 0.5)
 
 	var tween := create_tween()
 	tween.tween_property(card, "global_position", end_pos, 0.5)
@@ -234,7 +238,7 @@ func _set_enemy_active(card: CardView) -> void:
 	# 🔑 Setear HP real del enemigo activo
 	var enemy_data: Variant = RunState.get_card(card.card_id)
 	if enemy_data != null:
-		card.refresh_from_runtime(enemy_data)
+		card.refresh(enemy_data)
 
 	current_phase = BattlePhase.ENEMY_ACTIVE
 	_update_hud_state()
@@ -294,6 +298,9 @@ func _handle_enemy_defeated() -> void:
 func _connect_run_signals() -> void:
 	RunState.hero_level_up.connect(_on_hero_level_up)
 
+func _on_enemy_stats_changed() -> void:
+	_refresh_all_card_views()
+
 func _on_hero_level_up(new_level: int) -> void:
 	print("[BattleTable] HERO LEVEL UP → Pausando batalla")
 
@@ -321,6 +328,16 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# Instanciar CardView
 	var card: CardView = card_view_scene.instantiate()
 	cards_layer.add_child(card)
+	# Base size explícito para layout interno del CardView
+	card.custom_minimum_size = card_base_size
+	card.size = card_base_size
+	# Asegurar layout fijo del Control (sin anchors dependientes del parent)
+	card.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	card.offset_left = 0.0
+	card.offset_top = 0.0
+	card.offset_right = card_base_size.x
+	card.offset_bottom = card_base_size.y
+	card.pivot_offset = card_base_size * 0.5
 
 	# =========================
 	# ID + REGISTRO UI
@@ -341,22 +358,21 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# POSICIÓN BASE
 	# =========================
 	var slot_rect: Rect2 = slot.get_global_rect()
-	card.global_position = slot_rect.get_center()
 
 	# =========================
 	# ESCALADO VISUAL
 	# =========================
-	var sprite: Sprite2D = _find_sprite_in_card(card)
-	if sprite != null and sprite.texture != null:
-		var image_size: Vector2 = sprite.texture.get_size()
-		var target_size: Vector2 = slot_rect.size
-
-		var scale_w: float = target_size.x / image_size.x
-		var scale_h: float = target_size.y / image_size.y
+	if card_base_size.x > 0.0 and card_base_size.y > 0.0:
+		var scale_w: float = card_display_size.x / card_base_size.x
+		var scale_h: float = card_display_size.y / card_base_size.y
 		var final_scale: float = min(scale_w, scale_h) * card_margin_factor
-
 		card.scale = Vector2(final_scale, final_scale)
-		sprite.scale = Vector2.ONE
+
+	# =========================
+	# POSICIÓN CENTRADA (GLOBAL)
+	# =========================
+	var scaled_size := card_base_size * card.scale
+	card.global_position = slot_rect.get_center() - (scaled_size * 0.5)
 
 	# =========================
 	# PIVOT CORRECTO
@@ -423,7 +439,7 @@ func _on_traits_confirmed(hero_trait_res: TraitResource, enemy_trait_res: TraitR
 	# 🔑 ACTUALIZAR VISUAL DEL HÉROE
 	refresh_card_view("th")
 
-# 🔥 refrescar TODOS los enemigos existentes
+	# 🔥 refrescar TODOS los enemigos existentes
 	for card_id in RunState.cards.keys():
 		if card_id == "th":
 			continue
@@ -495,7 +511,11 @@ func refresh_card_view(card_id: String) -> void:
 	if card_data.is_empty():
 		return
 
-	card_view.refresh_from_runtime(card_data)
+	card_view.refresh(card_data)
+
+func _refresh_all_card_views() -> void:
+	for card_id in card_views.keys():
+		refresh_card_view(String(card_id))
 
 
 # ==========================================
@@ -676,7 +696,7 @@ func _on_damage_applied(target_id: String, _amount: int) -> void:
 		var data: Dictionary = RunState.get_card(target_id)
 		if data.is_empty():
 			return
-		card_view.update_hp(int(data.current_hp))
+		refresh_card_view(target_id)
 
 func _on_card_died(card_id: String) -> void:
 	if card_id == "th":

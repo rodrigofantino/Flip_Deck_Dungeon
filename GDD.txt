@@ -1,0 +1,111 @@
+
+FLIP DECK DUNGEON
+GAME DESIGN DOCUMENT (GDD)
+
+========================
+1. VISIÓN GENERAL
+========================
+Flip Deck Dungeon es un roguelike de cartas con combates por turnos donde todas las cartas
+son entidades vivas con HP, daño, nivel y traits.
+
+Plataforma: PC (Steam)
+Motor: Godot 4.x
+Duración de runs: corta / media
+Enfoque: decisiones claras, progresión persistente, rejugabilidad.
+
+========================
+2. PILARES DE DISEÑO
+========================
+- Cartas como entidades vivas
+- Una sola fuente de verdad
+- Runs cortas pero profundas
+- Progresión clara y acumulativa
+- Riesgo vs recompensa
+
+========================
+3. CORE FANTASY
+========================
+El jugador encarna a un héroe representado por una carta.
+Los enemigos también son cartas que se enfrentan una a una.
+Cada combate debilita o fortalece la run.
+
+========================
+4. LOOP PRINCIPAL
+========================
+MACRO LOOP:
+- Inicio de run
+- Combates secuenciales
+- Recompensas
+- Level up y traits
+- Derrota o victoria
+- Retorno al meta
+
+MICRO LOOP:
+- Robar enemigo
+- Combate
+- Resolución
+- Limpieza de estado
+
+========================
+5. SISTEMA DE CARTAS
+========================
+Tipos:
+- Héroe
+- Enemigo
+
+Cada carta tiene:
+- ID
+- Definición base
+- Nivel
+- HP actual / máximo
+- Daño
+- Traits
+
+========================
+6. SISTEMA DE COMBATE
+========================
+Combate por turnos:
+- Turno héroe
+- Turno enemigo
+- Aplicación de daño
+- Chequeo de muerte
+- Fin de ronda
+
+========================
+7. SISTEMA DE TRAITS
+========================
+Traits como modificadores de reglas.
+Se aplican mediante hooks:
+- Inicio de combate
+- Ataque
+- Daño
+- Muerte
+
+========================
+8. TUTORIAL
+========================
+- Run guiada
+- Sin RNG duro
+- Enseña todo el juego
+- Cartas de tutorial no se pierden
+
+========================
+9. META PROGRESIÓN
+========================
+- Oro
+- Upgrades
+- Sobres
+- Colección
+
+========================
+10. COLECCIÓN
+========================
+Libro de cartas
+Filtros por rareza y bioma
+
+========================
+11. PRINCIPIOS
+========================
+- Sistemas antes que contenido
+- Datos > UI
+- Claridad > complejidad

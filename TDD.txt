@@ -1,0 +1,78 @@
+
+FLIP DECK DUNGEON
+TECHNICAL DESIGN DOCUMENT (TDD)
+
+========================
+1. ARQUITECTURA GENERAL
+========================
+Separación estricta entre:
+- Lógica
+- Datos
+- UI
+
+========================
+2. RUNMANAGER
+========================
+Fuente única de verdad.
+Responsable de:
+- Estado de la run
+- Cartas runtime
+- Economía
+- XP y level up
+- Traits
+
+========================
+3. COMBATMANAGER
+========================
+Orquestador lógico.
+No conoce UI.
+Comunica por señales.
+
+========================
+4. CARDVIEW
+========================
+UI pura.
+Refleja estado, no lo modifica.
+tamaño de las cartas original 620*860
+tamaño de las cartas instandciadas en battletable 155*215
+
+
+========================
+5. RESOURCES
+========================
+- CardDefinition
+- TraitResource
+- EnemyDefinition
+
+Nunca se modifican en runtime.
+
+========================
+6. SEÑALES
+========================
+Toda comunicación es desacoplada.
+Nada de referencias directas innecesarias.
+
+========================
+7. PERSISTENCIA
+========================
+Guardado de run.
+Runs temporales no se guardan.
+
+========================
+8. CONVENCIONES
+========================
+- Tipado explícito
+- Nombres consistentes
+- Una responsabilidad por clase
+
+========================
+9. ESCALABILIDAD
+========================
+Agregar contenido no debe requerir refactor.
+
+========================
+10. PRINCIPIOS TÉCNICOS
+========================
+- Claridad antes que optimización
+- Evitar deuda técnica
+- Código legible y mantenible

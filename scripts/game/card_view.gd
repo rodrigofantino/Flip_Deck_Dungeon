@@ -44,7 +44,7 @@ func setup_from_definition(definition: CardDefinition) -> void:
 # REFRESH DESDE RUNTIME (TRAITS / COMBATE)
 # =========================
 
-func refresh_from_runtime(data: Dictionary) -> void:
+func refresh(data: Dictionary) -> void:
 	if data.is_empty():
 		return
 
@@ -52,10 +52,7 @@ func refresh_from_runtime(data: Dictionary) -> void:
 	# LEVEL
 	# =========================
 	if data.has("level"):
-		level_label.text = "%s %d" % [
-			tr("CARD_VIEW_STATS_LEVEL"),
-			int(data.level)
-		]
+		level_label.text = "%d" % int(data.level)
 
 	# =========================
 	# HP (MAX + CURRENT)
@@ -74,6 +71,25 @@ func refresh_from_runtime(data: Dictionary) -> void:
 		damage_label.text = "%s %d" % [
 			tr("CARD_VIEW_STATS_DAMAGE"),
 			int(data.damage)
+		]
+
+	# =========================
+	# POWER
+	# =========================
+	if data.has("power"):
+		power_label.text = "%s %d" % [
+			tr("CARD_VIEW_STATS_POWER"),
+			int(data.power)
+		]
+	elif data.has("max_hp") and data.has("damage"):
+		var level: int = int(data.get("level", 1))
+		var power_bonus: int = int(data.get("power_bonus", 0))
+		var base_power: int = int(data.max_hp) + int(data.damage)
+		var power: int = base_power * level + power_bonus
+
+		power_label.text = "%s %d" % [
+			tr("CARD_VIEW_STATS_POWER"),
+			power
 		]
 
 
@@ -138,7 +154,6 @@ func _fit_art(max_size: Vector2) -> void:
 func _fit_label_text(
 	label: Label,
 	text: String,
-	max_font_size: int,
 	min_font_size: int
 ) -> void:
 	label.text = text
@@ -149,8 +164,11 @@ func _fit_label_text(
 		return
 
 	var available_size: Vector2 = label.size
+	var base_size: int = label.get_theme_font_size("font_size")
+	if base_size <= 0:
+		base_size = 16
 
-	for size in range(max_font_size, min_font_size - 1, -1):
+	for size in range(base_size, min_font_size - 1, -1):
 		label.add_theme_font_size_override("font_size", size)
 
 		var text_size: Vector2 = font.get_multiline_string_size(
@@ -167,57 +185,35 @@ func _refresh_all_labels(definition: CardDefinition) -> void:
 	_fit_label_text(
 		name_label,
 		tr(definition.display_name),
-		22,
 		12
 	)
 
 	_fit_label_text(
 		description_label,
 		tr(definition.description),
-		18,
 		10
 	)
 
 	_fit_label_text(
 		level_label,
-		"%s %d" % [tr("CARD_VIEW_STATS_LEVEL"), definition.level],
-		16,
+		"%d" % definition.level,
 		10
 	)
 
 	_fit_label_text(
 		power_label,
 		"%s %d" % [tr("CARD_VIEW_STATS_POWER"), definition.power],
-		16,
 		10
 	)
 
 	_fit_label_text(
 		hp_label,
 		"%s %d" % [tr("CARD_VIEW_STATS_HP"), definition.max_hp],
-		16,
 		10
 	)
 
 	_fit_label_text(
 		damage_label,
 		"%s %d" % [tr("CARD_VIEW_STATS_DAMAGE"), definition.damage],
-		16,
 		10
 	)
-
-# =========================
-# ACTUALIZACIÓN DE STATS (UI)
-# =========================
-
-func update_hp(current_hp: int) -> void:
-	hp_label.text = "%s %d" % [
-		tr("CARD_VIEW_STATS_HP"),
-		current_hp
-	]
-
-func update_damage(damage: int) -> void:
-	damage_label.text = "%s %d" % [
-		tr("CARD_VIEW_STATS_DAMAGE"),
-		damage
-	]
