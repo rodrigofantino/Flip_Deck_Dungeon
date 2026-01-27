@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_def")
-definition_id = "dark_forest_corrupted_bat"
+definition_id = "dark_forest_corrupted_bat"
+level = 1
+initiative = 9
+max_hp = 1
+damage = 1
 display_name = "DARK_FOREST_CORRUPTED_BAT_NAME"
 description = "DARK_FOREST_CORRUPTED_BAT_DESCRIPTION"
 art = ExtResource("3_art")

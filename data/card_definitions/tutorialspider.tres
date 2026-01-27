@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_b88mt")
-definition_id = "spider"
+definition_id = "spider"
+level = 1
+initiative = 7
+max_hp = 1
+damage = 1
 display_name = "TUTORIAL_SPIDER_NAME"
 description = "TUTORIAL_SPIDER_DESCRIPTION"
 art = ExtResource("1_rv6wv")
