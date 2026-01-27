@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_def")
-definition_id = "dark_forest_sporeling"
+definition_id = "dark_forest_sporeling"
+
+
+
+
 level = 1
 initiative = 7
 max_hp = 2
@@ -15,10 +19,6 @@ display_name = "DARK_FOREST_SPORELING_NAME"
 description = "DARK_FOREST_SPORELING_DESCRIPTION"
 art = ExtResource("3_art")
 frame_texture = ExtResource("2_frame")
-level = 1
-max_hp = 3
-damage = 2
-initiative = 7
 card_type = "enemy"
 is_persistent = false
 is_tutorial = false

@@ -85,9 +85,9 @@ func _ready() -> void:
 		booster_popup.visible = false
 		booster_popup.mouse_filter = Control.MOUSE_FILTER_STOP
 	if booster_area:
-		booster_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		booster_area.mouse_filter = Control.MOUSE_FILTER_PASS
 	if booster_list:
-		booster_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		booster_list.mouse_filter = Control.MOUSE_FILTER_PASS
 	if booster_popup_dimmer:
 		booster_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
 	if open_popup != null:
@@ -119,17 +119,19 @@ func _ready() -> void:
 func _init_selection_ui() -> void:
 	selection_mode = RunState.selection_pending
 	if selection_panel:
-		selection_panel.visible = selection_mode
+		selection_panel.visible = true
 		selection_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_set_booster_interactivity(true)
 	if select_hero_label:
 		select_hero_label.text = tr("COLLECTION_SELECT_HERO")
-		select_hero_label.visible = true
+		select_hero_label.visible = selection_mode
 	if select_enemies_label:
 		select_enemies_label.text = tr("COLLECTION_SELECT_ENEMIES")
-		select_enemies_label.visible = true
+		select_enemies_label.visible = selection_mode
 	if start_dungeon_button:
 		start_dungeon_button.text = tr("COLLECTION_START_DUNGEON")
 		start_dungeon_button.pressed.connect(_on_start_dungeon_pressed)
+		start_dungeon_button.visible = selection_mode
 	_update_selection_state()
 	if not selection_mode:
 		# Clear any selection visuals when browsing only
@@ -560,6 +562,12 @@ func _update_slot_selection(slot: CollectionSlot) -> void:
 
 func _update_selection_state() -> void:
 	if not selection_mode:
+		if select_hero_label:
+			select_hero_label.visible = false
+		if select_enemies_label:
+			select_enemies_label.visible = false
+		if start_dungeon_button:
+			start_dungeon_button.visible = false
 		return
 	var has_hero := selected_hero_id != ""
 	var has_enemies := selected_enemy_ids.size() > 0
@@ -584,6 +592,15 @@ func _set_hint_visible(label: Label, show: bool) -> void:
 	label.visible = true
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.modulate.a = 1.0 if show else 0.0
+
+func _set_booster_interactivity(enabled: bool) -> void:
+	if booster_area:
+		booster_area.visible = enabled
+		booster_area.mouse_filter = Control.MOUSE_FILTER_PASS
+	if booster_list:
+		booster_list.mouse_filter = Control.MOUSE_FILTER_PASS
+	if booster_popup:
+		booster_popup.visible = enabled and booster_popup.visible
 
 func _on_start_dungeon_pressed() -> void:
 	if selected_hero_id == "" or selected_enemy_ids.size() == 0:

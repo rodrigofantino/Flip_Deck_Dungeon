@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_m8xw4")
-definition_id = "slime"
+definition_id = "slime"
+
+
+
+
 level = 1
 initiative = 1
 max_hp = 2
@@ -15,8 +19,6 @@ display_name = "TUTORIAL_SLIME_NAME"
 description = "TUTORIAL_SLIME_DESCRIPTION"
 art = ExtResource("1_fhrye")
 frame_texture = ExtResource("2_q3xwj")
-max_hp = 20
-damage = 40
 card_type = "enemy"
 is_persistent = true
 is_tutorial = true

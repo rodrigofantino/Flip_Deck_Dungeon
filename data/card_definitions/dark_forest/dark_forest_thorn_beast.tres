@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_def")
-definition_id = "dark_forest_thorn_beast"
+definition_id = "dark_forest_thorn_beast"
+
+
+
+
 level = 1
 initiative = 3
 max_hp = 8
@@ -15,10 +19,6 @@ display_name = "DARK_FOREST_THORN_BEAST_NAME"
 description = "DARK_FOREST_THORN_BEAST_DESCRIPTION"
 art = ExtResource("3_art")
 frame_texture = ExtResource("2_frame")
-level = 1
-max_hp = 8
-damage = 3
-initiative = 3
 card_type = "enemy"
 is_persistent = false
 is_tutorial = false

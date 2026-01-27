@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_b88mt")
-definition_id = "spider"
+definition_id = "spider"
+
+
+
+
 level = 1
 initiative = 7
 max_hp = 1
@@ -15,8 +19,6 @@ display_name = "TUTORIAL_SPIDER_NAME"
 description = "TUTORIAL_SPIDER_DESCRIPTION"
 art = ExtResource("1_rv6wv")
 frame_texture = ExtResource("2_vnucy")
-max_hp = 15
-damage = 30
 card_type = "enemy"
 is_persistent = true
 is_tutorial = true

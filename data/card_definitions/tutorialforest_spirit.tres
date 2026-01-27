@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_e8p1m")
-definition_id = "forest_spirit"
+definition_id = "forest_spirit"
+
+
+
+
 level = 1
 initiative = 4
 max_hp = 7
@@ -15,8 +19,6 @@ display_name = "TUTORIAL_FOREST_SPIRIT_NAME"
 description = "TUTORIAL_FOREST_SPIRIT_DESCRIPTION"
 art = ExtResource("1_y4wcp")
 frame_texture = ExtResource("2_y5c37")
-max_hp = 30
-damage = 300
 card_type = "enemy"
 is_persistent = true
 is_tutorial = true

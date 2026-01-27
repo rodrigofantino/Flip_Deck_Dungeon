@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_d6bsh")
-definition_id = "wolf"
+definition_id = "wolf"
+
+
+
+
 level = 1
 initiative = 6
 max_hp = 3
@@ -15,8 +19,6 @@ display_name = "TUTORIAL_WOLf_NAME"
 description = "TUTORIAL_WOLF_DESCRIPTION"
 art = ExtResource("1_llihs")
 frame_texture = ExtResource("2_nyrrp")
-max_hp = 60
-damage = 10
 card_type = "enemy"
 is_persistent = true
 is_tutorial = true

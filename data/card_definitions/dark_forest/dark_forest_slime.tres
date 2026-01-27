@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_def")
-definition_id = "dark_forest_slime"
+definition_id = "dark_forest_slime"
+
+
+
+
 level = 1
 initiative = 1
 max_hp = 6
@@ -15,10 +19,6 @@ display_name = "DARK_FOREST_SLIME_NAME"
 description = "DARK_FOREST_SLIME_DESCRIPTION"
 art = ExtResource("3_art")
 frame_texture = ExtResource("2_frame")
-level = 1
-max_hp = 7
-damage = 1
-initiative = 1
 card_type = "enemy"
 is_persistent = false
 is_tutorial = false

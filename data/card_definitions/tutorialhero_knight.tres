@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_fgiq4")
-definition_id = "hero_knight"
+definition_id = "hero_knight"
+
+
+
+
 level = 1
 initiative = 5
 max_hp = 5
@@ -15,8 +19,6 @@ display_name = "TUTORIAL_HERO_KNIGHT_NAME"
 description = "TUTORIAL_HERO_KNIGHT_DESCRIPTION"
 art = ExtResource("1_nju0v")
 frame_texture = ExtResource("2_5l7ja")
-max_hp = 50
-damage = 30
 card_type = "hero"
 is_persistent = true
 is_tutorial = true

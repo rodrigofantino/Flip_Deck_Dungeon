@@ -32,6 +32,15 @@ custom_minimum_size = Vector2(5, 5)
 layout_mode = 2
 text = "GOLD LABEL"
 
+[node name="Spacer2" type="Control" parent="TopBar"]
+custom_minimum_size = Vector2(5, 0)
+layout_mode = 2
+
+[node name="InitiativeLabel" type="Label" parent="TopBar"]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+text = "Chance to attack first: --%"
+
 [node name="Controls" type="Control" parent="."]
 anchors_preset = 0
 offset_left = 290.0

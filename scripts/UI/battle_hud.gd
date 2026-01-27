@@ -17,6 +17,7 @@ signal pause_pressed
 
 @onready var danger_label: Label = $TopBar/DangerLabel
 @onready var gold_label: Label = $TopBar/GoldLabel
+@onready var initiative_label: Label = $TopBar/InitiativeLabel
 
 @onready var draw_button: Button = $Controls/DrawButton
 @onready var combat_button: Button = $Controls/CombatButton
@@ -59,6 +60,7 @@ func _ready() -> void:
 	# Inicial
 	update_gold(RunState.gold)
 	update_danger(RunState.danger_level)
+	update_initiative_chance(0.0)
 
 	set_draw_enabled(true)
 	set_combat_enabled(false)
@@ -86,6 +88,11 @@ func update_gold(value: int) -> void:
 		gold_amount
 	]
 
+func update_initiative_chance(prob: float) -> void:
+	if initiative_label == null:
+		return
+	var percent: int = int(round(prob * 100.0))
+	initiative_label.text = "Chance to attack first: %d%%" % percent
 
 func set_draw_enabled(enabled: bool) -> void:
 	draw_button.disabled = not enabled

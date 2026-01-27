@@ -122,11 +122,13 @@ func create_card_instance(
 		# BASE
 		"base_hp": def.max_hp,
 		"base_damage": def.damage,
+		"base_initiative": def.initiative,
 
 		# RUNTIME
 		"max_hp": def.max_hp,
 		"current_hp": def.max_hp,
 		"damage": def.damage,
+		"initiative": def.initiative,
 
 		"level": def.level
 	}

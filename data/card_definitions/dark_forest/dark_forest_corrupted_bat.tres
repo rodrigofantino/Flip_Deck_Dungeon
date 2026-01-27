@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_def")
-definition_id = "dark_forest_corrupted_bat"
+definition_id = "dark_forest_corrupted_bat"
+
+
+
+
 level = 1
 initiative = 9
 max_hp = 1
@@ -15,10 +19,6 @@ display_name = "DARK_FOREST_CORRUPTED_BAT_NAME"
 description = "DARK_FOREST_CORRUPTED_BAT_DESCRIPTION"
 art = ExtResource("3_art")
 frame_texture = ExtResource("2_frame")
-level = 1
-max_hp = 2
-damage = 2
-initiative = 9
 card_type = "enemy"
 is_persistent = false
 is_tutorial = false

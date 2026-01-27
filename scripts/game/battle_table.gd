@@ -273,6 +273,7 @@ func _set_enemy_active(card: CardView) -> void:
 
 	current_phase = BattlePhase.ENEMY_ACTIVE
 	_update_hud_state()
+	_update_initiative_chance_for_active_enemy()
 
 	# 🔥 AUTO-COMBAT: primer ataque automático
 	if auto_combat_enabled:
@@ -605,6 +606,7 @@ func _start_combat() -> void:
 	current_phase = BattlePhase.UI_LOCKED
 	_update_hud_state()
 
+	_update_initiative_chance_for_active_enemy()
 	combat_manager.start_combat(enemy_card_view.card_id)
 
 
@@ -830,6 +832,23 @@ func _restore_active_enemy_if_needed() -> void:
 	enemy_card_view = card
 	current_phase = BattlePhase.ENEMY_ACTIVE
 	_update_hud_state()
+	_update_initiative_chance_for_active_enemy()
+
+func _update_initiative_chance_for_active_enemy() -> void:
+	if battle_hud == null:
+		return
+	var hero: Dictionary = RunState.get_card("th")
+	if hero.is_empty() or enemy_card_view == null:
+		battle_hud.update_initiative_chance(0.0)
+		return
+	var enemy: Dictionary = RunState.get_card(enemy_card_view.card_id)
+	if enemy.is_empty():
+		battle_hud.update_initiative_chance(0.0)
+		return
+	var hero_init: int = int(hero.get("initiative", 0))
+	var enemy_init: int = int(enemy.get("initiative", 0))
+	var p: float = CombatManager.calc_hero_first_chance(hero_init, enemy_init)
+	battle_hud.update_initiative_chance(p)
 
 func _has_remaining_enemies() -> bool:
 	if not RunState.enemy_draw_queue.is_empty():

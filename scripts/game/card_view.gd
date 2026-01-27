@@ -14,7 +14,7 @@ class_name CardView
 @onready var front_frame: TextureRect = $Front/FrontFrame
 
 @onready var level_label: Label = $Front/Stats/LevelLabel
-@onready var power_label: Label = $Front/Stats/PowerLabel
+@onready var initiative_label: Label = $Front/Stats/PowerLabel
 @onready var hp_label: Label = $Front/Stats/HPLabel
 @onready var damage_label: Label = $Front/Stats/DamageLabel
 
@@ -77,22 +77,12 @@ func refresh(data: Dictionary) -> void:
 		]
 
 	# =========================
-	# POWER
+	# INITIATIVE
 	# =========================
-	if data.has("power"):
-		power_label.text = "%s %d" % [
+	if data.has("initiative"):
+		initiative_label.text = "%s %d" % [
 			tr("CARD_VIEW_STATS_POWER"),
-			int(data.power)
-		]
-	elif data.has("max_hp") and data.has("damage"):
-		var level: int = int(data.get("level", 1))
-		var power_bonus: int = int(data.get("power_bonus", 0))
-		var base_power: int = int(data.max_hp) + int(data.damage)
-		var power: int = base_power * level + power_bonus
-
-		power_label.text = "%s %d" % [
-			tr("CARD_VIEW_STATS_POWER"),
-			power
+			int(data.initiative)
 		]
 
 
@@ -204,8 +194,8 @@ func _refresh_all_labels(definition: CardDefinition) -> void:
 	)
 
 	_fit_label_text(
-		power_label,
-		"%s %d" % [tr("CARD_VIEW_STATS_POWER"), definition.power],
+		initiative_label,
+		"%s %d" % [tr("CARD_VIEW_STATS_POWER"), definition.initiative],
 		10
 	)
 

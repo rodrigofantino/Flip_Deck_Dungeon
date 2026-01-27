@@ -6,7 +6,11 @@
 
 [resource]
 script = ExtResource("1_def")
-definition_id = "dark_forest_fallen_stag"
+definition_id = "dark_forest_fallen_stag"
+
+
+
+
 level = 1
 initiative = 5
 max_hp = 6
@@ -15,10 +19,6 @@ display_name = "DARK_FOREST_FALLEN_STAG_NAME"
 description = "DARK_FOREST_FALLEN_STAG_DESCRIPTION"
 art = ExtResource("3_art")
 frame_texture = ExtResource("2_frame")
-level = 1
-max_hp = 6
-damage = 3
-initiative = 5
 card_type = "enemy"
 is_persistent = false
 is_tutorial = false
