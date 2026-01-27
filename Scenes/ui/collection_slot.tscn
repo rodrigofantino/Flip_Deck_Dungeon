@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c6j2v0v7e2k1p"]
 
-[ext_resource type="Script" uid="uid://d1u2h3r4a5n6d" path="res://scripts/UI/collection_slot.gd" id="1_s7l0t"]
+[ext_resource type="Script" path="res://scripts/UI/collection_slot.gd" id="1_s7l0t"]
 
 [node name="CollectionSlot" type="Control"]
 custom_minimum_size = Vector2(110, 150)

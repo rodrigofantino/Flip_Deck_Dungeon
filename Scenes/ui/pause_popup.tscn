@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c2p2m7p4y3w1q"]
 
-[ext_resource type="Script" uid="uid://c6b3m0n8x1k5r" path="res://scripts/UI/pause_popup.gd" id="1_1p4a0"]
+[ext_resource type="Script" path="res://scripts/UI/pause_popup.gd" id="1_1p4a0"]
 
 [node name="PausePopup" type="Control"]
 layout_mode = 1
