@@ -1,32 +1,31 @@
-
 FLIP DECK DUNGEON
 GAME DESIGN DOCUMENT (GDD)
 
 ========================
-1. VISIÓN GENERAL
+1. VISION GENERAL
 ========================
 Flip Deck Dungeon es un roguelike de cartas con combates por turnos donde todas las cartas
-son entidades vivas con HP, daño, nivel y traits.
+son entidades vivas con HP, dano, nivel y traits.
 
 Plataforma: PC (Steam)
 Motor: Godot 4.x
-Duración de runs: corta / media
-Enfoque: decisiones claras, progresión persistente, rejugabilidad.
+Duracion de runs: corta / media
+Enfoque: decisiones claras, progresion persistente, rejugabilidad.
 
 ========================
-2. PILARES DE DISEÑO
+2. PILARES DE DISENO
 ========================
 - Cartas como entidades vivas
 - Una sola fuente de verdad
 - Runs cortas pero profundas
-- Progresión clara y acumulativa
+- Progresion clara y acumulativa
 - Riesgo vs recompensa
 
 ========================
 3. CORE FANTASY
 ========================
-El jugador encarna a un héroe representado por una carta.
-Los enemigos también son cartas que se enfrentan una a una.
+El jugador encarna a un heroe representado por una carta.
+Los enemigos tambien son cartas que se enfrentan una a una.
 Cada combate debilita o fortalece la run.
 
 ========================
@@ -43,31 +42,31 @@ MACRO LOOP:
 MICRO LOOP:
 - Robar enemigo
 - Combate
-- Resolución
+- Resolucion
 - Limpieza de estado
 
 ========================
 5. SISTEMA DE CARTAS
 ========================
 Tipos:
-- Héroe
+- Heroe
 - Enemigo
 
 Cada carta tiene:
 - ID
-- Definición base
+- Definicion base
 - Nivel
-- HP actual / máximo
-- Daño
+- HP actual / maximo
+- Dano
 - Traits
 
 ========================
 6. SISTEMA DE COMBATE
 ========================
 Combate por turnos:
-- Turno héroe
+- Turno heroe
 - Turno enemigo
-- Aplicación de daño
+- Aplicacion de dano
 - Chequeo de muerte
 - Fin de ronda
 
@@ -78,7 +77,7 @@ Traits como modificadores de reglas.
 Se aplican mediante hooks:
 - Inicio de combate
 - Ataque
-- Daño
+- Dano
 - Muerte
 
 ========================
@@ -86,25 +85,32 @@ Se aplican mediante hooks:
 ========================
 - Run guiada
 - Sin RNG duro
-- Enseña todo el juego
+- Ensenia todo el juego
 - Cartas de tutorial no se pierden
 
 ========================
-9. META PROGRESIÓN
+9. META PROGRESION
 ========================
-- Oro
-- Upgrades
-- Sobres
-- Colección
+- Oro persistente
+- Sobres (boosters)
+- Coleccion
+- Boton Continue para continuar run guardada
 
 ========================
-10. COLECCIÓN
+10. COLECCION
 ========================
 Libro de cartas
 Filtros por rareza y bioma
 
 ========================
-11. PRINCIPIOS
+11. POPUPS Y FLOW DE VICTORIA/DERROTA
+========================
+- Derrota: popup con boton para volver al menu
+- Victoria: popup con celebracion, oro obtenido y boton para volver al menu
+- La victoria no ofrece traits ni level up si no hay enemigos restantes
+
+========================
+12. PRINCIPIOS
 ========================
 - Sistemas antes que contenido
 - Datos > UI

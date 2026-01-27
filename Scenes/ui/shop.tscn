@@ -25,29 +25,73 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -100.0
-offset_top = 24.0
-offset_right = 100.0
-offset_bottom = 54.0
+offset_left = -140.0
+offset_top = 20.0
+offset_right = 140.0
+offset_bottom = 50.0
 grow_horizontal = 2
 horizontal_alignment = 1
 text = "Shop"
 
-[node name="PackPanel" type="Panel" parent="."]
+[node name="UnopenedLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -280.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 50.0
+grow_horizontal = 0
+horizontal_alignment = 2
+text = "Unopened packs: 0"
+
+[node name="GoldLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -280.0
+offset_top = 54.0
+offset_right = -20.0
+offset_bottom = 84.0
+grow_horizontal = 0
+horizontal_alignment = 2
+text = "Gold: 0"
+
+[node name="FeedbackLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -160.0
+offset_top = 56.0
+offset_right = 160.0
+offset_bottom = 82.0
+grow_horizontal = 2
+horizontal_alignment = 1
+text = ""
+
+[node name="PacksContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -180.0
-offset_top = -120.0
-offset_right = 180.0
-offset_bottom = 120.0
+offset_left = -420.0
+offset_top = -160.0
+offset_right = 420.0
+offset_bottom = 160.0
 grow_horizontal = 2
 grow_vertical = 2
+alignment = 1
 
-[node name="PackContent" type="VBoxContainer" parent="PackPanel"]
+[node name="ForestPack" type="Panel" parent="PacksContainer"]
+custom_minimum_size = Vector2(360, 320)
+layout_mode = 2
+
+[node name="Content" type="VBoxContainer" parent="PacksContainer/ForestPack"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -60,20 +104,94 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
-[node name="PackNameLabel" type="Label" parent="PackPanel/PackContent"]
+[node name="Preview" type="ColorRect" parent="PacksContainer/ForestPack/Content"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+color = Color(0.6, 0.85, 0.6, 1)
+
+[node name="PackNameLabel" type="Label" parent="PacksContainer/ForestPack/Content"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 horizontal_alignment = 1
 text = "Forest Pack"
 
-[node name="PriceLabel" type="Label" parent="PackPanel/PackContent"]
-custom_minimum_size = Vector2(0, 30)
+[node name="PriceLabel" type="Label" parent="PacksContainer/ForestPack/Content"]
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 horizontal_alignment = 1
 text = "20g"
 
-[node name="BuyButton" type="Button" parent="PackPanel/PackContent"]
-custom_minimum_size = Vector2(0, 40)
+[node name="OwnedLabel" type="Label" parent="PacksContainer/ForestPack/Content"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+horizontal_alignment = 1
+text = "Owned (unopened): 0"
+
+[node name="Buttons" type="HBoxContainer" parent="PacksContainer/ForestPack/Content"]
+layout_mode = 2
+alignment = 1
+
+[node name="BuyOpenButton" type="Button" parent="PacksContainer/ForestPack/Content/Buttons"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Buy & Open"
+
+[node name="BuyButton" type="Button" parent="PacksContainer/ForestPack/Content/Buttons"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Buy"
+
+[node name="DarkForestPack" type="Panel" parent="PacksContainer"]
+custom_minimum_size = Vector2(360, 320)
+layout_mode = 2
+
+[node name="Content" type="VBoxContainer" parent="PacksContainer/DarkForestPack"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Preview" type="ColorRect" parent="PacksContainer/DarkForestPack/Content"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+color = Color(0.12, 0.35, 0.2, 1)
+
+[node name="PackNameLabel" type="Label" parent="PacksContainer/DarkForestPack/Content"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+horizontal_alignment = 1
+text = "Dark Forest Pack"
+
+[node name="PriceLabel" type="Label" parent="PacksContainer/DarkForestPack/Content"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+horizontal_alignment = 1
+text = "50g"
+
+[node name="OwnedLabel" type="Label" parent="PacksContainer/DarkForestPack/Content"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+horizontal_alignment = 1
+text = "Owned (unopened): 0"
+
+[node name="Buttons" type="HBoxContainer" parent="PacksContainer/DarkForestPack/Content"]
+layout_mode = 2
+alignment = 1
+
+[node name="BuyOpenButton" type="Button" parent="PacksContainer/DarkForestPack/Content/Buttons"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Buy & Open"
+
+[node name="BuyButton" type="Button" parent="PacksContainer/DarkForestPack/Content/Buttons"]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Buy"
 

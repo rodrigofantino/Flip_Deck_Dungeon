@@ -1,78 +1,86 @@
-
 FLIP DECK DUNGEON
 TECHNICAL DESIGN DOCUMENT (TDD)
 
 ========================
 1. ARQUITECTURA GENERAL
 ========================
-Separación estricta entre:
-- Lógica
+Separacion estricta entre:
+- Logica
 - Datos
 - UI
 
 ========================
 2. RUNMANAGER
 ========================
-Fuente única de verdad.
+Fuente unica de verdad.
 Responsable de:
 - Estado de la run
 - Cartas runtime
-- Economía
+- Economia
 - XP y level up
 - Traits
+- Orden de enemigos
 
 ========================
 3. COMBATMANAGER
 ========================
-Orquestador lógico.
+Orquestador logico.
 No conoce UI.
-Comunica por señales.
+Comunica por seniales.
 
 ========================
 4. CARDVIEW
 ========================
 UI pura.
 Refleja estado, no lo modifica.
-tamaño de las cartas original 620*860
-tamaño de las cartas instandciadas en battletable 155*215
-
+Tamano cartas: base 620x860 / en mesa 155x215
 
 ========================
 5. RESOURCES
 ========================
 - CardDefinition
 - TraitResource
+- BoosterPackDefinition
 - EnemyDefinition
 
 Nunca se modifican en runtime.
 
 ========================
-6. SEÑALES
+6. SENIALES
 ========================
-Toda comunicación es desacoplada.
+Toda comunicacion es desacoplada.
 Nada de referencias directas innecesarias.
 
 ========================
 7. PERSISTENCIA
 ========================
-Guardado de run.
-Runs temporales no se guardan.
+- Guardado de run (save_run.json)
+- Progreso persistente (coleccion, oro, boosters)
+- Runs temporales no se guardan
 
 ========================
-8. CONVENCIONES
+8. UI Y POPUPS
 ========================
-- Tipado explícito
+- PausePopup
+- DefeatPopup
+- VictoryPopup con VFX (code-driven)
+- LevelUpPopup
+
+========================
+9. CONVENCIONES
+========================
+- Tipado explicito
 - Nombres consistentes
 - Una responsabilidad por clase
 
 ========================
-9. ESCALABILIDAD
+10. ESCALABILIDAD
 ========================
 Agregar contenido no debe requerir refactor.
 
 ========================
-10. PRINCIPIOS TÉCNICOS
+11. PRINCIPIOS TECNICOS
 ========================
-- Claridad antes que optimización
-- Evitar deuda técnica
-- Código legible y mantenible
+- Claridad antes que optimizacion
+- Evitar deuda tecnica
+- Codigo legible y mantenible

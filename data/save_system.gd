@@ -326,6 +326,56 @@ static func build_tutorial_run_deck() -> Array[Dictionary]:
 	return run_deck
 
 
+static func build_run_deck_from_selection(
+	hero_instance_id: String,
+	enemy_instance_ids: Array[String]
+) -> Array[Dictionary]:
+	var collection := ensure_collection()
+	if CardDatabase.definitions.is_empty():
+		CardDatabase.load_definitions()
+
+	var run_deck: Array[Dictionary] = []
+	var hero_card := collection.get_card_by_instance_id(hero_instance_id)
+	if hero_card == null:
+		return []
+
+	var hero_def: CardDefinition = CardDatabase.get_definition(hero_card.definition_id)
+	if hero_def == null:
+		return []
+
+	run_deck.append({
+		"run_id": "th",
+		"collection_id": hero_card.instance_id,
+		"definition_id": hero_def.definition_id,
+		"is_persistent": hero_def.is_persistent
+	})
+
+	var counters := {}
+	for instance_id in enemy_instance_ids:
+		var enemy_card := collection.get_card_by_instance_id(instance_id)
+		if enemy_card == null:
+			continue
+		var def: CardDefinition = CardDatabase.get_definition(enemy_card.definition_id)
+		if def == null:
+			continue
+		var key := def.definition_id
+		var index := int(counters.get(key, 0)) + 1
+		counters[key] = index
+		var run_id := "e_%s_%d" % [key, index]
+		run_deck.append({
+			"run_id": run_id,
+			"collection_id": enemy_card.instance_id,
+			"definition_id": def.definition_id,
+			"is_persistent": def.is_persistent
+		})
+
+		if not def.is_persistent:
+			collection.remove_card_by_instance_id(enemy_card.instance_id)
+
+	save_collection(collection)
+	return run_deck
+
+
 static func _ensure_save_dir() -> void:
 	if not DirAccess.dir_exists_absolute(SAVE_DIR):
 		DirAccess.make_dir_absolute(SAVE_DIR)

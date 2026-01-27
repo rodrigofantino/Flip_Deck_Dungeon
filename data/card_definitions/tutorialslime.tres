@@ -16,3 +16,4 @@ damage = 40
 card_type = "enemy"
 is_persistent = true
 is_tutorial = true
+biome_modifier = "Base Set"

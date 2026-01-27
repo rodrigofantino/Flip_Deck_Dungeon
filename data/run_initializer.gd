@@ -26,10 +26,10 @@ func _add_hero(collection: PlayerCollection) -> void:
 
 
 func _add_enemies(collection: PlayerCollection) -> void:
-	_add_multiple(collection, "res://data/card_definitions/slime.tres", 3)
-	_add_multiple(collection, "res://data/card_definitions/wolf.tres", 3)
-	_add_multiple(collection, "res://data/card_definitions/spider.tres", 3)
-	_add_multiple(collection, "res://data/card_definitions/forest_spirit.tres", 1)
+	_add_multiple(collection, "res://data/card_definitions/forest/forest_slime.tres", 3)
+	_add_multiple(collection, "res://data/card_definitions/forest/forest_wolf.tres", 3)
+	_add_multiple(collection, "res://data/card_definitions/forest/forest_spider.tres", 3)
+	_add_multiple(collection, "res://data/card_definitions/forest/forest_spirit.tres", 1)
 
 
 func _add_multiple(

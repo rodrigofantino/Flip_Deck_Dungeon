@@ -44,7 +44,8 @@ static func player_collection_to_dict(collection: PlayerCollection) -> Dictionar
 
 	return {
 		"cards": cards_array,                 # Guarda todas las cartas del jugador
-		"gold": collection.gold               # Oro persistente del jugador
+		"gold": collection.gold,              # Oro persistente del jugador
+		"boosters": collection.booster_packs  # Boosters persistentes del jugador
 	}
 
 
@@ -52,6 +53,7 @@ static func player_collection_from_dict(data: Dictionary) -> PlayerCollection:
 	# Reconstruye la colección del jugador desde datos guardados
 	var collection := PlayerCollection.new()  # Crea una colección vacía
 	collection.gold = int(data.get("gold", 0))
+	collection.booster_packs = data.get("boosters", {})
 
 	for card_data in data.get("cards", []):
 		# Reconstruye cada carta individual

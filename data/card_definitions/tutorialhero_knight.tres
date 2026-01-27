@@ -16,4 +16,4 @@ damage = 30
 card_type = "hero"
 is_persistent = true
 is_tutorial = true
-biome_modifier = "Hero Gold"
+biome_modifier = "Base Set"

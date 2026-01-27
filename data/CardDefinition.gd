@@ -40,5 +40,5 @@ class_name CardDefinition
 @export var is_tutorial: bool = false
 # Si la carta pertenece al set de tutorial
 
-@export_enum("Forest", "Dark Forest", "Hero Gold") var biome_modifier: String = "Forest"
+@export_enum("Base Set", "Forest", "Dark Forest", "Hero Gold") var biome_modifier: String = "Forest"
 # Bioma de la carta (solo uno)

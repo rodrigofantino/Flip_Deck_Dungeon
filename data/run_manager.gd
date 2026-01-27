@@ -39,6 +39,7 @@ var danger_level: int = 0
 var active_hero_traits: Array[TraitResource] = []
 var active_enemy_traits: Array[TraitResource] = []
 var run_loaded: bool = false
+var selection_pending: bool = false
 
 # =========================
 # PROGRESIÓN DEL JUGADOR

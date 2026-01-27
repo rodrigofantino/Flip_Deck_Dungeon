@@ -3,10 +3,13 @@ class_name DefeatPopup
 
 signal back_to_menu_pressed
 
+@onready var label: Label = $Panel/VBoxContainer/Label
 @onready var back_button: Button = $Panel/VBoxContainer/Button
 
 func _ready() -> void:
 	visible = false
+	if label:
+		label.text = tr("DEFEAT_POPUP_LABEL")
 	back_button.pressed.connect(_on_back_pressed)
 
 func show_popup() -> void:

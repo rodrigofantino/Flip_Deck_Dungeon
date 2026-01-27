@@ -3,6 +3,7 @@ class_name PlayerCollection
 
 @export var cards: Array[CardInstance] = []
 @export var gold: int = 0
+@export var booster_packs: Dictionary = {}
 
 # =========================
 # API PÚBLICA
@@ -46,3 +47,29 @@ func get_all_cards() -> Array[CardInstance]:
 
 func clear() -> void:
 	cards.clear()
+
+func add_booster(pack_type: String, amount: int = 1) -> void:
+	if pack_type == "":
+		return
+	if amount <= 0:
+		return
+	var current := int(booster_packs.get(pack_type, 0))
+	booster_packs[pack_type] = current + amount
+
+func get_booster_count(pack_type: String) -> int:
+	return int(booster_packs.get(pack_type, 0))
+
+func remove_booster(pack_type: String, amount: int = 1) -> bool:
+	if pack_type == "":
+		return false
+	if amount <= 0:
+		return false
+	var current := int(booster_packs.get(pack_type, 0))
+	if current < amount:
+		return false
+	var next := current - amount
+	if next <= 0:
+		booster_packs.erase(pack_type)
+	else:
+		booster_packs[pack_type] = next
+	return true

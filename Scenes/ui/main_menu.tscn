@@ -59,6 +59,18 @@ offset_bottom = 95.0
 grow_horizontal = 0
 text = "Development: Reset Progress"
 
+[node name="DevAddGoldButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 100.0
+offset_right = -20.0
+offset_bottom = 135.0
+grow_horizontal = 0
+text = "Development: Add Gold"
+
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 8

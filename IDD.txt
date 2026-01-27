@@ -1,0 +1,85 @@
+FLIP DECK DUNGEON
+IMPLEMENTED DESIGN DOCUMENT (IDD)
+
+Este documento lista lo que YA esta implementado en el proyecto.
+
+========================
+1. CORE LOOP IMPLEMENTADO
+========================
+- Run con heroe y enemigos en combate por turnos
+- Robo de enemigo, combate, resolucion y limpieza de estado
+- Recompensas al derrotar enemigos (oro y XP)
+
+========================
+2. NUEVA RUN Y SELECCION DE CARTAS
+========================
+- Boton Play abre la coleccion en modo seleccion (selection_pending)
+- El jugador elige 1 heroe y 1+ enemigos; Start Dungeon se habilita al cumplir
+- Se genera un run_deck (run_deck.json) con run_id, definition_id y collection_id
+- Las cartas no persistentes elegidas se remueven de la coleccion al iniciar la run
+- RunManager construye las cartas runtime desde el run_deck al iniciar combate
+- Al derrotar cartas, se remueven del run_deck para mantener el progreso de la run
+
+========================
+3. VICTORIA / DERROTA
+========================
+- Popup de derrota con boton volver al menu
+- Popup de victoria con celebracion y VFX (code-driven)
+- La victoria muestra oro ganado
+- La victoria no muestra level up si no hay enemigos restantes
+- Al ganar se guarda oro en progreso persistente (no en derrota/pausa)
+
+========================
+4. VICTORY VFX (CODE-DRIVEN)
+========================
+- Dimmer overlay con breathing
+- Rays/halo con rotacion suave
+- Confetti full screen y lluvia continua
+- Motes/bolitas full screen
+- Mini cards y hojas en bursts
+- Monedas doradas salen del texto de oro durante el conteo
+- Shine sweep en titulo y reflejo metalico animado en oro
+
+========================
+5. ECONOMIA Y PERSISTENCIA
+========================
+- Oro persistente en coleccion
+- Save de run separado (save_run.json)
+- Continue habilitado si hay save
+- Boton dev reset para limpiar progreso persistente
+
+========================
+6. SHOP
+========================
+- Shop con un pack Dark Forest
+- Boton Buy se habilita si alcanza el oro
+- Al comprar, se descuenta oro y se agrega booster en el save
+
+========================
+7. BOOSTERS
+========================
+- BoosterPackDefinition resource
+- booster_pack_dark_forest.tres
+- boosters guardados en PlayerCollection
+
+========================
+8. UI IMPLEMENTADA
+========================
+- Main menu con oro persistente
+- Pause popup
+- Level up popup
+- Battle HUD
+- Collection UI base
+
+========================
+9. LOCALIZACION
+========================
+- Strings de UI en CSV
+- Shop, menu, victory, defeat, level up
+
+========================
+10. ASSETS Y CONTENIDO
+========================
+- Arte tutorial y dark forest
+- Definiciones de cartas dark forest
+- Frames de cartas actualizados

@@ -8,10 +8,21 @@ MAIN_MENU_BUTTON_SETTINGS,Settings,Opciones
 MAIN_MENU_BUTTON_COLLECTION,Collection,Colección
 MAIN_MENU_LABEL_GOLD,Gold,Oro
 MAIN_MENU_BUTTON_DEV_RESET,Development: Reset Progress,Desarrollo: Resetear progreso
+MAIN_MENU_BUTTON_DEV_ADD_GOLD,Development: Add Gold,Desarrollo: Agregar oro
+MAIN_MENU_TITLE,FLIP DECK DUNGEON,FLIP DECK DUNGEON
 SHOP_TITLE,Shop,Tienda
 SHOP_PACK_FOREST,Forest Pack,Sobre Bosque
 SHOP_PACK_FOREST_PRICE,20g,20g
+SHOP_PACK_DARK_FOREST,Dark Forest Pack,Sobre Bosque Oscuro
+SHOP_PACK_DARK_FOREST_PRICE,50g,50g
+BOOSTER_PACK_FOREST_NAME,Forest Pack,Sobre Bosque
+BOOSTER_PACK_DARK_FOREST_NAME,Dark Forest Booster Pack,Sobre Dark Forest
 SHOP_BUY_BUTTON,Buy,Comprar
+SHOP_BUY_OPEN_BUTTON,Buy & Open,Comprar y Abrir
+SHOP_PACK_OWNED,Owned (unopened): %d,En inventario (sin abrir): %d
+SHOP_PACKS_UNOPENED_HEADER,Unopened packs: %d,Sobres sin abrir: %d
+SHOP_FEEDBACK_NOT_ENOUGH_GOLD,Not enough gold,Oro insuficiente
+SHOP_FEEDBACK_PURCHASED,Purchased!,Comprado!
 SHOP_BACK_BUTTON,Back,Volver
 PAUSE_POPUP_TITLE,Pause,Pausa
 PAUSE_POPUP_BUTTON_CONTINUE,Continue,Continuar
@@ -47,3 +58,14 @@ COLLECTION_TITLE,Collection,Colección
 COLLECTION_BACK,Back,Volver
 COLLECTION_PREV,Prev,Anterior
 COLLECTION_NEXT,Next,Siguiente
+COLLECTION_PACK_COUNT,%s x%d,%s x%d
+COLLECTION_PAGE_LABEL,Pág. %d-%d,Pág. %d-%d
+COLLECTION_BOOSTER_POPUP_TITLE,Booster Pack,Sobre
+COLLECTION_BOOSTER_OPEN,Open Pack,Abrir sobre
+COLLECTION_BOOSTER_BACK,Back,Volver
+COLLECTION_OPEN_POPUP_TITLE,Open Pack,Abrir sobre
+COLLECTION_OPEN_POPUP_TITLE_NAME,Open Pack: %s,Abrir sobre: %s
+COLLECTION_OPEN_ADD_ALL,Add all,Agregar todas
+COLLECTION_SELECT_HERO,Choose a hero,Elige un héroe
+COLLECTION_SELECT_ENEMIES,Choose enemies,Elige enemigos
+COLLECTION_START_DUNGEON,Start Dungeon,Iniciar Dungeon
