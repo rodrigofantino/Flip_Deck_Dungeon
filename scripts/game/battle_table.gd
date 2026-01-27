@@ -151,6 +151,7 @@ func setup_battle() -> void:
 
 	spawn_hero()
 	setup_enemy_deck()
+	_restore_active_enemy_if_needed()
 
 # ==========================================
 # CONNECT BATTLE HUD
@@ -182,8 +183,11 @@ func spawn_hero() -> void:
 	var hero_card := _create_and_fit_card(hero_anchor, hero_data)
 	if hero_card:
 		hero_card_view = hero_card
-		hero_card.show_back()
-		hero_card.flip_to_front()
+		if RunState.run_loaded:
+			hero_card.show_front()
+		else:
+			hero_card.show_back()
+			hero_card.flip_to_front()
 
 		# 🔑 Setear HP real inicial
 		hero_card_view.refresh(hero_data)
@@ -260,6 +264,7 @@ func spawn_enemy_from_deck() -> void:
 
 func _set_enemy_active(card: CardView) -> void:
 	enemy_card_view = card
+	RunState.active_enemy_id = card.card_id
 
 	# 🔑 Setear HP real del enemigo activo
 	var enemy_data: Variant = RunState.get_card(card.card_id)
@@ -299,6 +304,7 @@ func _handle_enemy_defeated() -> void:
 		return
 
 	var enemy_data: Dictionary = RunState.get_card(enemy_card_view.card_id)
+	RunState.active_enemy_id = ""
 	var victory_after_defeat := not _has_remaining_enemies_after_defeat(enemy_card_view.card_id)
 	suppress_level_up_popup = victory_after_defeat
 
@@ -777,6 +783,7 @@ func _on_card_died(card_id: String) -> void:
 		RunState.save_run()
 		return
 
+	RunState.active_enemy_id = ""
 	_handle_enemy_defeated()
 	SaveSystem.remove_from_run_deck(card_id)
 	RunState.save_run()
@@ -798,6 +805,28 @@ func _get_card_view(card_id: String) -> CardView:
 	if enemy_card_view and enemy_card_view.card_id == card_id:
 		return enemy_card_view
 	return null
+
+func _restore_active_enemy_if_needed() -> void:
+	if RunState.active_enemy_id == "":
+		return
+	if enemy_slot == null:
+		return
+	var enemy_data: Dictionary = RunState.get_card(RunState.active_enemy_id)
+	if enemy_data.is_empty():
+		RunState.active_enemy_id = ""
+		return
+	var existing: CardView = card_views.get(RunState.active_enemy_id, null)
+	var card: CardView = existing
+	if card == null:
+		card = _create_and_fit_card(enemy_slot, enemy_data)
+	if card == null:
+		RunState.active_enemy_id = ""
+		return
+	card.reparent(enemy_slot, true)
+	card.show_front()
+	enemy_card_view = card
+	current_phase = BattlePhase.ENEMY_ACTIVE
+	_update_hud_state()
 
 func _has_remaining_enemies() -> bool:
 	if not RunState.enemy_draw_queue.is_empty():

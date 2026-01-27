@@ -40,6 +40,7 @@ var active_hero_traits: Array[TraitResource] = []
 var active_enemy_traits: Array[TraitResource] = []
 var run_loaded: bool = false
 var selection_pending: bool = false
+var active_enemy_id: String = ""
 
 # =========================
 # PROGRESIÓN DEL JUGADOR
@@ -396,7 +397,8 @@ func save_run():
 		"cards": cards,
 		"enemy_draw_order": enemy_draw_order,
 		"active_hero_traits": hero_trait_ids,
-		"active_enemy_traits": enemy_trait_ids
+		"active_enemy_traits": enemy_trait_ids,
+		"active_enemy_id": active_enemy_id
 	}
 
 	var file = FileAccess.open("user://save/save_run.json", FileAccess.WRITE)
@@ -439,6 +441,10 @@ func load_run():
 
 	if enemy_draw_queue.is_empty() and not cards.is_empty():
 		prepare_progressive_deck()
+
+	active_enemy_id = String(data.get("active_enemy_id", ""))
+	if active_enemy_id != "" and not cards.has(active_enemy_id):
+		active_enemy_id = ""
 
 	run_loaded = true
 	_emit_run_state_signals()
@@ -510,6 +516,7 @@ func reset_run(new_mode: String = "normal") -> void:
 	hero_xp = 0
 	xp_to_next_level = 100
 	run_loaded = false
+	active_enemy_id = ""
 
 
 #####################################################################################################
