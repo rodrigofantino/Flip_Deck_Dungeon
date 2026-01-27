@@ -267,6 +267,12 @@ static func clear_run_deck() -> void:
 		DirAccess.remove_absolute(RUN_DECK_SAVE_PATH)
 
 
+static func clear_run_save() -> void:
+	if FileAccess.file_exists("user://save/save_run.json"):
+		DirAccess.remove_absolute("user://save/save_run.json")
+	clear_run_deck()
+
+
 static func remove_from_run_deck(run_id: String) -> void:
 	if run_id == "":
 		return

@@ -533,6 +533,8 @@ func _on_auto_combat_toggled(enabled: bool) -> void:
 	# defeat popup
 	# =========================
 func _on_back_to_menu() -> void:
+	SaveSystem.clear_run_save()
+	RunState.reset_run()
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")
 
@@ -637,6 +639,7 @@ func _show_victory() -> void:
 	if not victory_gold_awarded and not RunState.is_temporary_run:
 		SaveSystem.add_persistent_gold(RunState.gold)
 		victory_gold_awarded = true
+	SaveSystem.clear_run_save()
 
 	if victory_popup_scene == null:
 		push_error("VictoryPopup scene not assigned")

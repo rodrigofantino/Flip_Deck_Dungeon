@@ -40,6 +40,9 @@ func _ready() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED and is_visible_in_tree():
+		var continue_button: Button = $VBoxContainer/ContinueButton
+		if continue_button:
+			continue_button.disabled = not RunState.has_saved_run()
 		_update_gold_label()
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 
