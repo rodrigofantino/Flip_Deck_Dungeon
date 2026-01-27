@@ -43,15 +43,17 @@ static func player_collection_to_dict(collection: PlayerCollection) -> Dictionar
 		cards_array.append(card_instance_to_dict(card))
 
 	return {
-		"cards": cards_array                  # Guarda todas las cartas del jugador
+		"cards": cards_array,                 # Guarda todas las cartas del jugador
+		"gold": collection.gold               # Oro persistente del jugador
 	}
 
 
 static func player_collection_from_dict(data: Dictionary) -> PlayerCollection:
 	# Reconstruye la colección del jugador desde datos guardados
 	var collection := PlayerCollection.new()  # Crea una colección vacía
+	collection.gold = int(data.get("gold", 0))
 
-	for card_data in data["cards"]:
+	for card_data in data.get("cards", []):
 		# Reconstruye cada carta individual
 		var card := card_instance_from_dict(card_data)
 		collection.add_card(card)             # Agrega la carta a la colección

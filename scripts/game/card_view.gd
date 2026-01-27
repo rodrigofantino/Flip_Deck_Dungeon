@@ -11,6 +11,7 @@ class_name CardView
 @onready var art: TextureRect = $Front/Art
 @onready var name_label: Label = $Front/Name
 @onready var description_label: Label = $Front/Description
+@onready var front_frame: TextureRect = $Front/FrontFrame
 
 @onready var level_label: Label = $Front/Stats/LevelLabel
 @onready var power_label: Label = $Front/Stats/PowerLabel
@@ -39,6 +40,8 @@ func setup_from_definition(definition: CardDefinition) -> void:
 
 	if definition.art:
 		art.texture = definition.art
+	if definition.frame_texture and front_frame:
+		front_frame.texture = definition.frame_texture
 
 # =========================
 # REFRESH DESDE RUNTIME (TRAITS / COMBATE)

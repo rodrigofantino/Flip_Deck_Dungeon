@@ -8,16 +8,32 @@ func _ready() -> void:
 	# Asumimos que los botones ya existen en la escena
 	# y están conectados por señal (_on_*_pressed)
 	var play_button: Button = $VBoxContainer/PlayButton
+	var continue_button: Button = $VBoxContainer/ContinueButton
 	var tutorial_button: Button = $VBoxContainer/TutorialButton
 	var endless_button: Button = $VBoxContainer/EndlessButton
 	var shop_button: Button = $VBoxContainer/ShopButton
+	var collection_button: Button = $VBoxContainer/CollectionButton
 	var settings_button: Button = $VBoxContainer/SettingsButton
+	var gold_label: Label = $GoldLabel
+	var dev_reset_button: Button = $DevResetButton
 
+	continue_button.text = tr("MAIN_MENU_BUTTON_CONTINUE")
 	play_button.text = tr("MAIN_MENU_BUTTON_PLAY")
 	tutorial_button.text = tr("MAIN_MENU_BUTTON_TUTORIAL")
 	endless_button.text = tr("MAIN_MENU_BUTTON_ENDLESS")
 	shop_button.text = tr("MAIN_MENU_BUTTON_SHOP")
+	collection_button.text = tr("MAIN_MENU_BUTTON_COLLECTION")
 	settings_button.text = tr("MAIN_MENU_BUTTON_SETTINGS")
+	if dev_reset_button:
+		dev_reset_button.text = tr("MAIN_MENU_BUTTON_DEV_RESET")
+		dev_reset_button.pressed.connect(_on_dev_reset_pressed)
+
+	continue_button.disabled = not RunState.has_saved_run()
+	if gold_label:
+		gold_label.text = "%s: %d" % [
+			tr("MAIN_MENU_LABEL_GOLD"),
+			SaveSystem.get_persistent_gold()
+		]
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 
 
@@ -28,6 +44,10 @@ func _process(delta: float) -> void:
 	
 func _on_p_lay_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/game/table.tscn")
+
+func _on_continue_pressed() -> void:
+	RunState.load_run()
+	get_tree().change_scene_to_file("res://Scenes/battle_table.tscn")
 
 
 func _on_tutorial_pressed() -> void:
@@ -40,3 +60,22 @@ func _on_tutorial_pressed() -> void:
 
 func _on_settings_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://Scenes/menu/Settings.tscn")
+
+func _on_collection_pressed() -> void:
+	get_tree().change_scene_to_file("res://Scenes/ui/collection.tscn")
+
+func _on_shop_pressed() -> void:
+	get_tree().change_scene_to_file("res://Scenes/ui/shop.tscn")
+
+func _on_dev_reset_pressed() -> void:
+	SaveSystem.reset_progress()
+	RunState.reset_run()
+	var continue_button: Button = $VBoxContainer/ContinueButton
+	var gold_label: Label = $GoldLabel
+	if continue_button:
+		continue_button.disabled = true
+	if gold_label:
+		gold_label.text = "%s: %d" % [
+			tr("MAIN_MENU_LABEL_GOLD"),
+			SaveSystem.get_persistent_gold()
+		]

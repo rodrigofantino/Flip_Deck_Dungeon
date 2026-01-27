@@ -38,6 +38,7 @@ var danger_level: int = 0
 
 var active_hero_traits: Array[TraitResource] = []
 var active_enemy_traits: Array[TraitResource] = []
+var run_loaded: bool = false
 
 # =========================
 # PROGRESIÓN DEL JUGADOR
@@ -80,6 +81,13 @@ func init_run() -> void:
 	trait_database.load_all()
 	debug_print_traits()
 
+	if run_loaded:
+		return
+
+	if cards.is_empty() or not cards.has("th"):
+		cards.clear()
+		_build_cards_from_run_deck()
+
 	# 🔑 APLICAR TRAITS ACTIVOS A ENEMIGOS YA EXISTENTES
 	for card in cards.values():
 		if card.get("id", "") == "th":
@@ -95,7 +103,8 @@ func init_run() -> void:
 func create_card_instance(
 	id: String,
 	definition_key: String,
-	is_tutorial := false
+	is_tutorial := false,
+	collection_id: String = ""
 ) -> void:
 	var def: CardDefinition = CardDatabase.get_definition(definition_key)
 	if def == null:
@@ -104,6 +113,7 @@ func create_card_instance(
 
 	var card := {
 		"id": id,
+		"collection_id": collection_id,
 		"definition": definition_key,
 		"is_tutorial": is_tutorial,
 
@@ -223,7 +233,7 @@ func clear_tutorial_cards():
 # CONSULTA DE CARTAS
 ########################################
 func get_card(id: String):
-	return cards.get(id, null)
+	return cards.get(id, {})
 
 func get_all_cards():
 	return cards.values()
@@ -358,20 +368,45 @@ func save_run():
 	if is_temporary_run:
 		return
 
+	var hero_trait_ids: Array[String] = []
+	for trait_res in active_hero_traits:
+		if trait_res != null:
+			hero_trait_ids.append(trait_res.trait_id)
+
+	var enemy_trait_ids: Array[String] = []
+	for trait_res in active_enemy_traits:
+		if trait_res != null:
+			enemy_trait_ids.append(trait_res.trait_id)
+
+	var enemy_draw_order: Array[String] = []
+	for enemy in enemy_draw_queue:
+		var enemy_id := String(enemy.get("id", ""))
+		if enemy_id != "":
+			enemy_draw_order.append(enemy_id)
+
 	var data := {
 		"run_mode": run_mode,
-		"cards": cards
+		"is_temporary_run": is_temporary_run,
+		"gold": gold,
+		"danger_level": danger_level,
+		"hero_level": hero_level,
+		"hero_xp": hero_xp,
+		"xp_to_next_level": xp_to_next_level,
+		"cards": cards,
+		"enemy_draw_order": enemy_draw_order,
+		"active_hero_traits": hero_trait_ids,
+		"active_enemy_traits": enemy_trait_ids
 	}
 
-	var file = FileAccess.open("user://save_run.json", FileAccess.WRITE)
+	var file = FileAccess.open("user://save/save_run.json", FileAccess.WRITE)
 	file.store_string(JSON.stringify(data, "\t"))
 	file.close()
 
 func load_run():
-	if not FileAccess.file_exists("user://save_run.json"):
+	if not FileAccess.file_exists("user://save/save_run.json"):
 		return
 
-	var file = FileAccess.open("user://save_run.json", FileAccess.READ)
+	var file = FileAccess.open("user://save/save_run.json", FileAccess.READ)
 	var content = file.get_as_text()
 	file.close()
 
@@ -381,7 +416,99 @@ func load_run():
 		return
 
 	run_mode = data.get("run_mode", "normal")
+	is_temporary_run = data.get("is_temporary_run", false)
+	gold = int(data.get("gold", 0))
+	danger_level = int(data.get("danger_level", 0))
+	hero_level = int(data.get("hero_level", 1))
+	hero_xp = int(data.get("hero_xp", 0))
+	xp_to_next_level = int(data.get("xp_to_next_level", 100))
 	cards = data.get("cards", {})
+
+	if trait_database != null:
+		trait_database.load_all()
+	var trait_map := _build_trait_map()
+	active_hero_traits = _resolve_traits(data.get("active_hero_traits", []), trait_map)
+	active_enemy_traits = _resolve_traits(data.get("active_enemy_traits", []), trait_map)
+
+	enemy_draw_queue.clear()
+	var enemy_draw_order: Array = data.get("enemy_draw_order", [])
+	for enemy_id in enemy_draw_order:
+		if cards.has(enemy_id):
+			enemy_draw_queue.append(cards[enemy_id])
+
+	if enemy_draw_queue.is_empty() and not cards.is_empty():
+		prepare_progressive_deck()
+
+	run_loaded = true
+	_emit_run_state_signals()
+
+func has_saved_run() -> bool:
+	if not FileAccess.file_exists("user://save/save_run.json"):
+		return false
+	var file = FileAccess.open("user://save/save_run.json", FileAccess.READ)
+	if file == null:
+		return false
+	var content = file.get_as_text()
+	file.close()
+	var data = JSON.parse_string(content)
+	return data != null and data.size() > 0
+
+func _build_trait_map() -> Dictionary:
+	var map := {}
+	if trait_database == null:
+		return map
+	for trait_res in trait_database.hero_traits:
+		map[trait_res.trait_id] = trait_res
+	for trait_res in trait_database.enemy_traits:
+		map[trait_res.trait_id] = trait_res
+	return map
+
+func _resolve_traits(ids: Array, trait_map: Dictionary) -> Array[TraitResource]:
+	var result: Array[TraitResource] = []
+	for trait_id in ids:
+		if trait_map.has(trait_id):
+			result.append(trait_map[trait_id])
+		else:
+			push_warning("[RunManager] Trait no encontrado: " + String(trait_id))
+	return result
+
+func _emit_run_state_signals() -> void:
+	gold_changed.emit(gold)
+	danger_level_changed.emit(danger_level)
+	hero_xp_changed.emit(hero_xp, xp_to_next_level)
+
+
+func _build_cards_from_run_deck() -> void:
+	var run_deck := SaveSystem.load_run_deck()
+	if run_deck.is_empty():
+		return
+
+	for entry in run_deck:
+		var run_id := String(entry.get("run_id", ""))
+		var def_id := String(entry.get("definition_id", ""))
+		var collection_id := String(entry.get("collection_id", ""))
+		if run_id == "" or def_id == "":
+			continue
+		var def: CardDefinition = CardDatabase.get_definition(def_id)
+		var is_tutorial := false
+		if def != null:
+			is_tutorial = def.is_tutorial
+		create_card_instance(run_id, def_id, is_tutorial, collection_id)
+
+
+func reset_run(new_mode: String = "normal") -> void:
+	run_mode = new_mode
+	is_temporary_run = false
+	cards.clear()
+	enemy_draw_queue.clear()
+	active_hero_traits.clear()
+	active_enemy_traits.clear()
+	gold = 0
+	danger_level = 0
+	hero_level = 1
+	hero_xp = 0
+	xp_to_next_level = 100
+	run_loaded = false
 
 
 #####################################################################################################
@@ -478,7 +605,8 @@ func prepare_progressive_deck() -> void:
 	# =========================
 	print("[DECK READY] Orden final:")
 	for i in range(enemy_draw_queue.size()):
-		print(" ", i, "→", enemy_draw_queue[i].get("id", "?"))
+		var enemy := enemy_draw_queue[i]
+		print(" ", i, "→", enemy.get("id", "?"), "| def:", enemy.get("definition", "?"), "| collection:", enemy.get("collection_id", ""))
 
 	# =========================
 	# RECALCULAR RIESGO

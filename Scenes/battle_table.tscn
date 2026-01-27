@@ -1,12 +1,14 @@
-[gd_scene load_steps=8 format=3 uid="uid://c6u72gt7nh3p4"]
+[gd_scene load_steps=10 format=3 uid="uid://c6u72gt7nh3p4"]
 
 [ext_resource type="Script" uid="uid://266r1e7fm203" path="res://scripts/game/battle_table.gd" id="1_f743b"]
 [ext_resource type="PackedScene" uid="uid://dtt1b34yncqy2" path="res://Scenes/cards/card_view.tscn" id="2_udct1"]
 [ext_resource type="Texture2D" uid="uid://gswgi1ix5v7s" path="res://assets/stonefglordark.png" id="3_bvdcj"]
 [ext_resource type="PackedScene" uid="uid://b3kpwmfmlg8sc" path="res://Scenes/ui/battle_hud.tscn" id="4_udct1"]
 [ext_resource type="PackedScene" uid="uid://cg7apdsjsotgx" path="res://Scenes/ui/defeat_popup.tscn" id="5_tmutd"]
+[ext_resource type="PackedScene" uid="uid://bq3a6o0ulb6fm" path="res://Scenes/ui/victory_popup.tscn" id="6_4h7lb"]
 [ext_resource type="PackedScene" uid="uid://buf3cc7nbc5w4" path="res://Scenes/ui/xp_hud.tscn" id="6_j8cen"]
 [ext_resource type="PackedScene" uid="uid://dbv8f10a2jvwh" path="res://Scenes/ui/level_up_popup.tscn" id="7_x57qr"]
+[ext_resource type="PackedScene" path="res://Scenes/ui/pause_popup.tscn" id="8_p9p7r"]
 
 [node name="BattleTable" type="Control"]
 layout_mode = 3
@@ -18,7 +20,9 @@ grow_vertical = 2
 pivot_offset = Vector2(640, 360)
 script = ExtResource("1_f743b")
 defeat_popup_scene = ExtResource("5_tmutd")
+victory_popup_scene = ExtResource("6_4h7lb")
 level_up_popup_scene = ExtResource("7_x57qr")
+pause_popup_scene = ExtResource("8_p9p7r")
 card_view_scene = ExtResource("2_udct1")
 
 [node name="TextureRect" type="TextureRect" parent="."]
@@ -90,6 +94,7 @@ grow_vertical = 2
 [node name="HeroArea" type="Control" parent="UI"]
 custom_minimum_size = Vector2(155, 215)
 layout_mode = 1
+anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5

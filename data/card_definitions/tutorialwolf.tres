@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3 uid="uid://bhh3c0phfijmb"]
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://bhh3c0phfijmb"]
 
 [ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/CardDefinition.gd" id="1_d6bsh"]
-[ext_resource type="Texture2D" uid="uid://0470nr0f7q8e" path="res://assets/cards/art/wolf.png" id="1_llihs"]
+[ext_resource type="Texture2D" uid="uid://dka65t3nbl85v" path="res://assets/cards/art/tutorial_forest_wolf.png" id="1_llihs"]
+[ext_resource type="Texture2D" uid="uid://dfbhfgvv73pq0" path="res://assets/cards/frame/Card Forest Front.png" id="2_nyrrp"]
 
 [resource]
 script = ExtResource("1_d6bsh")
@@ -9,7 +10,9 @@ definition_id = "wolf"
 display_name = "TUTORIAL_WOLf_NAME"
 description = "TUTORIAL_WOLF_DESCRIPTION"
 art = ExtResource("1_llihs")
-level = 20
+frame_texture = ExtResource("2_nyrrp")
 max_hp = 60
 damage = 10
 card_type = "enemy"
+is_persistent = true
+is_tutorial = true

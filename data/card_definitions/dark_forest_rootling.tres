@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/CardDefinition.gd" id="1_def"]
+[ext_resource type="Texture2D" path="res://assets/cards/frame/Card Dark Forest Front.png" id="2_frame"]
+[ext_resource type="Texture2D" path="res://assets/cards/art/dark_forest/dark_forest_rootling.png" id="3_art"]
+
+[resource]
+script = ExtResource("1_def")
+definition_id = "dark_forest_rootling"
+display_name = "DARK_FOREST_ROOTLING_NAME"
+description = "DARK_FOREST_ROOTLING_DESCRIPTION"
+art = ExtResource("3_art")
+frame_texture = ExtResource("2_frame")
+level = 1
+max_hp = 6
+damage = 1
+initiative = 2
+card_type = "enemy"
+is_persistent = false
+is_tutorial = false
+biome_modifier = "Dark Forest"

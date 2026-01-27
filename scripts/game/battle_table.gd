@@ -17,6 +17,14 @@ extends Control
 @export var defeat_popup_scene: PackedScene
 var defeat_popup: DefeatPopup = null
 var run_initialized: bool = false
+var suppress_level_up_popup: bool = false
+var victory_gold_awarded: bool = false
+
+# =========================
+# VICTORY POPUP
+# =========================
+@export var victory_popup_scene: PackedScene
+var victory_popup: VictoryPopup = null
 
 # ==========================================
 # REGISTRO DE CARD VIEWS (UI)
@@ -30,6 +38,14 @@ var card_views: Dictionary = {}
 # =========================
 @export var level_up_popup_scene: PackedScene
 var level_up_popup: LevelUpPopup
+
+# =========================
+# PAUSE POPUP
+# =========================
+@export var pause_popup_scene: PackedScene
+var pause_popup: PausePopup = null
+var pause_open: bool = false
+var phase_before_pause: BattlePhase = BattlePhase.IDLE
 
 # ==========================================
 # ESTADO DEL HEROE Y ENEMIGOS
@@ -50,6 +66,7 @@ var combat_manager: CombatManager
 @export var card_margin_factor: float = 1.0
 @export var card_base_size: Vector2 = Vector2(620, 860)
 @export var card_display_size: Vector2 = Vector2(155, 215)
+@export var debug_card_positions: bool = true
 
 const DECK_OFFSET_Y := -2.0
 
@@ -78,6 +95,10 @@ var auto_combat_enabled: bool = false
 
 func _process(_delta: float) -> void:
 	_process_battle_flow()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_toggle_pause()
 
 func _process_battle_flow() -> void:
 	match current_phase:
@@ -126,6 +147,7 @@ func setup_battle() -> void:
 	if not run_initialized:
 		RunState.init_run() ## SOLO SE PUEDE LLAMAR 1 VEZ a ESTA FUNCION POR PARTIDA
 		run_initialized = true
+		victory_gold_awarded = false
 
 	spawn_hero()
 	setup_enemy_deck()
@@ -139,6 +161,7 @@ func _connect_battle_hud() -> void:
 	battle_hud.combat_pressed.connect(_on_combat_pressed)
 	battle_hud.auto_draw_toggled.connect(_on_auto_draw_toggled)
 	battle_hud.auto_combat_toggled.connect(_on_auto_combat_toggled)
+	battle_hud.pause_pressed.connect(_on_pause_pressed)
 
 # ==========================================
 # HÉROE
@@ -151,6 +174,9 @@ func spawn_hero() -> void:
 	var hero_data: Variant = RunState.get_card("th")
 	if hero_data == null:
 		push_error("Hero data not found")
+		return
+	if hero_data is Dictionary and hero_data.is_empty():
+		push_error("Hero data empty")
 		return
 
 	var hero_card := _create_and_fit_card(hero_anchor, hero_data)
@@ -273,10 +299,13 @@ func _handle_enemy_defeated() -> void:
 		return
 
 	var enemy_data: Dictionary = RunState.get_card(enemy_card_view.card_id)
+	var victory_after_defeat := not _has_remaining_enemies_after_defeat(enemy_card_view.card_id)
+	suppress_level_up_popup = victory_after_defeat
 
 	# 1️⃣ Recompensas
 	if enemy_data != null:
 		RunState.apply_enemy_rewards(enemy_data)
+	suppress_level_up_popup = false
 
 	# 2️⃣ Eliminar del estado
 	RunState.cards.erase(enemy_card_view.card_id)
@@ -288,9 +317,11 @@ func _handle_enemy_defeated() -> void:
 	enemy_card_view.queue_free()
 	card_views.erase(enemy_card_view.card_id)
 	enemy_card_view = null
-
-	current_phase = BattlePhase.IDLE
-	_update_hud_state()
+	if _has_remaining_enemies():
+		current_phase = BattlePhase.IDLE
+		_update_hud_state()
+	else:
+		_show_victory()
 #######################################################
 #### REVISAR LVL UP
 ######################################################
@@ -301,8 +332,16 @@ func _connect_run_signals() -> void:
 func _on_enemy_stats_changed() -> void:
 	_refresh_all_card_views()
 
+func _on_pause_pressed() -> void:
+	_toggle_pause()
+
 func _on_hero_level_up(new_level: int) -> void:
+	if suppress_level_up_popup:
+		return
+	if not _has_remaining_enemies():
+		return
 	print("[BattleTable] HERO LEVEL UP → Pausando batalla")
+	RunState.save_run()
 
 	current_phase = BattlePhase.UI_LOCKED
 
@@ -373,6 +412,14 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# =========================
 	var scaled_size := card_base_size * card.scale
 	card.global_position = slot_rect.get_center() - (scaled_size * 0.5)
+	if debug_card_positions:
+		print(
+			"[CARD POS]",
+			"slot:", slot.name,
+			"slot_center:", slot_rect.get_center(),
+			"card_pos:", card.global_position,
+			"scale:", card.scale
+		)
 
 	# =========================
 	# PIVOT CORRECTO
@@ -434,6 +481,7 @@ func _on_traits_confirmed(hero_trait_res: TraitResource, enemy_trait_res: TraitR
 
 	RunState.apply_hero_trait(hero_trait_res)
 	RunState.apply_enemy_trait(enemy_trait_res)
+	RunState.save_run()
 
 
 	# 🔑 ACTUALIZAR VISUAL DEL HÉROE
@@ -479,6 +527,7 @@ func _on_auto_combat_toggled(enabled: bool) -> void:
 	# defeat popup
 	# =========================
 func _on_back_to_menu() -> void:
+	get_tree().paused = false
 	get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")
 
 func _on_ready_for_next_round() -> void:
@@ -573,6 +622,28 @@ func _show_defeat() -> void:
 	defeat_popup.show_popup()
 	print("Popup global position:", global_position)
 	print("Popup size:", size)
+
+func _show_victory() -> void:
+	current_phase = BattlePhase.UI_LOCKED
+	_update_hud_state()
+	get_tree().paused = true
+
+	if not victory_gold_awarded and not RunState.is_temporary_run:
+		SaveSystem.add_persistent_gold(RunState.gold)
+		victory_gold_awarded = true
+
+	if victory_popup_scene == null:
+		push_error("VictoryPopup scene not assigned")
+		return
+
+	if victory_popup == null:
+		victory_popup = victory_popup_scene.instantiate()
+		add_child(victory_popup)
+		victory_popup.process_mode = Node.PROCESS_MODE_ALWAYS
+		victory_popup.z_index = 200
+		victory_popup.back_to_menu_pressed.connect(_on_back_to_menu)
+
+	victory_popup.show_victory(RunState.gold)
 
 
 ######################################
@@ -682,6 +753,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 # ==========================================
 
 func _on_attack_started(attacker_id: String, target_id: String) -> void:
+	RunState.save_run()
 	var attacker := _get_card_view(attacker_id)
 	var target := _get_card_view(target_id)
 
@@ -701,9 +773,13 @@ func _on_damage_applied(target_id: String, _amount: int) -> void:
 func _on_card_died(card_id: String) -> void:
 	if card_id == "th":
 		_show_defeat()
+		SaveSystem.remove_from_run_deck(card_id)
+		RunState.save_run()
 		return
 
 	_handle_enemy_defeated()
+	SaveSystem.remove_from_run_deck(card_id)
+	RunState.save_run()
 
 func _on_combat_finished(victory: bool) -> void:
 	if victory:
@@ -722,3 +798,58 @@ func _get_card_view(card_id: String) -> CardView:
 	if enemy_card_view and enemy_card_view.card_id == card_id:
 		return enemy_card_view
 	return null
+
+func _has_remaining_enemies() -> bool:
+	if not RunState.enemy_draw_queue.is_empty():
+		return true
+	for card in RunState.cards.values():
+		if card.get("id", "") != "th":
+			return true
+	return false
+
+func _has_remaining_enemies_after_defeat(defeated_id: String) -> bool:
+	if not RunState.enemy_draw_queue.is_empty():
+		return true
+	for card in RunState.cards.values():
+		if card.get("id", "") != "th" and card.get("id", "") != defeated_id:
+			return true
+	return false
+
+# ==========================================
+# PAUSE
+# ==========================================
+func _toggle_pause() -> void:
+	if get_tree().paused and not pause_open:
+		return
+	if pause_open:
+		_close_pause()
+	else:
+		_open_pause()
+
+func _open_pause() -> void:
+	if pause_popup == null:
+		pause_popup = pause_popup_scene.instantiate()
+		pause_popup.z_index = 150
+		add_child(pause_popup)
+		pause_popup.continue_pressed.connect(_close_pause)
+		pause_popup.menu_pressed.connect(_on_pause_menu_pressed)
+
+	pause_open = true
+	phase_before_pause = current_phase
+	current_phase = BattlePhase.UI_LOCKED
+	_update_hud_state()
+	get_tree().paused = true
+
+func _close_pause() -> void:
+	pause_open = false
+	if pause_popup != null:
+		pause_popup.queue_free()
+		pause_popup = null
+	get_tree().paused = false
+	current_phase = phase_before_pause
+	_update_hud_state()
+
+func _on_pause_menu_pressed() -> void:
+	RunState.save_run()
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")

@@ -2,6 +2,7 @@ extends Resource
 class_name PlayerCollection
 
 @export var cards: Array[CardInstance] = []
+@export var gold: int = 0
 
 # =========================
 # API PÚBLICA

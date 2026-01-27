@@ -1,21 +1,37 @@
 id,en,es
+MAIN_MENU_BUTTON_CONTINUE,Continue,Continuar
 MAIN_MENU_BUTTON_PLAY,Play,Jugar
 MAIN_MENU_BUTTON_TUTORIAL,Tutorial,Tutorial
 MAIN_MENU_BUTTON_ENDLESS,Endless,Infinito
 MAIN_MENU_BUTTON_SHOP,Shop,Tienda
 MAIN_MENU_BUTTON_SETTINGS,Settings,Opciones
+MAIN_MENU_BUTTON_COLLECTION,Collection,Colección
+MAIN_MENU_LABEL_GOLD,Gold,Oro
+MAIN_MENU_BUTTON_DEV_RESET,Development: Reset Progress,Desarrollo: Resetear progreso
+SHOP_TITLE,Shop,Tienda
+SHOP_PACK_FOREST,Forest Pack,Sobre Bosque
+SHOP_PACK_FOREST_PRICE,20g,20g
+SHOP_BUY_BUTTON,Buy,Comprar
+SHOP_BACK_BUTTON,Back,Volver
+PAUSE_POPUP_TITLE,Pause,Pausa
+PAUSE_POPUP_BUTTON_CONTINUE,Continue,Continuar
+PAUSE_POPUP_BUTTON_MENU,Back to Menu,Volver al Menú
 CARD_VIEW_STATS_LEVEL,Lv, Nv
 CARD_VIEW_STATS_POWER,I, I
-CARD_VIEW_STATS_HP,HP, HP
+CARD_VIEW_STATS_HP,HP, PV
 CARD_VIEW_STATS_DAMAGE,D, D
 BATTLE_HUD_LABEL_DANGER,Danger,Peligro
 BATTLE_HUD_LABEL_GOLD,Gold,Oro
 BATTLE_HUD_BUTTON_DRAW,Draw Enemy,Robar Enemigo
 BATTLE_HUD_BUTTON_COMBAT,Start Combat,Iniciar Combate
+BATTLE_HUD_BUTTON_PAUSE,Pause,Pausa
 BATTLE_HUD_CHECK_AUTO_DRAW,Auto Draw,Robar Automático
 BATTLE_HUD_CHECK_AUTO_COMBAT,Auto Combat,Combate Automático
 DEFEAT_POPUP_BUTTON_BACK,Back to Menu,Volver al Menú
 DEFEAT_POPUP_LABEL,Your hero has fallen,Tu héroe ha caido
+VICTORY_POPUP_LABEL,Victory!,Victoria
+VICTORY_POPUP_GOLD_LINE,Gold earned: %d,Oro ganado: %d
+VICTORY_POPUP_BUTTON_BACK,Back to Menu,Volver al Menú
 LEVEL_UP_POPUP_TITLE_LEVEL_REACHED,Level %d reached, Nivel %d alcanzado
 LEVEL_UP_POPUP_BUTTON_CONFIRM,Confirm,Confirmar
 LEVEL_UP_POPUP_COLUMN_HERO,Hero Trait,Rasgo del Héroe
@@ -27,3 +43,7 @@ XP_HUD_XP_NEXT,{value} XP,{value} XP
 SETTINGS_LANGUAGE_LABEL,Language,Idioma
 SETTINGS_LANGUAGE_BUTTON,Change Language,Cambiar Idioma
 SETTINGS_BACK_BUTTON,Back,Volver
+COLLECTION_TITLE,Collection,Colección
+COLLECTION_BACK,Back,Volver
+COLLECTION_PREV,Prev,Anterior
+COLLECTION_NEXT,Next,Siguiente

@@ -1,13 +1,18 @@
-[gd_resource type="Resource" script_class="CardDefinition" load_steps=2 format=3 uid="uid://cjhhd2kiydms7"]
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://cjhhd2kiydms7"]
 
+[ext_resource type="Texture2D" uid="uid://gapkvcnrdbp2" path="res://assets/cards/art/tutorial_forest_slime.png" id="1_fhrye"]
 [ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/CardDefinition.gd" id="1_m8xw4"]
+[ext_resource type="Texture2D" uid="uid://dfbhfgvv73pq0" path="res://assets/cards/frame/Card Forest Front.png" id="2_q3xwj"]
 
 [resource]
 script = ExtResource("1_m8xw4")
 definition_id = "slime"
 display_name = "TUTORIAL_SLIME_NAME"
 description = "TUTORIAL_SLIME_DESCRIPTION"
-level = 200
+art = ExtResource("1_fhrye")
+frame_texture = ExtResource("2_q3xwj")
 max_hp = 20
 damage = 40
 card_type = "enemy"
+is_persistent = true
+is_tutorial = true

@@ -8,6 +8,7 @@ signal draw_pressed
 signal combat_pressed
 signal auto_draw_toggled(enabled: bool)
 signal auto_combat_toggled(enabled: bool)
+signal pause_pressed
 
 
 # ==========================================
@@ -21,6 +22,7 @@ signal auto_combat_toggled(enabled: bool)
 @onready var combat_button: Button = $Controls/CombatButton
 @onready var auto_draw_check: CheckButton = $Controls/AutoDrawCheck
 @onready var auto_combat_check: CheckButton = $Controls/AutoCombatCheck
+@onready var pause_button: Button = $PauseButton
 
 
 # ==========================================
@@ -42,11 +44,13 @@ func _ready() -> void:
 	combat_button.text = tr("BATTLE_HUD_BUTTON_COMBAT")
 	auto_draw_check.text = tr("BATTLE_HUD_CHECK_AUTO_DRAW")
 	auto_combat_check.text = tr("BATTLE_HUD_CHECK_AUTO_COMBAT")
+	pause_button.text = tr("BATTLE_HUD_BUTTON_PAUSE")
 
 	draw_button.pressed.connect(_on_draw_button_pressed)
 	combat_button.pressed.connect(_on_combat_button_pressed)
 	auto_draw_check.toggled.connect(_on_auto_draw_toggled)
 	auto_combat_check.toggled.connect(_on_auto_combat_toggled)
+	pause_button.pressed.connect(_on_pause_button_pressed)
 
 	# 🔑 Escuchar al RunManager
 	RunState.gold_changed.connect(update_gold)
@@ -117,3 +121,6 @@ func _on_auto_draw_toggled(enabled: bool) -> void:
 
 func _on_auto_combat_toggled(enabled: bool) -> void:
 	auto_combat_toggled.emit(enabled)
+
+func _on_pause_button_pressed() -> void:
+	pause_pressed.emit()

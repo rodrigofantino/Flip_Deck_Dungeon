@@ -34,6 +34,31 @@ grow_horizontal = 2
 text = "FLIP DECK DUNGEON"
 horizontal_alignment = 1
 
+[node name="GoldLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 50.0
+grow_horizontal = 0
+text = "Gold: 0"
+horizontal_alignment = 2
+
+[node name="DevResetButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 60.0
+offset_right = -20.0
+offset_bottom = 95.0
+grow_horizontal = 0
+text = "Development: Reset Progress"
+
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 8
@@ -47,6 +72,11 @@ offset_right = 107.0
 offset_bottom = 19.5
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="ContinueButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+text = "Continue"
 
 [node name="PlayButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
@@ -68,11 +98,19 @@ custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 text = "Shop"
 
+[node name="CollectionButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+text = "Collection"
+
 [node name="SettingsButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 text = "Settings"
 
 [connection signal="pressed" from="VBoxContainer/PlayButton" to="." method="_on_p_lay_pressed"]
+[connection signal="pressed" from="VBoxContainer/ContinueButton" to="." method="_on_continue_pressed"]
 [connection signal="pressed" from="VBoxContainer/TutorialButton" to="." method="_on_tutorial_pressed"]
+[connection signal="pressed" from="VBoxContainer/ShopButton" to="." method="_on_shop_pressed"]
+[connection signal="pressed" from="VBoxContainer/CollectionButton" to="." method="_on_collection_pressed"]
 [connection signal="pressed" from="VBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
