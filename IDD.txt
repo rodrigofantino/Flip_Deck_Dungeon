@@ -9,6 +9,7 @@ Este documento lista lo que YA esta implementado en el proyecto.
 - Run con heroe y enemigos en combate por turnos
 - Robo de enemigo, combate, resolucion y limpieza de estado
 - Recompensas al derrotar enemigos (oro y XP)
+- Al subir de nivel, el heroe se cura al maximo y su carta refleja el nivel de la run (no persistente)
 
 ========================
 2. NUEVA RUN Y SELECCION DE CARTAS
@@ -43,6 +44,7 @@ Este documento lista lo que YA esta implementado en el proyecto.
 - Mini cards y hojas en bursts
 - Monedas doradas salen del texto de oro durante el conteo
 - Shine sweep en titulo y reflejo metalico animado en oro
+- SFX de flip de carta y monedas (drop y count)
 
 ========================
 5. ECONOMIA Y PERSISTENCIA
