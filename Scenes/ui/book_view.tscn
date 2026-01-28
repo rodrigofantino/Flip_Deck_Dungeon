@@ -13,4 +13,3 @@ grow_vertical = 2
 script = ExtResource("2_ctrl")
 
 [node name="Book" parent="." instance=ExtResource("1_book")]
-start_option = 2

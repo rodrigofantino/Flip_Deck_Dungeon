@@ -3,6 +3,8 @@ extends Control
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	if MusicManager:
+		MusicManager.play_menu()
 
 
 	# Asumimos que los botones ya existen en la escena

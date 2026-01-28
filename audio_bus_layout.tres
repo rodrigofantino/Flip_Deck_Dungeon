@@ -16,6 +16,14 @@ bypass_fx = false
 volume_db = 0.0
 send = &"Master"
 
+[sub_resource type="AudioBus" id="AudioBus_Music"]
+name = "Music"
+solo = false
+mute = false
+bypass_fx = false
+volume_db = 0.0
+send = &"Master"
+
 [resource]
-bus_count = 2
-buses = [SubResource("AudioBus_Master"), SubResource("AudioBus_SFX")]
+bus_count = 3
+buses = [SubResource("AudioBus_Master"), SubResource("AudioBus_SFX"), SubResource("AudioBus_Music")]

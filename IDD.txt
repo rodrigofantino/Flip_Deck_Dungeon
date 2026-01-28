@@ -99,3 +99,21 @@ Este documento lista lo que YA esta implementado en el proyecto.
 - Formula: clamp(0.15, 0.85, 0.5 + (hero_init - enemy_init) * 0.05)
 - Sorteo por combate usando RNG del proyecto
 - Orden de ataque respeta la iniciativa; si el primero mata, el segundo no ataca
+
+========================
+12. LIBRO DE COLECCION 3D (PROTOTIPO)
+========================
+- Flag en Collection para alternar entre libro 2D y prototipo 3D
+- BookView basado en PageFlip con tapa, contraportada y contenido de paginas con grilla de cartas
+- Flip por click en bordes con banda de deteccion ampliada
+- Click en cartas funciona con seleccion (heroe/enemigos) y feedback visual de borde
+- Fondo de coleccion nuevo (colection_background.png) en modo cover, centrado
+- BookView ajusta posicion/escala al abrir/cerrar sin warpeos
+
+========================
+13. AUDIO (MUSICA + SETTINGS)
+========================
+- MusicManager global con playlists de musica de menu y batalla
+- Crossfade entre musica de menu y batalla, sin cortes al navegar UI
+- Carpetas separadas para music/background y music/battle
+- Settings con sliders de volumen Master, Music y SFX (bus audio)

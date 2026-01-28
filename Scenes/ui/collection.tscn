@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://d3ddts4gppkmx"]
+[gd_scene load_steps=6 format=3 uid="uid://d3ddts4gppkmx"]
 
 [ext_resource type="Script" uid="uid://b0v24hehn8yh2" path="res://scripts/UI/collection.gd" id="1_1kq8g"]
 [ext_resource type="PackedScene" uid="uid://c6j2v0v7e2k1p" path="res://Scenes/ui/collection_slot.tscn" id="2_s1ot"]
 [ext_resource type="PackedScene" uid="uid://dtt1b34yncqy2" path="res://Scenes/cards/card_view.tscn" id="3_cv"]
-[ext_resource type="PackedScene" path="res://Scenes/ui/book_view.tscn" id="4_book"]
+[ext_resource type="PackedScene" uid="uid://blg50faekwh8p" path="res://Scenes/ui/book_view.tscn" id="4_book"]
+[ext_resource type="Texture2D" uid="uid://cmuxtlp1o37pe" path="res://assets/card_book/colection_background.png" id="5_bg"]
 
 [node name="Collection" type="Control"]
 layout_mode = 3
@@ -18,7 +19,22 @@ card_view_scene = ExtResource("3_cv")
 
 [node name="BookView" parent="." instance=ExtResource("4_book")]
 visible = false
-debug_book = true
+layout_mode = 1
+open_center_offset = Vector2(-50, -150)
+closed_front_offset = Vector2(-100, 0)
+closed_back_offset = Vector2(-100, 0)
+debug_book = false
+
+[node name="CollectionBackground" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5_bg")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1

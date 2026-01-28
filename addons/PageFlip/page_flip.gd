@@ -713,6 +713,42 @@ func _prepare_book_content():
 # ==============================================================================
 # INPUT
 # ==============================================================================
+func is_pointer_over_page_control_with_event(event: InputEvent) -> bool:
+	# Inject a motion event first so hover updates even on click-only input.
+	if event is InputEventMouse or event is InputEventMouseMotion:
+		var motion := InputEventMouseMotion.new()
+		if event is InputEventMouseButton:
+			motion.position = (event as InputEventMouseButton).position
+			motion.global_position = (event as InputEventMouseButton).global_position
+		elif event is InputEventMouseMotion:
+			motion.position = (event as InputEventMouseMotion).position
+			motion.global_position = (event as InputEventMouseMotion).global_position
+		if _slot_1 and static_left:
+			_inject_event_to_viewport(_slot_1, static_left, motion)
+		if _slot_2 and static_right:
+			_inject_event_to_viewport(_slot_2, static_right, motion)
+		# Also push the real event so controls can react to the click.
+		if _slot_1 and static_left:
+			_inject_event_to_viewport(_slot_1, static_left, event)
+		if _slot_2 and static_right:
+			_inject_event_to_viewport(_slot_2, static_right, event)
+	if _slot_1 and _is_over_clickable_slot(_slot_1.gui_get_hovered_control()):
+		return true
+	if _slot_2 and _is_over_clickable_slot(_slot_2.gui_get_hovered_control()):
+		return true
+	if _slot_3 and _is_over_clickable_slot(_slot_3.gui_get_hovered_control()):
+		return true
+	if _slot_4 and _is_over_clickable_slot(_slot_4.gui_get_hovered_control()):
+		return true
+	return false
+
+func _is_over_clickable_slot(control: Control) -> bool:
+	var node: Node = control
+	while node:
+		if node is CollectionSlot:
+			return true
+		node = node.get_parent()
+	return false
 func _inject_event_to_viewport(viewport: SubViewport, polygon: Polygon2D, event: InputEvent) -> void:
 	var mouse_pos = get_global_mouse_position()
 	var new_mouse_pos = polygon.to_local(mouse_pos)

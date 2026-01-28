@@ -25,6 +25,7 @@ LocalizationManager="*res://assets/Localization/LocalizationManager.gd"
 RunState="*res://data/run_manager.gd"
 TutorialManage="*res://scripts/game/tutorial_manager.gd"
 CardDatabase="*res://data/card_database.gd"
+MusicManager="*res://scripts/audio/music_manager.gd"
 
 [display]
 

@@ -118,6 +118,8 @@ func _process_battle_flow() -> void:
 # ==========================================
 
 func _ready() -> void:
+	if MusicManager:
+		MusicManager.play_battle()
 	# --- Combat Manager ---
 	combat_manager = CombatManager.new()
 	add_child(combat_manager)
@@ -542,6 +544,10 @@ func _on_back_to_menu() -> void:
 	SaveSystem.clear_run_save()
 	RunState.reset_run()
 	get_tree().paused = false
+	if MusicManager:
+		MusicManager.play_menu()
+	if MusicManager:
+		MusicManager.play_menu()
 	get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")
 
 func _on_ready_for_next_round() -> void:
@@ -915,4 +921,6 @@ func _close_pause() -> void:
 func _on_pause_menu_pressed() -> void:
 	RunState.save_run()
 	get_tree().paused = false
+	if MusicManager:
+		MusicManager.play_menu()
 	get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")

@@ -60,16 +60,17 @@ func _set_mouse_filter_recursive(node: Node, filter: int) -> void:
 		_set_mouse_filter_recursive(child, filter)
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_filter = Control.MOUSE_FILTER_PASS
+	add_to_group("collection_slots")
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if selection_outline:
 		var style := StyleBoxFlat.new()
-		style.border_color = Color(0.9, 0.2, 0.2, 1.0)
-		style.border_width_left = 3
-		style.border_width_top = 3
-		style.border_width_right = 3
-		style.border_width_bottom = 3
+		style.border_color = Color(0.2, 0.9, 0.2, 1.0)
+		style.border_width_left = 6
+		style.border_width_top = 6
+		style.border_width_right = 6
+		style.border_width_bottom = 6
 		style.bg_color = Color(0, 0, 0, 0)
 		selection_outline.add_theme_stylebox_override("panel", style)
 		selection_outline.mouse_filter = Control.MOUSE_FILTER_IGNORE

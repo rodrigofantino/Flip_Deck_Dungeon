@@ -67,6 +67,7 @@ var open_cards: Array[CardView] = []
 var open_collection: PlayerCollection = null
 
 func _ready() -> void:
+	add_to_group("collection_root")
 	if use_3d_book:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var book_view := get_node_or_null("BookView")
@@ -138,6 +139,9 @@ func _ready() -> void:
 	if open_popup_back:
 		open_popup_back.text = tr("COLLECTION_BOOSTER_BACK")
 		open_popup_back.pressed.connect(_on_add_all_pressed)
+
+func _on_page_slot_clicked(slot: CollectionSlot) -> void:
+	_on_slot_clicked(slot)
 
 func _init_selection_ui() -> void:
 	selection_mode = RunState.selection_pending
@@ -608,6 +612,9 @@ func _update_selection_state() -> void:
 	for child in right_grid.get_children():
 		if child is CollectionSlot:
 			_update_slot_selection(child)
+	for slot in get_tree().get_nodes_in_group("collection_slots"):
+		if slot is CollectionSlot:
+			_update_slot_selection(slot)
 
 func _set_hint_visible(label: Label, show: bool) -> void:
 	if label == null:

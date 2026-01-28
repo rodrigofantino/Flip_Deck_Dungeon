@@ -1,5 +1,7 @@
 extends Control
 
+signal manage_pageflip(give_control_to_book: bool)
+
 @export var slot_scene: PackedScene = preload("res://Scenes/ui/collection_slot.tscn")
 @export var card_view_scene: PackedScene = preload("res://Scenes/cards/card_view.tscn")
 @export var slots_per_page: int = 9
@@ -11,6 +13,12 @@ var _card_keys: Array[String] = []
 var _collection_map: Dictionary = {}
 
 func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg := get_node_or_null("Background")
+	if bg and bg is Control:
+		(bg as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if grid:
+		grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_slots()
 	_load_collection()
 	_refresh()
@@ -38,8 +46,11 @@ func _build_slots() -> void:
 		if slot == null:
 			continue
 		slot.card_view_scene = card_view_scene
-		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slot.slot_clicked.connect(_on_slot_clicked)
 		grid.add_child(slot)
+
+func _on_slot_clicked(slot: CollectionSlot) -> void:
+	get_tree().call_group("collection_root", "_on_page_slot_clicked", slot)
 
 func _load_collection() -> void:
 	if CardDatabase.definitions.is_empty():
