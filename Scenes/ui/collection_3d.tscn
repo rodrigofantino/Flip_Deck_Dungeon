@@ -1,0 +1,31 @@
+[gd_scene load_steps=3 format=3 uid="uid://c5x5byb4k3r0p"]
+
+[ext_resource type="PackedScene" uid="uid://btnw7ojjf5s3s" path="res://addons/PageFlip/page_flip.tscn" id="1_book"]
+[ext_resource type="Script" uid="uid://b26ncwmqabuil" path="res://scripts/UI/collection_3d.gd" id="2_ctrl"]
+
+[node name="Collection3D" type="Node2D"]
+script = ExtResource("2_ctrl")
+
+[node name="Book" parent="." instance=ExtResource("1_book")]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="UI" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BackButton" type="Button" parent="CanvasLayer/UI"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 124.0
+offset_bottom = 56.0
+grow_horizontal = 2
+text = "Back"

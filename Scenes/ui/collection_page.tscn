@@ -1,0 +1,34 @@
+[gd_scene load_steps=2 format=3 uid="uid://b4dyg0k7v2u5v"]
+
+[ext_resource type="Script" uid="uid://c3w6u2v8f1a9t" path="res://scripts/UI/collection_page.gd" id="1_page"]
+
+[node name="CollectionPage" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_page")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.88, 0.88, 0.88, 1)
+
+[node name="Grid" type="GridContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 24.0
+offset_right = -20.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+columns = 3

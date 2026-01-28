@@ -15,6 +15,10 @@ run/main_scene="uid://b3dr60j30wwxu"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
+[audio]
+
+bus_layout="res://audio_bus_layout.tres"
+
 [autoload]
 
 LocalizationManager="*res://assets/Localization/LocalizationManager.gd"
@@ -28,10 +32,6 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-
-[audio]
-
-bus_layout="res://audio_bus_layout.tres"
 
 [editor]
 

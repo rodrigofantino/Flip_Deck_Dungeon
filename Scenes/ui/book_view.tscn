@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://blg50faekwh8p"]
+
+[ext_resource type="PackedScene" uid="uid://btnw7ojjf5s3s" path="res://addons/PageFlip/page_flip.tscn" id="1_book"]
+[ext_resource type="Script" uid="uid://cxf60olldgxxh" path="res://scripts/UI/book_view.gd" id="2_ctrl"]
+
+[node name="BookView" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_ctrl")
+
+[node name="Book" parent="." instance=ExtResource("1_book")]
+start_option = 2

@@ -1,5 +1,6 @@
 extends Control
 
+@export var use_3d_book: bool = true
 @export var slot_scene: PackedScene
 @export var card_view_scene: PackedScene
 
@@ -66,6 +67,28 @@ var open_cards: Array[CardView] = []
 var open_collection: PlayerCollection = null
 
 func _ready() -> void:
+	if use_3d_book:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var book_view := get_node_or_null("BookView")
+		if book_view:
+			if book_view is Node2D:
+				(book_view as Node2D).z_index = -10
+			book_view.visible = true
+			if book_view.has_method("force_show"):
+				book_view.call("force_show")
+		var background := get_node_or_null("Background")
+		if background and background is CanvasItem:
+			(background as CanvasItem).visible = false
+		var spread := get_node_or_null("Spread")
+		if spread and spread is CanvasItem:
+			(spread as CanvasItem).visible = false
+		if prev_button:
+			prev_button.visible = false
+		if next_button:
+			next_button.visible = false
+		if page_label:
+			page_label.visible = false
+
 	title_label.text = tr("COLLECTION_TITLE")
 	prev_button.text = tr("COLLECTION_PREV")
 	next_button.text = tr("COLLECTION_NEXT")
