@@ -6,7 +6,5 @@
 script = ExtResource("1_mkq8b")
 trait_id = "Holly_Mind"
 display_name = "TRAIT_HOLY_MIND_NAME"
-description = "dobles life
-
-TRAIT_HOLY_MIND_DESCRIPTION"
-hero_hp_multiplier = 2.0
+description = "Vida máxima x1.4."
+hero_hp_multiplier = 1.4

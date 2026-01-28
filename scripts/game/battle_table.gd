@@ -351,11 +351,14 @@ func _on_hero_level_up(new_level: int) -> void:
 	RunState.save_run()
 
 	current_phase = BattlePhase.UI_LOCKED
+	get_tree().paused = true
 
 	_update_hud_state()
 
 	get_tree().paused = true
 	_show_level_up_popup(new_level)
+	if hero_card_view != null:
+		hero_card_view.play_heal_effect()
 
 
 	# FUTURO:
@@ -493,6 +496,8 @@ func _on_traits_confirmed(hero_trait_res: TraitResource, enemy_trait_res: TraitR
 
 	# 🔑 ACTUALIZAR VISUAL DEL HÉROE
 	refresh_card_view("th")
+	if hero_card_view != null:
+		hero_card_view.stop_heal_effect()
 
 	# 🔥 refrescar TODOS los enemigos existentes
 	for card_id in RunState.cards.keys():
@@ -625,6 +630,7 @@ func _show_defeat() -> void:
 	if defeat_popup == null:
 		defeat_popup = defeat_popup_scene.instantiate()
 		add_child(defeat_popup)
+		defeat_popup.process_mode = Node.PROCESS_MODE_ALWAYS
 		defeat_popup.z_index = 100
 		# Conexión segura
 		defeat_popup.back_to_menu_pressed.connect(_on_back_to_menu)
@@ -783,6 +789,8 @@ func _on_damage_applied(target_id: String, _amount: int) -> void:
 
 func _on_card_died(card_id: String) -> void:
 	if card_id == "th":
+		auto_draw_enabled = false
+		auto_combat_enabled = false
 		_show_defeat()
 		SaveSystem.remove_from_run_deck(card_id)
 		RunState.save_run()
@@ -797,7 +805,11 @@ func _on_combat_finished(victory: bool) -> void:
 	if victory:
 		current_phase = BattlePhase.IDLE
 	else:
-		current_phase = BattlePhase.ENEMY_ACTIVE
+		var hero: Dictionary = RunState.get_card("th")
+		if not hero.is_empty() and int(hero.get("current_hp", 0)) <= 0:
+			current_phase = BattlePhase.UI_LOCKED
+		else:
+			current_phase = BattlePhase.ENEMY_ACTIVE
 
 	_update_hud_state()
 

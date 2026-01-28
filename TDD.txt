@@ -4,6 +4,7 @@ TECHNICAL DESIGN DOCUMENT (TDD)
 ========================
 1. ARQUITECTURA GENERAL
 ========================
+Motor: Godot 4.5
 Separacion estricta entre:
 - Logica
 - Datos

@@ -51,7 +51,7 @@ signal hero_level_up(new_level: int)
 
 var hero_level: int = 1
 var hero_xp: int = 0
-var xp_to_next_level: int = 100
+var xp_to_next_level: int = 4
 
 const XP_GROWTH_FACTOR: float = 1.25
 
@@ -89,6 +89,7 @@ func init_run() -> void:
 	if cards.is_empty() or not cards.has("th"):
 		cards.clear()
 		_build_cards_from_run_deck()
+		_sync_hero_card_level(false)
 
 	# 🔑 APLICAR TRAITS ACTIVOS A ENEMIGOS YA EXISTENTES
 	for card in cards.values():
@@ -156,11 +157,13 @@ func recalc_card_stats(
 ) -> void:
 	var base_hp: int = card["base_hp"]
 	var base_damage: int = card["base_damage"]
+	var base_initiative: int = card["base_initiative"]
 	var old_max_hp: int = int(card.get("max_hp", base_hp))
 	var old_current_hp: int = int(card.get("current_hp", base_hp))
 
 	var flat_hp := 0
 	var flat_damage := 0
+	var flat_initiative := 0
 	var hp_mult := 1.0
 	var damage_mult := 1.0
 
@@ -177,15 +180,18 @@ func recalc_card_stats(
 		elif not is_hero and trait_res.trait_type == TraitResource.TraitType.ENEMY:
 			flat_hp += trait_res.enemy_add_flat_hp
 			flat_damage += trait_res.enemy_add_flat_damage
+			flat_initiative += trait_res.enemy_add_initiative
 			hp_mult *= trait_res.enemy_hp_multiplier
 			damage_mult *= trait_res.enemy_damage_multiplier
 			card["level"] += trait_res.enemy_add_level
 
 	var new_max_hp := int((base_hp + flat_hp) * hp_mult)
 	var new_damage := int((base_damage + flat_damage) * damage_mult)
+	var new_initiative := base_initiative + flat_initiative
 
 	card["max_hp"] = new_max_hp
 	card["damage"] = new_damage
+	card["initiative"] = new_initiative
 	if old_max_hp > 0 and new_max_hp > old_max_hp:
 		var ratio := float(old_current_hp) / float(old_max_hp)
 		card["current_hp"] = int(round(float(new_max_hp) * ratio))
@@ -314,7 +320,18 @@ func _add_hero_xp(amount: int) -> void:
 func _level_up() -> void:
 	hero_level += 1
 	xp_to_next_level = int(float(xp_to_next_level) * XP_GROWTH_FACTOR)
+	_sync_hero_card_level(true)
 	hero_level_up.emit(hero_level)
+
+
+func _sync_hero_card_level(full_heal: bool) -> void:
+	var hero: Dictionary = cards.get("th", {})
+	if hero.is_empty():
+		return
+
+	hero["level"] = hero_level
+	if full_heal:
+		hero["current_hp"] = int(hero.get("max_hp", hero.get("current_hp", 0)))
 
 
 #########################################################
@@ -426,8 +443,9 @@ func load_run():
 	danger_level = int(data.get("danger_level", 0))
 	hero_level = int(data.get("hero_level", 1))
 	hero_xp = int(data.get("hero_xp", 0))
-	xp_to_next_level = int(data.get("xp_to_next_level", 100))
+	xp_to_next_level = int(data.get("xp_to_next_level", 4))
 	cards = data.get("cards", {})
+	_sync_hero_card_level(false)
 
 	if trait_database != null:
 		trait_database.load_all()
@@ -516,7 +534,7 @@ func reset_run(new_mode: String = "normal") -> void:
 	danger_level = 0
 	hero_level = 1
 	hero_xp = 0
-	xp_to_next_level = 100
+	xp_to_next_level = 4
 	run_loaded = false
 	active_enemy_id = ""
 

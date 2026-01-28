@@ -6,7 +6,5 @@
 script = ExtResource("1_33wvw")
 trait_id = "Divine_Vigor"
 display_name = "TRAIT_DIVINE_VIGOR_NAME"
-description = "+50 Life
-
-TRAIT_DIVINE_VIGOR_DESCRIPTION"
-hero_max_hp_bonus = 50
+description = "Vida máxima +2."
+hero_max_hp_bonus = 2

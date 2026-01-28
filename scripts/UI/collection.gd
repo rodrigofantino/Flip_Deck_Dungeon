@@ -85,9 +85,9 @@ func _ready() -> void:
 		booster_popup.visible = false
 		booster_popup.mouse_filter = Control.MOUSE_FILTER_STOP
 	if booster_area:
-		booster_area.mouse_filter = Control.MOUSE_FILTER_PASS
+		booster_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if booster_list:
-		booster_list.mouse_filter = Control.MOUSE_FILTER_PASS
+		booster_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if booster_popup_dimmer:
 		booster_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
 	if open_popup != null:
@@ -596,9 +596,9 @@ func _set_hint_visible(label: Label, show: bool) -> void:
 func _set_booster_interactivity(enabled: bool) -> void:
 	if booster_area:
 		booster_area.visible = enabled
-		booster_area.mouse_filter = Control.MOUSE_FILTER_PASS
+		booster_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if booster_list:
-		booster_list.mouse_filter = Control.MOUSE_FILTER_PASS
+		booster_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if booster_popup:
 		booster_popup.visible = enabled and booster_popup.visible
 

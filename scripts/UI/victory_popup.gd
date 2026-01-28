@@ -28,10 +28,28 @@ var title_breathe_tween: Tween = null
 var title_text: String = ""
 var title_palette: Array[Color] = []
 var title_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var coin_sfx_schedule: Array[float] = []
+var coin_sfx_start_time: float = 0.0
+var coin_sfx_index: int = 0
+var coin_sfx_stream: AudioStream = null
+var coin_sfx_pool: Array[AudioStreamPlayer] = []
+var coin_sfx_active: Array[AudioStreamPlayer] = []
+var coin_sfx_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var coin_sfx_elapsed: float = 0.0
+var coin_sfx_active_schedule: bool = false
+
+const COIN_SFX_PATH: String = "res://audio/sfx/single_coin.mp3"
+const COIN_SFX_BUS: String = "SFX"
+const COIN_SFX_MAX_TOTAL: int = 128
+const COIN_SFX_MAX_CONCURRENT: int = 32
+const COIN_SFX_CURVE_POWER: float = 0.45
 
 func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	coin_sfx_stream = load(COIN_SFX_PATH)
+	coin_sfx_rng.randomize()
 	if title_label:
 		title_label.bbcode_enabled = true
 		title_label.fit_content = true
@@ -111,12 +129,15 @@ func _start_gold_count_up() -> void:
 
 	var duration := GOLD_COUNT_DURATION
 	gold_count_tween = create_tween()
+	gold_count_tween.set_trans(Tween.TRANS_QUAD)
+	gold_count_tween.set_ease(Tween.EASE_OUT)
 	gold_count_tween.tween_method(
 		Callable(self, "_set_gold_count_display"),
 		0,
 		gold_target,
 		duration
 	)
+	_start_coin_sfx_schedule(gold_target, duration)
 
 func _set_gold_count_display(value: float) -> void:
 	if gold_label:
@@ -200,6 +221,7 @@ func _on_back_pressed() -> void:
 		vfx = null
 	_stop_gold_shine()
 	_stop_title_fx()
+	_stop_coin_sfx_schedule()
 	print("BACK BUTTON PRESSED")
 	emit_signal("back_to_menu_pressed")
 
@@ -314,6 +336,81 @@ func _stop_title_fx() -> void:
 	if title_breathe_tween != null and title_breathe_tween.is_running():
 		title_breathe_tween.kill()
 	title_breathe_tween = null
+
+func _start_coin_sfx_schedule(count: int, duration: float) -> void:
+	_stop_coin_sfx_schedule()
+	if count <= 0:
+		return
+
+	coin_sfx_schedule.clear()
+	coin_sfx_index = 0
+	coin_sfx_elapsed = 0.0
+	coin_sfx_schedule.append(0.0)
+	if count >= 2:
+		coin_sfx_schedule.append(duration)
+
+	var remaining: int = max(0, count - 2)
+	if remaining > 0:
+		var jitter: float = max(0.02, duration / float(count) * 0.35)
+		var denom: int = max(1, count - 1)
+		for i in range(1, count - 1):
+			var t: float = pow(float(i) / float(denom), COIN_SFX_CURVE_POWER) * duration
+			t += coin_sfx_rng.randf_range(-jitter, jitter)
+			t = clampf(t, 0.0, duration)
+			coin_sfx_schedule.append(t)
+	coin_sfx_schedule.sort()
+
+	coin_sfx_start_time = float(Time.get_ticks_msec()) / 1000.0
+	coin_sfx_active_schedule = true
+	set_process(true)
+
+func _process(delta: float) -> void:
+	if not coin_sfx_active_schedule:
+		return
+	coin_sfx_elapsed += delta
+	while coin_sfx_index < coin_sfx_schedule.size() and coin_sfx_elapsed >= coin_sfx_schedule[coin_sfx_index]:
+		_play_coin_one_shot()
+		coin_sfx_index += 1
+	if coin_sfx_index >= coin_sfx_schedule.size():
+		coin_sfx_active_schedule = false
+
+func _play_coin_one_shot() -> void:
+	if coin_sfx_stream == null:
+		return
+	var player: AudioStreamPlayer = null
+
+	if not coin_sfx_pool.is_empty():
+		player = coin_sfx_pool.pop_back()
+	elif coin_sfx_active.size() < COIN_SFX_MAX_CONCURRENT and (coin_sfx_active.size() + coin_sfx_pool.size()) < COIN_SFX_MAX_TOTAL:
+		player = AudioStreamPlayer.new()
+		player.stream = coin_sfx_stream
+		player.bus = COIN_SFX_BUS
+		player.process_mode = Node.PROCESS_MODE_ALWAYS
+		player.finished.connect(func() -> void:
+			_on_coin_player_finished(player)
+		)
+		add_child(player)
+
+	if player == null:
+		return
+
+	coin_sfx_active.append(player)
+	player.play()
+
+func _on_coin_player_finished(player: AudioStreamPlayer) -> void:
+	if player == null:
+		return
+	coin_sfx_active.erase(player)
+	if coin_sfx_pool.size() < COIN_SFX_MAX_TOTAL:
+		coin_sfx_pool.append(player)
+	else:
+		player.queue_free()
+
+func _stop_coin_sfx_schedule() -> void:
+	coin_sfx_schedule.clear()
+	coin_sfx_index = 0
+	coin_sfx_elapsed = 0.0
+	coin_sfx_active_schedule = false
 
 func _update_title_colors() -> void:
 	if title_label == null:

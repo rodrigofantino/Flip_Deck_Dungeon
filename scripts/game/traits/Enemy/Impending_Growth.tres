@@ -6,8 +6,6 @@
 script = ExtResource("1_81oov")
 trait_id = "Impending_Growth"
 display_name = "TRAIT_IMPENDING_GROUWTH_NAME"
-description = "triples enemy life
-TRAIT_IMPENDING_GROUWTH_DESCRIPTION
-"
+description = "Vida máxima x1.8."
 trait_type = 1
-enemy_hp_multiplier = 3.0
+enemy_hp_multiplier = 1.8

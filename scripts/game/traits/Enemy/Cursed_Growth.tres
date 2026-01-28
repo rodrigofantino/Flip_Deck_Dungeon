@@ -6,7 +6,6 @@
 script = ExtResource("1_5d77d")
 trait_id = "Cursed_Growth"
 display_name = "Cursed Growth"
-description = "triples enemy damage TRAIT__CURSED_GROWTH_DESCRIPTION
-"
+description = "Daño x1.5."
 trait_type = 1
-enemy_damage_multiplier = 3.0
+enemy_damage_multiplier = 1.5

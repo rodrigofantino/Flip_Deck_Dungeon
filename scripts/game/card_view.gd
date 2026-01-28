@@ -17,15 +17,37 @@ class_name CardView
 @onready var initiative_label: Label = $Front/Stats/PowerLabel
 @onready var hp_label: Label = $Front/Stats/HPLabel
 @onready var damage_label: Label = $Front/Stats/DamageLabel
+@onready var heal_effect: AnimatedSprite2D = $Front/Stats/HealEffect
 
 @export var display_name: String
 @export var description: String
+@export var heal_effect_offset: Vector2 = Vector2(0, 0)
+
+const FLIP_SFX_PATH: String = "res://audio/sfx/card_flip.mp3"
+const FLIP_SFX_BUS: String = "SFX"
 
 # ==========================================
 # IDENTIDAD DE LA CARTA (RunManager)
 # ==========================================
 
 var card_id: String = ""
+var flip_sfx: AudioStreamPlayer = null
+
+# =========================
+# INIT
+# =========================
+
+func _ready() -> void:
+	_setup_flip_sfx()
+
+func _setup_flip_sfx() -> void:
+	if flip_sfx != null:
+		return
+	flip_sfx = AudioStreamPlayer.new()
+	flip_sfx.name = "FlipSfx"
+	flip_sfx.stream = load(FLIP_SFX_PATH)
+	flip_sfx.bus = FLIP_SFX_BUS
+	add_child(flip_sfx)
 
 # =========================
 # SETUP (ESTÁTICO)
@@ -87,6 +109,54 @@ func refresh(data: Dictionary) -> void:
 
 
 # =========================
+# HEAL EFFECT
+# =========================
+
+func play_heal_effect() -> void:
+	if heal_effect == null or hp_label == null:
+		return
+
+	var text: String = hp_label.text
+	var slash_idx: int = text.find("/")
+	if slash_idx < 0:
+		slash_idx = text.length()
+
+	var before_slash: String = text.substr(0, slash_idx).strip_edges()
+	var last_space: int = before_slash.rfind(" ")
+	var prefix: String = before_slash.substr(0, max(0, last_space + 1))
+	var current_value: String = before_slash.substr(max(0, last_space + 1))
+
+	var font: Font = hp_label.get_theme_font("font")
+	var font_size: int = hp_label.get_theme_font_size("font_size")
+	var prefix_w := 0.0
+	var current_w := 0.0
+	var full_w := 0.0
+	if font != null and font_size > 0:
+		prefix_w = font.get_string_size(prefix, font_size).x
+		current_w = font.get_string_size(current_value, font_size).x
+		full_w = font.get_string_size(text, font_size).x
+
+	var hp_pos: Vector2 = hp_label.position
+	var text_offset_x := 0.0
+	if full_w > 0.0:
+		text_offset_x = (hp_label.size.x - full_w) * 0.5
+	var center_x: float = hp_pos.x + text_offset_x + prefix_w + (current_w * 0.5)
+	var center_y: float = hp_pos.y + (hp_label.size.y * 0.5) + heal_effect_offset.y
+	heal_effect.position = Vector2(center_x, center_y)
+	heal_effect.scale = Vector2(2.0, 2.0)
+	heal_effect.visible = true
+	heal_effect.frame = 0
+	heal_effect.process_mode = Node.PROCESS_MODE_ALWAYS
+	heal_effect.play("default")
+
+func stop_heal_effect() -> void:
+	if heal_effect == null:
+		return
+	heal_effect.stop()
+	heal_effect.visible = false
+
+
+# =========================
 # PIVOT
 # =========================
 
@@ -118,8 +188,16 @@ func flip_to_front() -> void:
 	tween.set_ease(Tween.EASE_IN_OUT)
 
 	tween.tween_property(self, "scale:x", 0.0, 0.15)
+	tween.tween_callback(Callable(self, "_play_flip_sfx"))
 	tween.tween_callback(show_front)
 	tween.tween_property(self, "scale:x", scale.x, 0.15)
+
+func _play_flip_sfx() -> void:
+	if flip_sfx == null:
+		return
+	if flip_sfx.playing:
+		flip_sfx.stop()
+	flip_sfx.play()
 
 # =========================
 # ARTE

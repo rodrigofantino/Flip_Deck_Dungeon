@@ -6,7 +6,7 @@
 script = ExtResource("1_573mb")
 trait_id = "Abyss_Shell"
 display_name = "TRAIT_ABYSS_SHELL_NAME"
-description = "Doubles enemy life TRAIT_ABYSS_SHELL_DESCRIPTION"
+description = "Vida máxima x1.5 y +2."
 trait_type = 1
-enemy_hp_multiplier = 2.0
-enemy_add_flat_hp = 30
+enemy_hp_multiplier = 1.5
+enemy_add_flat_hp = 2

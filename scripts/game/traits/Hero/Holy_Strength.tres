@@ -6,7 +6,5 @@
 script = ExtResource("1_j7hr1")
 trait_id = "Holy_Strength"
 display_name = "TRAIT_HOLY_STRENGTH_NAME"
-description = "triples damage
-
-TRAIT_HOLY_STRENGTH_DESCRIPTION"
-hero_damage_multiplier = 3.0
+description = "Daño x1.5."
+hero_damage_multiplier = 1.5

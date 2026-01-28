@@ -34,5 +34,6 @@ enum TraitType {
 @export var enemy_hp_multiplier: float = 1.0
 @export var enemy_damage_multiplier: float = 1.0
 @export var enemy_add_level: int = 0
+@export var enemy_add_initiative: int = 0
 @export var enemy_add_flat_damage: int = 0
 @export var enemy_add_flat_hp: int = 0
