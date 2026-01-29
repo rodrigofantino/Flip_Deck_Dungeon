@@ -25,7 +25,7 @@ open_center_offset = Vector2(-50, -150)
 closed_front_offset = Vector2(-30, -280)
 closed_back_offset = Vector2(-30, -300)
 debug_book = true
-perspective_top_inset_px = 0.0
+perspective_top_inset_px = -100.0
 perspective_top_drop_px = -200.0
 perspective_top_tilt_px = 0.0
 
