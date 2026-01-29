@@ -568,7 +568,7 @@ func _cache_deform_targets() -> void:
 		var base := poly.polygon.duplicate()
 		if base.size() < 4:
 			continue
-		var top_indices := _get_top_vertex_indices(base)
+		var top_indices := _get_top_vertex_indices(base, poly)
 		if top_indices.size() < 2:
 			continue
 		_sort_indices_by_x(top_indices, base)
@@ -656,16 +656,19 @@ func _determine_target_side(node: Node) -> String:
 		return "back"
 	return "front"
 
-func _get_top_vertex_indices(base: PackedVector2Array) -> Array:
+func _get_top_vertex_indices(base: PackedVector2Array, node: Polygon2D) -> Array:
 	if base.size() == 0:
 		return []
-	var min_y := base[0].y
+	var transform := node.get_global_transform()
+	var min_y := transform.xform(base[0]).y
 	for i in range(base.size()):
-		min_y = min(min_y, base[i].y)
-	var threshold := max(1.0, abs(min_y) * 0.01)
-	var results := []
+		var global_y := transform.xform(base[i]).y
+		min_y = min(min_y, global_y)
+	var threshold: float = max(1.0, abs(min_y) * 0.01)
+	var results: Array = []
 	for i in range(base.size()):
-		if abs(base[i].y - min_y) <= threshold:
+		var global_y := transform.xform(base[i]).y
+		if abs(global_y - min_y) <= threshold:
 			results.append(i)
 	return results
 
