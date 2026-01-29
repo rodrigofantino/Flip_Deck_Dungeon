@@ -240,10 +240,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		var vc := book.visuals_container
 		if vc == null:
 			return
-		if _is_point_over_card_view(event.global_position):
-			get_viewport().set_input_as_handled()
-			_dbg("click_on_card")
-			return
 		var local_x := _get_local_x_over_book(event.global_position)
 		var page_w := _get_page_width_scaled()
 		var edge_band := maxf(page_w * edge_click_ratio, edge_click_band_px)
@@ -260,6 +256,9 @@ func _unhandled_input(event: InputEvent) -> void:
 					# Let CardViews handle clicks when not on edge.
 					get_viewport().set_input_as_handled()
 					return
+			if _is_point_over_card_view(event.global_position):
+				get_viewport().set_input_as_handled()
+				return
 			if local_x >= right_edge - edge_band:
 				_dbg("click_open_right_edge")
 				if _will_close_to_back():
