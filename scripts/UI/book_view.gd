@@ -659,7 +659,7 @@ func _determine_target_side(node: Node) -> String:
 func _get_top_vertex_indices(base: PackedVector2Array, node: CanvasItem) -> Array:
 	if base.size() == 0:
 		return []
-	var first_global := node.to_global(base[0])
+	var first_global: Vector2 = node.to_global(base[0])
 	var min_y: float = first_global.y
 	for i in range(base.size()):
 		var global_y: float = node.to_global(base[i]).y
