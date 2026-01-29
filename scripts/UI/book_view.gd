@@ -256,6 +256,9 @@ func _unhandled_input(event: InputEvent) -> void:
 					# Let CardViews handle clicks when not on edge.
 					get_viewport().set_input_as_handled()
 					return
+			if _is_point_over_card_view(event.global_position):
+				get_viewport().set_input_as_handled()
+				return
 			if local_x >= right_edge - edge_band:
 				_dbg("click_open_right_edge")
 				if _will_close_to_back():
@@ -363,6 +366,19 @@ func _is_point_over_book(global_pos: Vector2) -> bool:
 	var min_y := -(page_h * 0.5)
 	var max_y := (page_h * 0.5)
 	return local.x >= min_x and local.x <= max_x and local.y >= min_y and local.y <= max_y
+
+func _is_point_over_card_view(global_pos: Vector2) -> bool:
+	var vp := get_viewport()
+	if vp == null:
+		return false
+	var target := vp.gui_pick(global_pos)
+	while target:
+		if target is CardView:
+			return true
+		if target == self:
+			break
+		target = target.get_parent()
+	return false
 
 func _is_back_closed() -> bool:
 	if book == null:
