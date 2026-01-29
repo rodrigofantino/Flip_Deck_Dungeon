@@ -479,7 +479,7 @@ func _on_viewport_resized() -> void:
 		if version != _resize_version:
 			return
 		call_deferred("_apply_book_scale")
-	call_deferred("_apply_book_position", true)
+		call_deferred("_apply_book_position", true)
 		call_deferred("_recenter_book_internal")
 		call_deferred("_force_visibility")
 	)
