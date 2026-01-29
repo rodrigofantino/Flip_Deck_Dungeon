@@ -568,21 +568,12 @@ func _cache_deform_targets() -> void:
 		var base := poly.polygon.duplicate()
 		if base.size() < 4:
 			continue
-		var sorted_indices := _sort_vertex_indices_by_y(base)
-		print("[Perspective] node %s top indices %s" % [node.name, sorted_indices])
-		if sorted_indices == null or sorted_indices.size() < 4:
+		var top_indices := _get_top_vertex_indices(base)
+		if top_indices.size() < 2:
 			continue
-		var top_pair := sorted_indices.slice(0, 2)
-		var tl_idx := int(top_pair[0])
-		var tr_idx := int(top_pair[1])
-		var top_left := base[tl_idx]
-		var top_right := base[tr_idx]
-		if top_right.x < top_left.x:
-			var temp := tl_idx
-			tl_idx = tr_idx
-			tr_idx = temp
-			top_left = base[tl_idx]
-			top_right = base[tr_idx]
+		_sort_indices_by_x(top_indices, base)
+		var tl_idx := int(top_indices[0])
+		var tr_idx := int(top_indices[1])
 		var side := _determine_target_side(node)
 		_deform_targets.append({
 			"node": poly,
@@ -665,22 +656,33 @@ func _determine_target_side(node: Node) -> String:
 		return "back"
 	return "front"
 
-func _sort_vertex_indices_by_y(base: PackedVector2Array) -> Array:
-	var indices := []
+func _get_top_vertex_indices(base: PackedVector2Array) -> Array:
+	if base.size() == 0:
+		return []
+	var min_y := base[0].y
 	for i in range(base.size()):
-		indices.append(i)
+		min_y = min(min_y, base[i].y)
+	var threshold := max(1.0, abs(min_y) * 0.01)
+	var results := []
+	for i in range(base.size()):
+		if abs(base[i].y - min_y) <= threshold:
+			results.append(i)
+	return results
+
+func _sort_indices_by_x(indices: Array, base: PackedVector2Array) -> void:
+	if indices.size() <= 1:
+		return
 	_sort_reference_vertices = base
-	var compare_ref := Callable(self, "_compare_vertex_y")
+	var compare_ref := Callable(self, "_compare_vertex_x")
 	indices.sort_custom(compare_ref)
 	_sort_reference_vertices = PackedVector2Array()
-	return indices
 
-func _compare_vertex_y(a: int, b: int) -> int:
+func _compare_vertex_x(a: int, b: int) -> int:
 	var va := _sort_reference_vertices[a]
 	var vb := _sort_reference_vertices[b]
-	if va.y < vb.y:
+	if va.x < vb.x:
 		return -1
-	if va.y > vb.y:
+	if va.x > vb.x:
 		return 1
 	return 0
 
