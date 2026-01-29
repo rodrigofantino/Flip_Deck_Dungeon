@@ -59,7 +59,7 @@ var enemy_card_view: CardView = null
 var combat_manager: CombatManager
 
 # ==========================================
-# CONFIGURACIÓN
+# CONFIGURACIÃ“N
 # ==========================================
 
 @export var card_view_scene: PackedScene
@@ -83,14 +83,14 @@ enum BattlePhase {
 var current_phase: BattlePhase = BattlePhase.IDLE
 
 # ==========================================
-# CONFIGURACIÓN DE AUTOMATIZACIÓN
+# CONFIGURACIÃ“N DE AUTOMATIZACIÃ“N
 # ==========================================
 
 var auto_draw_enabled: bool = false
 var auto_combat_enabled: bool = false
 
 # ==========================================
-# LOOP AUTOMÁTICO DE BATALLA
+# LOOP AUTOMÃTICO DE BATALLA
 # ==========================================
 
 func _process(_delta: float) -> void:
@@ -107,7 +107,7 @@ func _process_battle_flow() -> void:
 				_draw_enemy()
 
 		BattlePhase.ENEMY_ACTIVE:
-			pass # El combate se dispara por señal, no por polling
+			pass # El combate se dispara por seÃ±al, no por polling
 
 		BattlePhase.UI_LOCKED:
 			pass
@@ -167,7 +167,7 @@ func _connect_battle_hud() -> void:
 	battle_hud.pause_pressed.connect(_on_pause_pressed)
 
 # ==========================================
-# HÉROE
+# HÃ‰ROE
 # ==========================================
 
 func spawn_hero() -> void:
@@ -191,7 +191,7 @@ func spawn_hero() -> void:
 			hero_card.show_back()
 			hero_card.flip_to_front()
 
-		# 🔑 Setear HP real inicial
+		# ðŸ”‘ Setear HP real inicial
 		hero_card_view.refresh(hero_data)
 
 # ==========================================	
@@ -210,7 +210,7 @@ func setup_enemy_deck() -> void:
 
 	var current_y_offset := 0.0
 
-	# 🔥 DIBUJAMOS DE ABAJO HACIA ARRIBA
+	# ðŸ”¥ DIBUJAMOS DE ABAJO HACIA ARRIBA
 	for i in range(RunState.enemy_draw_queue.size() - 1, -1, -1):
 		var enemy_data := RunState.enemy_draw_queue[i]
 
@@ -235,22 +235,22 @@ func spawn_enemy_from_deck() -> void:
 	if enemy_deck == null or enemy_slot == null:
 		return
 
-	# 1️⃣ ROBAR DEL MAZO LÓGICO
+	# 1ï¸âƒ£ ROBAR DEL MAZO LÃ“GICO
 	var enemy_data: Dictionary = RunState.draw_enemy_card()
 	if enemy_data.is_empty():
 		return
 
-	# 2️⃣ BUSCAR LA CARD VIEW EXISTENTE
+	# 2ï¸âƒ£ BUSCAR LA CARD VIEW EXISTENTE
 	var card: CardView = card_views.get(enemy_data.id, null)
 	if card == null:
 		push_error("No CardView found for enemy: " + enemy_data.id)
 		return
 
-	# 3️⃣ REPARENT (deck → slot) manteniendo posición global
+	# 3ï¸âƒ£ REPARENT (deck â†’ slot) manteniendo posiciÃ³n global
 	card.reparent(enemy_slot, true)
 	card.show_back()
 
-	# 4️⃣ ANIMACIÓN
+	# 4ï¸âƒ£ ANIMACIÃ“N
 	var slot_rect := enemy_slot.get_global_rect()
 	var scaled_size := card_base_size * card.scale
 	var end_pos := slot_rect.get_center() - (scaled_size * 0.5)
@@ -268,7 +268,7 @@ func _set_enemy_active(card: CardView) -> void:
 	enemy_card_view = card
 	RunState.active_enemy_id = card.card_id
 
-	# 🔑 Setear HP real del enemigo activo
+	# ðŸ”‘ Setear HP real del enemigo activo
 	var enemy_data: Variant = RunState.get_card(card.card_id)
 	if enemy_data != null:
 		card.refresh(enemy_data)
@@ -277,7 +277,7 @@ func _set_enemy_active(card: CardView) -> void:
 	_update_hud_state()
 	_update_initiative_chance_for_active_enemy()
 
-	# 🔥 AUTO-COMBAT: primer ataque automático
+	# ðŸ”¥ AUTO-COMBAT: primer ataque automÃ¡tico
 	if auto_combat_enabled:
 		# Esperamos 1 frame para que:
 		# - termine el flip
@@ -311,18 +311,18 @@ func _handle_enemy_defeated() -> void:
 	var victory_after_defeat := not _has_remaining_enemies_after_defeat(enemy_card_view.card_id)
 	suppress_level_up_popup = victory_after_defeat
 
-	# 1️⃣ Recompensas
+	# 1ï¸âƒ£ Recompensas
 	if enemy_data != null:
 		RunState.apply_enemy_rewards(enemy_data)
 	suppress_level_up_popup = false
 
-	# 2️⃣ Eliminar del estado
+	# 2ï¸âƒ£ Eliminar del estado
 	RunState.cards.erase(enemy_card_view.card_id)
 
-	# 🔑 3️⃣ Recalcular danger level (RunManager manda)
+	# ðŸ”‘ 3ï¸âƒ£ Recalcular danger level (RunManager manda)
 	RunState.recalculate_danger_level()
 
-	# 4️⃣ Visual
+	# 4ï¸âƒ£ Visual
 	enemy_card_view.queue_free()
 	card_views.erase(enemy_card_view.card_id)
 	enemy_card_view = null
@@ -349,7 +349,7 @@ func _on_hero_level_up(new_level: int) -> void:
 		return
 	if not _has_remaining_enemies():
 		return
-	print("[BattleTable] HERO LEVEL UP → Pausando batalla")
+	print("[BattleTable] HERO LEVEL UP â†’ Pausando batalla")
 	RunState.save_run()
 
 	current_phase = BattlePhase.UI_LOCKED
@@ -379,7 +379,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# Instanciar CardView
 	var card: CardView = card_view_scene.instantiate()
 	cards_layer.add_child(card)
-	# Base size explícito para layout interno del CardView
+	# Base size explÃ­cito para layout interno del CardView
 	card.custom_minimum_size = card_base_size
 	card.size = card_base_size
 	# Asegurar layout fijo del Control (sin anchors dependientes del parent)
@@ -395,10 +395,10 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# =========================
 	if card_data.has("id"):
 		card.card_id = String(card_data["id"])
-		card_views[card.card_id] = card   # 🔑 REGISTRO CENTRAL
+		card_views[card.card_id] = card   # ðŸ”‘ REGISTRO CENTRAL
 
 	# =========================
-	# DEFINICIÓN (Resource)
+	# DEFINICIÃ“N (Resource)
 	# =========================
 	var def_id: String = String(card_data["definition"])
 	var definition: CardDefinition = CardDatabase.get_definition(def_id)
@@ -406,7 +406,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 		card.setup_from_definition(definition)
 
 	# =========================
-	# POSICIÓN BASE
+	# POSICIÃ“N BASE
 	# =========================
 	var slot_rect: Rect2 = slot.get_global_rect()
 
@@ -420,7 +420,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 		card.scale = Vector2(final_scale, final_scale)
 
 	# =========================
-	# POSICIÓN CENTRADA (GLOBAL)
+	# POSICIÃ“N CENTRADA (GLOBAL)
 	# =========================
 	var scaled_size := card_base_size * card.scale
 	card.global_position = slot_rect.get_center() - (scaled_size * 0.5)
@@ -443,7 +443,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 
 
 # ==========================================
-# COMBATE - DAÑO
+# COMBATE - DAÃ‘O
 # ==========================================
 # YA NO ES PARTE MAS DE BATTLE TABLE SE OCUPA COMBAT CONTEXT DE ESTO
 
@@ -487,7 +487,7 @@ func _show_level_up_popup(new_level: int) -> void:
 		enemy_traits
 	)
 func _on_traits_confirmed(hero_trait_res: TraitResource, enemy_trait_res: TraitResource) -> void:
-	print("🧪 CONFIRMED TRAITS")
+	print("ðŸ§ª CONFIRMED TRAITS")
 	print("   hero:", hero_trait_res)
 	print("   enemy:", enemy_trait_res)
 
@@ -496,12 +496,12 @@ func _on_traits_confirmed(hero_trait_res: TraitResource, enemy_trait_res: TraitR
 	RunState.save_run()
 
 
-	# 🔑 ACTUALIZAR VISUAL DEL HÉROE
+	# ðŸ”‘ ACTUALIZAR VISUAL DEL HÃ‰ROE
 	refresh_card_view("th")
 	if hero_card_view != null:
 		hero_card_view.stop_heal_effect()
 
-	# 🔥 refrescar TODOS los enemigos existentes
+	# ðŸ”¥ refrescar TODOS los enemigos existentes
 	for card_id in RunState.cards.keys():
 		if card_id == "th":
 			continue
@@ -532,7 +532,7 @@ func _on_auto_draw_toggled(enabled: bool) -> void:
 func _on_auto_combat_toggled(enabled: bool) -> void:
 	auto_combat_enabled = enabled
 
-	# 🔑 Si se activa el auto-combat y hay un enemigo listo,
+	# ðŸ”‘ Si se activa el auto-combat y hay un enemigo listo,
 	# arrancamos inmediatamente una ronda.
 	if auto_combat_enabled and current_phase == BattlePhase.ENEMY_ACTIVE:
 		_start_combat()
@@ -589,13 +589,13 @@ func _refresh_all_card_views() -> void:
 
 # ==========================================
 # DRAW ENEMIGO (REAL)
-# Esta función NO cambia estado.
-# El estado se actualiza únicamente cuando
+# Esta funciÃ³n NO cambia estado.
+# El estado se actualiza Ãºnicamente cuando
 # la carta llega al slot (_set_enemy_active)
 # ==========================================
 
 func _draw_enemy() -> void:
-	# Verificación de seguridad: solo robamos si la mesa está vacía (IDLE)
+	# VerificaciÃ³n de seguridad: solo robamos si la mesa estÃ¡ vacÃ­a (IDLE)
 	if current_phase != BattlePhase.IDLE:
 		return
 	# Cambiamos a RESOLVING inmediatamente para bloquear otros robos
@@ -638,7 +638,7 @@ func _show_defeat() -> void:
 		add_child(defeat_popup)
 		defeat_popup.process_mode = Node.PROCESS_MODE_ALWAYS
 		defeat_popup.z_index = 100
-		# Conexión segura
+		# ConexiÃ³n segura
 		defeat_popup.back_to_menu_pressed.connect(_on_back_to_menu)
 
 	defeat_popup.show_popup()
@@ -674,7 +674,7 @@ func _show_victory() -> void:
 #######################################
 
 # ==========================================
-# ANIMACIÓN DE ATAQUE (HOVER + TAMBALÉO)
+# ANIMACIÃ“N DE ATAQUE (HOVER + TAMBALÃ‰O)
 # ==========================================
 
 func _play_attack_animation(attacker: CardView, target: CardView) -> void:
@@ -685,19 +685,19 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 	var start_pos: Vector2 = attacker.global_position
 	var target_pos: Vector2 = target.global_position
 
-	# Dirección hacia el objetivo
+	# DirecciÃ³n hacia el objetivo
 	var direction: Vector2 = (target_pos - start_pos).normalized()
 
 	# =========================
-	# PARÁMETROS DE ANIMACIÓN
+	# PARÃMETROS DE ANIMACIÃ“N
 	# =========================
 
-	var lift_height := 35.0              # cuánto flota
+	var lift_height := 35.0              # cuÃ¡nto flota
 	var attack_distance := 0.85          # porcentaje de la distancia real
 	var wiggle_amount := 10.0            # tambaleo lateral
-	var impact_recoil := 12.0            # pequeño rebote al impactar
+	var impact_recoil := 12.0            # pequeÃ±o rebote al impactar
 
-	# Cálculos
+	# CÃ¡lculos
 	var lift_offset := Vector2(0, -lift_height)
 	var full_distance := target_pos.distance_to(start_pos)
 	var attack_offset := direction * full_distance * attack_distance
@@ -713,7 +713,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 	tween.set_trans(Tween.TRANS_CUBIC)
 	tween.set_ease(Tween.EASE_OUT)
 
-	# 1️⃣ Levantar carta (hover)
+	# 1ï¸âƒ£ Levantar carta (hover)
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -721,7 +721,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.15
 	)
 
-	# 2️⃣ Tambaleo 1
+	# 2ï¸âƒ£ Tambaleo 1
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -729,7 +729,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.08
 	)
 
-	# 3️⃣ Tambaleo 2 (lado contrario)
+	# 3ï¸âƒ£ Tambaleo 2 (lado contrario)
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -737,7 +737,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.08
 	)
 
-	# 4️⃣ Avance fuerte hacia el enemigo
+	# 4ï¸âƒ£ Avance fuerte hacia el enemigo
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -745,7 +745,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.12
 	)
 
-	# 5️⃣ Micro recoil (impacto)
+	# 5ï¸âƒ£ Micro recoil (impacto)
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -753,7 +753,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.06
 	)
 
-	# 6️⃣ Volver a hover
+	# 6ï¸âƒ£ Volver a hover
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -761,7 +761,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.12
 	)
 
-	# 7️⃣ Volver a la mesa
+	# 7ï¸âƒ£ Volver a la mesa
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -772,7 +772,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 	await tween.finished
 
 # ==========================================
-# COMBAT MANAGER → VISUAL
+# COMBAT MANAGER â†’ VISUAL
 # ==========================================
 
 func _on_attack_started(attacker_id: String, target_id: String) -> void:

@@ -1,9 +1,12 @@
 [gd_resource type="Resource" script_class="TraitDatabase" load_steps=2 format=3 uid="uid://b2yfxt0giqctb"]
 
-[ext_resource type="Script" uid="uid://tevuasv0oa7k" path="res://data/traits/TraitDatabase.gd" id="2_pb50k"]
+[ext_resource type="Script" uid="uid://tevuasv0oa7k" path="res://data/traits/trait_database.gd" id="2_pb50k"]
 
 [resource]
 script = ExtResource("2_pb50k")
-hero_traits_folder = "res://scripts/game/traits/Hero"
-enemy_traits_folder = "res://scripts/game/traits/Enemy"
+hero_traits_folder = "res://scripts/game/traits/hero"
+enemy_traits_folder = "res://scripts/game/traits/enemy"
 metadata/_custom_type_script = "uid://tevuasv0oa7k"
+
+
+

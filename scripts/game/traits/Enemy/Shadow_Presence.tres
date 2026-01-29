@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://dkgwcugwiw40j"]
 
-[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/TraitResource.gd" id="1_g3xck"]
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_g3xck"]
 
 [resource]
 script = ExtResource("1_g3xck")
@@ -9,3 +9,6 @@ display_name = "TRAIT_SHADOW_PRESENCE_NAME"
 description = "Iniciativa +3."
 trait_type = 1
 enemy_add_initiative = 3
+
+
+

@@ -3,6 +3,7 @@ extends Control
 @export var use_3d_book: bool = true
 @export var slot_scene: PackedScene
 @export var card_view_scene: PackedScene
+@export var design_resolution: Vector2 = Vector2(1280, 720)
 
 @onready var title_label: Label = $TopBar/TitleLabel
 @onready var prev_button: Button = $TopBar/PrevButton
@@ -67,6 +68,7 @@ var open_cards: Array[CardView] = []
 var open_collection: PlayerCollection = null
 
 func _ready() -> void:
+	_configure_design_layout()
 	add_to_group("collection_root")
 	if use_3d_book:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -139,6 +141,25 @@ func _ready() -> void:
 	if open_popup_back:
 		open_popup_back.text = tr("COLLECTION_BOOSTER_BACK")
 		open_popup_back.pressed.connect(_on_add_all_pressed)
+
+func _configure_design_layout() -> void:
+	size = design_resolution
+	call_deferred("_apply_design_layout")
+	var vp := get_viewport()
+	if vp:
+		vp.size_changed.connect(_apply_design_layout)
+
+func _apply_design_layout() -> void:
+	var vp := get_viewport()
+	if vp == null:
+		return
+	var view := vp.get_visible_rect().size
+	if view == Vector2.ZERO:
+		return
+	var ratio: float = min(view.x / design_resolution.x, view.y / design_resolution.y)
+	scale = Vector2.ONE * ratio
+	size = design_resolution
+	position = (view - design_resolution * ratio) * 0.5
 
 func _on_page_slot_clicked(slot: CollectionSlot) -> void:
 	_on_slot_clicked(slot)

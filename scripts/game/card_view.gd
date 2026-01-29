@@ -50,7 +50,7 @@ func _setup_flip_sfx() -> void:
 	add_child(flip_sfx)
 
 # =========================
-# SETUP (ESTÁTICO)
+# SETUP (ESTÃTICO)
 # =========================
 
 func setup_from_definition(definition: CardDefinition) -> void:
@@ -219,7 +219,7 @@ func _fit_art(max_size: Vector2) -> void:
 	art.scale = Vector2(scale_factor, scale_factor)
 
 # ==========================================
-# AJUSTE AUTOMÁTICO DE TEXTO
+# AJUSTE AUTOMÃTICO DE TEXTO
 # ==========================================
 
 func _fit_label_text(

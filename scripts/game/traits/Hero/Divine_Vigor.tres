@@ -1,10 +1,13 @@
 [gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://bu44n605pcs1t"]
 
-[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/TraitResource.gd" id="1_33wvw"]
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_33wvw"]
 
 [resource]
 script = ExtResource("1_33wvw")
 trait_id = "Divine_Vigor"
 display_name = "TRAIT_DIVINE_VIGOR_NAME"
-description = "Vida máxima +2."
+description = "Vida mÃ¡xima +2."
 hero_max_hp_bonus = 2
+
+
+

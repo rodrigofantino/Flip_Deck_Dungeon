@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://bs1p7qv7lmtjr"]
 
-[ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/CardDefinition.gd" id="1_e8p1m"]
+[ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/card_definition.gd" id="1_e8p1m"]
 [ext_resource type="Texture2D" uid="uid://drfn6e6nga2ed" path="res://assets/cards/art/tutorial_forest_spirit.png" id="1_y4wcp"]
-[ext_resource type="Texture2D" uid="uid://dfbhfgvv73pq0" path="res://assets/cards/frame/Card Forest Front.png" id="2_y5c37"]
+[ext_resource type="Texture2D" uid="uid://dfbhfgvv73pq0" path="res://assets/cards/frame/card_forest_front.png" id="2_y5c37"]
 
 [resource]
 script = ExtResource("1_e8p1m")
@@ -23,3 +23,7 @@ card_type = "enemy"
 is_persistent = true
 is_tutorial = true
 biome_modifier = "Base Set"
+
+
+
+

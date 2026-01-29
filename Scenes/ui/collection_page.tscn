@@ -1,9 +1,9 @@
 [gd_scene load_steps=2 format=3 uid="uid://b4dyg0k7v2u5v"]
 
-[ext_resource type="Script" uid="uid://c3w6u2v8f1a9t" path="res://scripts/UI/collection_page.gd" id="1_page"]
+[ext_resource type="Script" uid="uid://bxrrklixsvymq" path="res://scripts/UI/collection_page.gd" id="1_page"]
 
 [node name="CollectionPage" type="Control"]
-layout_mode = 1
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

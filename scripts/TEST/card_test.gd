@@ -2,7 +2,7 @@ extends Control
 
 @onready var cards_container: VBoxContainer = $CardsContainer
 
-var card_scene := preload("res://Scenes/cards/Card_base.tscn")
+var card_scene: PackedScene = preload("res://Scenes/cards/card_view.tscn")
 
 
 func _ready() -> void:

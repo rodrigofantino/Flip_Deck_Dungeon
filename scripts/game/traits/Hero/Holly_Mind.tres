@@ -1,10 +1,13 @@
 [gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://cvk4es14v3kkw"]
 
-[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/TraitResource.gd" id="1_mkq8b"]
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_mkq8b"]
 
 [resource]
 script = ExtResource("1_mkq8b")
 trait_id = "Holly_Mind"
 display_name = "TRAIT_HOLY_MIND_NAME"
-description = "Vida máxima x1.4."
+description = "Vida mÃ¡xima x1.4."
 hero_hp_multiplier = 1.4
+
+
+

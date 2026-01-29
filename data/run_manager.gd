@@ -18,7 +18,7 @@ var cards := {}
 var enemy_draw_queue: Array[Dictionary] = [] # orden real de robo
 
 # =========================
-# SEÑALES DE PROGRESIÓN
+# SEÃ‘ALES DE PROGRESIÃ“N
 # =========================
 
 signal gold_changed(new_gold: int)
@@ -26,7 +26,7 @@ signal danger_level_changed(new_danger: int)
 signal enemy_stats_changed()
 
 # =========================
-# ESTADO ECONOMÍA / RIESGO
+# ESTADO ECONOMÃA / RIESGO
 # =========================
 
 var gold: int = 0
@@ -43,7 +43,7 @@ var selection_pending: bool = false
 var active_enemy_id: String = ""
 
 # =========================
-# PROGRESIÓN DEL JUGADOR
+# PROGRESIÃ“N DEL JUGADOR
 # =========================
 
 signal hero_xp_changed(current_xp: int, xp_to_next: int)
@@ -91,7 +91,7 @@ func init_run() -> void:
 		_build_cards_from_run_deck()
 		_sync_hero_card_level(false)
 
-	# 🔑 APLICAR TRAITS ACTIVOS A ENEMIGOS YA EXISTENTES
+	# ðŸ”‘ APLICAR TRAITS ACTIVOS A ENEMIGOS YA EXISTENTES
 	for card in cards.values():
 		if card.get("id", "") == "th":
 			recalc_card_stats(card, active_hero_traits)
@@ -136,7 +136,7 @@ func create_card_instance(
 
 	cards[id] = card
 
-	# 🔑 APLICAR TRAITS ACTIVOS
+	# ðŸ”‘ APLICAR TRAITS ACTIVOS
 	if id == "th":
 		recalc_card_stats(card, active_hero_traits)
 	else:
@@ -144,7 +144,7 @@ func create_card_instance(
 
 
 	# =========================
-	# 🧬 APLICAR TRAITS A ENEMIGOS NUEVOS
+	# ðŸ§¬ APLICAR TRAITS A ENEMIGOS NUEVOS
 	# =========================
 	if id != "th":
 		for trait_res: TraitResource in active_enemy_traits:
@@ -213,7 +213,7 @@ func draw_enemy_card() -> Dictionary:
 	recalc_card_stats(enemy, active_enemy_traits)
 
 	print(
-		"[DRAW] TOP OF DECK →",
+		"[DRAW] TOP OF DECK â†’",
 		enemy.get("definition", "???"),
 		"| Power:",
 		calculate_enemy_power(enemy),
@@ -634,7 +634,7 @@ func prepare_progressive_deck() -> void:
 	print("[DECK READY] Orden final:")
 	for i in range(enemy_draw_queue.size()):
 		var enemy := enemy_draw_queue[i]
-		print(" ", i, "→", enemy.get("id", "?"), "| def:", enemy.get("definition", "?"), "| collection:", enemy.get("collection_id", ""))
+		print(" ", i, "â†’", enemy.get("id", "?"), "| def:", enemy.get("definition", "?"), "| collection:", enemy.get("collection_id", ""))
 
 	# =========================
 	# RECALCULAR RIESGO
@@ -643,7 +643,7 @@ func prepare_progressive_deck() -> void:
 
 	
 # =========================
-# APLICACIÓN DE TRAITS
+# APLICACIÃ“N DE TRAITS
 # =========================
 func apply_hero_trait(trait_res: TraitResource) -> void:
 	if trait_res == null:

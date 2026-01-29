@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://o831bjxon7k0"
-path="res://.godot/imported/Halther.ttf-f918306f9c7b389d71f10e92c984cbfa.fontdata"
+uid="uid://bitkw1lsb0ex5"
+path="res://.godot/imported/halther.ttf-f4c7c305bea95c54c481b2cb501847bf.fontdata"
 
 [deps]
 
-source_file="res://data/Halther.ttf"
-dest_files=["res://.godot/imported/Halther.ttf-f918306f9c7b389d71f10e92c984cbfa.fontdata"]
+source_file="res://data/halther.ttf"
+dest_files=["res://.godot/imported/halther.ttf-f4c7c305bea95c54c481b2cb501847bf.fontdata"]
 
 [params]
 

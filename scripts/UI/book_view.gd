@@ -15,12 +15,35 @@ extends Control
 @export var closed_front_offset: Vector2 = Vector2.ZERO : set = _set_closed_front_offset
 @export var closed_back_offset: Vector2 = Vector2.ZERO : set = _set_closed_back_offset
 @export var debug_book: bool = false
+@export var perspective_top_inset_px: float = 30.0
+@export var perspective_top_drop_px: float = 28.0
+@export var perspective_top_tilt_px: float = 12.0
+@export var perspective_transition_duration: float = 0.35
+@export var supported_transition_duration: float = 0.35
+@export var supported: bool = true
+@export var perspective_debug_print: bool = false
 
 @onready var book: PageFlip2D = $Book
 var _resize_version: int = 0
 var _center_tween: Tween = null
 var _pending_open: bool = false
 var _base_scale: Vector2 = Vector2.ONE
+
+enum BookPerspectiveState {
+	CLOSED,
+	OPEN,
+	OPENING,
+	CLOSING,
+}
+
+var _visual_state: int = BookPerspectiveState.CLOSED
+var _rest_blend: float = 0.0
+var _rest_tween: Tween = null
+var _deform_targets: Array = []
+var _was_animating: bool = false
+var _supported_internal: bool = true
+var _sort_reference_vertices: PackedVector2Array = PackedVector2Array()
+var _last_logged_rest_blend: float = -1.0
 
 func _enter_tree() -> void:
 	var node := get_node_or_null("Book")
@@ -42,6 +65,9 @@ func _ready() -> void:
 	if vp:
 		vp.size_changed.connect(_on_viewport_resized)
 	resized.connect(_on_container_resized)
+	call_deferred("_cache_deform_targets")
+	call_deferred("_initialize_perspective_state")
+	set_process(true)
 
 func _configure_book() -> void:
 	book.start_option = PageFlip2D.StartOption.CLOSED_FROM_FRONT
@@ -84,6 +110,31 @@ func _prepare_collection_pages() -> void:
 	book.call("_prepare_book_content")
 	book.call("_update_static_visuals_immediate")
 	book.call("_update_volume_visuals")
+	_ensure_visual_deform_targets()
+	call_deferred("_cache_deform_targets")
+
+func _ensure_visual_deform_targets() -> void:
+	if not book:
+		return
+	var visual := book.get_node_or_null("Visual")
+	if visual == null:
+		return
+	var targets := {
+		"StaticPageLeft": "front",
+		"StaticPageRight": "back"
+	}
+	for name in targets.keys():
+		var node := visual.get_node_or_null(name)
+		if node and node is Polygon2D:
+			_set_deform_metadata(node as Polygon2D, targets[name])
+
+func _set_deform_metadata(target: Polygon2D, side: String) -> void:
+	if not target:
+		return
+	if not target.is_in_group("book_deform_target"):
+		target.add_to_group("book_deform_target")
+	if not target.has_meta("book_side"):
+		target.set_meta("book_side", side)
 
 func _tune_page_curvature() -> void:
 	if book.dynamic_poly == null:
@@ -441,6 +492,198 @@ func _force_visibility() -> void:
 	if book.visuals_container:
 		book.visuals_container.visible = true
 
+func _process(_delta: float) -> void:
+	if book == null:
+		return
+	if supported != _supported_internal:
+		_supported_internal = supported
+		_update_supported_target()
+	_update_book_state()
+	_apply_deformations()
+
+func _update_book_state() -> void:
+	var animating := book.is_animating
+	if animating and not _was_animating:
+		_on_book_animation_started()
+	elif not animating and _was_animating:
+		_on_book_animation_finished()
+	_was_animating = animating
+	if not animating:
+		var desired := BookPerspectiveState.OPEN if book.is_book_open else BookPerspectiveState.CLOSED
+		if _visual_state != desired:
+			_set_visual_state(desired)
+
+func _on_book_animation_started() -> void:
+	var target := BookPerspectiveState.OPENING if book.is_book_open else BookPerspectiveState.CLOSING
+	_set_visual_state(target)
+
+func _on_book_animation_finished() -> void:
+	var final_state := BookPerspectiveState.OPEN if book.is_book_open else BookPerspectiveState.CLOSED
+	_set_visual_state(final_state)
+
+func _set_visual_state(state: int) -> void:
+	if _visual_state == state:
+		return
+	_visual_state = state
+	match state:
+		BookPerspectiveState.OPEN:
+			_set_rest_blend(0.0, 0.0, true)
+		BookPerspectiveState.OPENING:
+			_set_rest_blend(0.0, perspective_transition_duration, false)
+		BookPerspectiveState.CLOSING:
+			var target := 1.0 if _supported_internal else 0.0
+			_set_rest_blend(target, supported_transition_duration, false)
+		BookPerspectiveState.CLOSED:
+			var target := 1.0 if _supported_internal else 0.0
+			_set_rest_blend(target, supported_transition_duration, false)
+
+func _set_rest_blend(target: float, duration: float, immediate: bool) -> void:
+	target = clamp(target, 0.0, 1.0)
+	if immediate or duration <= 0.0:
+		_rest_blend = target
+		if _rest_tween:
+			_rest_tween.kill()
+		_log_perspective_state()
+		return
+	if _rest_tween and _rest_tween.is_running():
+		_rest_tween.kill()
+	_rest_tween = create_tween()
+	_rest_tween.tween_property(self, "_rest_blend", target, duration).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_log_perspective_state()
+
+func _update_supported_target() -> void:
+	if _visual_state in [BookPerspectiveState.CLOSING, BookPerspectiveState.CLOSED]:
+		var target := 1.0 if _supported_internal else 0.0
+		_set_rest_blend(target, supported_transition_duration, false)
+
+func _cache_deform_targets() -> void:
+	_deform_targets.clear()
+	print("[Perspective] caching deform targets")
+	for node in get_tree().get_nodes_in_group("book_deform_target"):
+		if not book or not book.is_ancestor_of(node):
+			continue
+		if not node is Polygon2D:
+			continue
+		var poly := node as Polygon2D
+		var base := poly.polygon.duplicate()
+		if base.size() < 4:
+			continue
+		var sorted_indices := _sort_vertex_indices_by_y(base)
+		print("[Perspective] node %s top indices %s" % [node.name, sorted_indices])
+		if sorted_indices == null or sorted_indices.size() < 4:
+			continue
+		var top_pair := sorted_indices.slice(0, 2)
+		var tl_idx := int(top_pair[0])
+		var tr_idx := int(top_pair[1])
+		var top_left := base[tl_idx]
+		var top_right := base[tr_idx]
+		if top_right.x < top_left.x:
+			var temp := tl_idx
+			tl_idx = tr_idx
+			tr_idx = temp
+			top_left = base[tl_idx]
+			top_right = base[tr_idx]
+		var side := _determine_target_side(node)
+		_deform_targets.append({
+			"node": poly,
+			"base": base,
+			"top_left_idx": tl_idx,
+			"top_right_idx": tr_idx,
+			"side": side,
+		})
+	print("[Perspective] cached targets count:", _deform_targets.size())
+
+func _initialize_perspective_state() -> void:
+	_visual_state = BookPerspectiveState.OPEN if book and book.is_book_open else BookPerspectiveState.CLOSED
+	_supported_internal = supported
+	_rest_blend = 0.0 if _visual_state == BookPerspectiveState.OPEN else (1.0 if _supported_internal else 0.0)
+	_apply_deformations()
+
+func _apply_deformations() -> void:
+	if _deform_targets.size() == 0:
+		return
+	var effective_inset := perspective_top_inset_px * _rest_blend
+	var effective_drop := perspective_top_drop_px * _rest_blend
+	var effective_tilt := perspective_top_tilt_px * _rest_blend
+	if perspective_debug_print:
+		var message := "[Perspective] blend=%.3f inset=%.1f drop=%.1f tilt=%.1f" % [_rest_blend, effective_inset, effective_drop, effective_tilt]
+		print(message)
+	for info in _deform_targets:
+		_apply_supported_deform(info, effective_inset, effective_drop, effective_tilt)
+
+func _apply_supported_deform(info: Dictionary, effective_inset: float, effective_drop: float, effective_tilt: float) -> void:
+	var base := info["base"] as PackedVector2Array
+	var nodes := (info["node"] as Polygon2D)
+	var vertices := base.duplicate()
+	var tl_idx := int(info["top_left_idx"])
+	var tr_idx := int(info["top_right_idx"])
+	var side := str(info["side"])
+	var top_left := vertices[tl_idx]
+	var top_right := vertices[tr_idx]
+	if perspective_debug_print:
+		print("[Perspective] before deform (%s) top L=%s R=%s" % [side, top_left, top_right])
+	top_left.y += effective_drop
+	top_right.y += effective_drop
+	if side == "front":
+		top_right.y += effective_tilt
+		top_right.x -= effective_inset
+	elif side == "back":
+		top_left.y += effective_tilt
+		top_left.x += effective_inset
+	if perspective_debug_print:
+		print("[Perspective] after deform (%s) top L=%s R=%s inset=%.1f drop=%.1f tilt=%.1f" % [side, top_left, top_right, effective_inset, effective_drop, effective_tilt])
+	vertices[tl_idx] = top_left
+	vertices[tr_idx] = top_right
+	nodes.polygon = vertices
+
+func _log_perspective_state() -> void:
+	if not perspective_debug_print:
+		return
+	if abs(_rest_blend - _last_logged_rest_blend) < 0.001:
+		return
+	_last_logged_rest_blend = _rest_blend
+	var status := ""
+	match _visual_state:
+		BookPerspectiveState.OPEN:
+			status = "OPEN"
+		BookPerspectiveState.OPENING:
+			status = "OPENING"
+		BookPerspectiveState.CLOSING:
+			status = "CLOSING"
+		BookPerspectiveState.CLOSED:
+			status = "CLOSED"
+	print("[Perspective State] %s blend=%.3f" % [status, _rest_blend])
+
+func _determine_target_side(node: Node) -> String:
+	var meta_side := ""
+	if node.has_meta("book_side"):
+		meta_side = str(node.get_meta("book_side")).to_lower()
+	if meta_side in ["front", "back"]:
+		return meta_side
+	var ln := node.name.to_lower()
+	if ln.find("right") != -1 or ln.find("back") != -1:
+		return "back"
+	return "front"
+
+func _sort_vertex_indices_by_y(base: PackedVector2Array) -> Array:
+	var indices := []
+	for i in range(base.size()):
+		indices.append(i)
+	_sort_reference_vertices = base
+	var compare_ref := Callable(self, "_compare_vertex_y")
+	indices.sort_custom(compare_ref)
+	_sort_reference_vertices = PackedVector2Array()
+	return indices
+
+func _compare_vertex_y(a: int, b: int) -> int:
+	var va := _sort_reference_vertices[a]
+	var vb := _sort_reference_vertices[b]
+	if va.y < vb.y:
+		return -1
+	if va.y > vb.y:
+		return 1
+	return 0
+
 func _set_open_center_offset(value: Vector2) -> void:
 	open_center_offset = value
 	if not is_inside_tree():
@@ -476,4 +719,10 @@ func _initial_layout() -> void:
 	_apply_book_scale()
 	_apply_book_position()
 	_force_visibility()
+	_apply_saved_offsets()
 	_dbg("initial_layout")
+
+func _apply_saved_offsets() -> void:
+	_set_open_center_offset(open_center_offset)
+	_set_closed_front_offset(closed_front_offset)
+	_set_closed_back_offset(closed_back_offset)

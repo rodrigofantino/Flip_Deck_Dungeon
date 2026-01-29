@@ -8,3 +8,5 @@ instance_id = "test_001"
 definition_id = "slime"
 current_hp = 10
 metadata/_custom_type_script = "uid://7ny2d24d52h4"
+
+

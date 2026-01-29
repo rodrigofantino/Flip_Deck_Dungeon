@@ -1,11 +1,14 @@
 [gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://4soefvveoxi2"]
 
-[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/TraitResource.gd" id="1_5d77d"]
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_5d77d"]
 
 [resource]
 script = ExtResource("1_5d77d")
 trait_id = "Cursed_Growth"
 display_name = "Cursed Growth"
-description = "Daño x1.5."
+description = "DaÃ±o x1.5."
 trait_type = 1
 enemy_damage_multiplier = 1.5
+
+
+

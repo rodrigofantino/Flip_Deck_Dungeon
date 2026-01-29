@@ -6,10 +6,10 @@ uid="uid://ctetxeh4paqcs"
 
 [deps]
 
-files=["res://assets/Localization/cards_Hero.en.translation", "res://assets/Localization/cards_Hero.es.translation"]
+files=["res://assets/localization/cards_hero.en.translation", "res://assets/localization/cards_hero.es.translation"]
 
-source_file="res://assets/Localization/cards_Hero.csv"
-dest_files=["res://assets/Localization/cards_Hero.en.translation", "res://assets/Localization/cards_Hero.es.translation"]
+source_file="res://assets/localization/cards_hero.csv"
+dest_files=["res://assets/localization/cards_hero.en.translation", "res://assets/localization/cards_hero.es.translation"]
 
 [params]
 

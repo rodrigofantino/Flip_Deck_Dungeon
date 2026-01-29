@@ -1,11 +1,14 @@
 [gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://7fxj6bbnkaes"]
 
-[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/TraitResource.gd" id="1_81oov"]
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_81oov"]
 
 [resource]
 script = ExtResource("1_81oov")
 trait_id = "Impending_Growth"
 display_name = "TRAIT_IMPENDING_GROUWTH_NAME"
-description = "Vida máxima x1.8."
+description = "Vida mÃ¡xima x1.8."
 trait_type = 1
 enemy_hp_multiplier = 1.8
+
+
+

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://b3dr60j30wwxu"]
 
 [ext_resource type="Script" uid="uid://ksj73vg3vfbj" path="res://scripts/menu/main_menu.gd" id="1_c2fhx"]
-[ext_resource type="Texture2D" uid="uid://c7uto46yotucv" path="res://assets/flip dungeon wllpaper.png" id="2_e23ap"]
+[ext_resource type="Texture2D" uid="uid://dtyuf4oohobib" path="res://assets/flip_dungeon_wllpaper.png" id="2_e23ap"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -36,7 +36,7 @@ horizontal_alignment = 1
 
 [node name="GoldLabel" type="Label" parent="."]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -220.0
@@ -49,7 +49,7 @@ horizontal_alignment = 2
 
 [node name="DevResetButton" type="Button" parent="."]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -220.0
@@ -61,7 +61,7 @@ text = "Development: Reset Progress"
 
 [node name="DevAddGoldButton" type="Button" parent="."]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -220.0
@@ -120,8 +120,8 @@ custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 text = "Settings"
 
-[connection signal="pressed" from="VBoxContainer/PlayButton" to="." method="_on_p_lay_pressed"]
 [connection signal="pressed" from="VBoxContainer/ContinueButton" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="VBoxContainer/PlayButton" to="." method="_on_p_lay_pressed"]
 [connection signal="pressed" from="VBoxContainer/TutorialButton" to="." method="_on_tutorial_pressed"]
 [connection signal="pressed" from="VBoxContainer/ShopButton" to="." method="_on_shop_pressed"]
 [connection signal="pressed" from="VBoxContainer/CollectionButton" to="." method="_on_collection_pressed"]

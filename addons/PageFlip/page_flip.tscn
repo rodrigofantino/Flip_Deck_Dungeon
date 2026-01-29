@@ -2,13 +2,13 @@
 
 [ext_resource type="Script" uid="uid://ctw83iqgqxjjt" path="res://addons/PageFlip/page_flip.gd" id="1_h83wc"]
 [ext_resource type="Script" uid="uid://ce5ib2f4qff24" path="res://addons/PageFlip/page_rigger.gd" id="1_jnpse"]
-[ext_resource type="AudioStream" uid="uid://bhitebdghyhua" path="res://addons/PageFlip/Assets/book_impact.ogg" id="2_7r0mx"]
-[ext_resource type="Texture2D" uid="uid://cen51wqc15b14" path="res://addons/PageFlip/Assets/blank_page.png" id="2_71hrr"]
-[ext_resource type="Texture2D" uid="uid://cit41jypw2sy1" path="res://addons/PageFlip/Assets/spine.png" id="2_c7gpb"]
-[ext_resource type="Texture2D" uid="uid://dbdwbowx32d3v" path="res://addons/PageFlip/Assets/front.png" id="2_gkj0d"]
-[ext_resource type="AudioStream" uid="uid://bylfc3b5pmbij" path="res://addons/PageFlip/Assets/page_flip.ogg" id="3_c7gpb"]
-[ext_resource type="Texture2D" uid="uid://dt1tiecgw5rip" path="res://addons/PageFlip/Assets/interior.png" id="3_hqhik"]
-[ext_resource type="Texture2D" uid="uid://bjowpx1ap4uxt" path="res://addons/PageFlip/Assets/back.png" id="4_7r0mx"]
+[ext_resource type="AudioStream" uid="uid://qdctvpacd4hm" path="res://addons/PageFlip/Assets/book_impact.ogg" id="2_7r0mx"]
+[ext_resource type="Texture2D" uid="uid://3iagviu771sg" path="res://addons/PageFlip/Assets/blank_page.png" id="2_71hrr"]
+[ext_resource type="Texture2D" uid="uid://bk8eovep3h50g" path="res://addons/PageFlip/Assets/spine.png" id="2_c7gpb"]
+[ext_resource type="Texture2D" uid="uid://dhbfkfvujar0h" path="res://addons/PageFlip/Assets/front.png" id="2_gkj0d"]
+[ext_resource type="AudioStream" uid="uid://dlic1ltodib1v" path="res://addons/PageFlip/Assets/page_flip.ogg" id="3_c7gpb"]
+[ext_resource type="Texture2D" uid="uid://byickwptejra5" path="res://addons/PageFlip/Assets/interior.png" id="3_hqhik"]
+[ext_resource type="Texture2D" uid="uid://pa1n0qu28cwi" path="res://addons/PageFlip/Assets/back.png" id="4_7r0mx"]
 
 [sub_resource type="Shader" id="Shader_cuh5i"]
 code = "
@@ -1483,7 +1483,6 @@ stripe_darken_ratio = 0.848
 sfx_book_impact = ExtResource("2_7r0mx")
 sfx_page_flip = ExtResource("3_c7gpb")
 audio_player = NodePath("AudioStreamPlayer")
-pages_paths = Array[String](["uid://bblt4uih5pvaq", "uid://cjuuqqpxyvn1a", "uid://dnh24tb3nt53d"])
 tex_cover_front_out = ExtResource("2_gkj0d")
 tex_cover_front_in = ExtResource("3_hqhik")
 tex_cover_back_in = ExtResource("3_hqhik")
@@ -1556,12 +1555,16 @@ position = Vector2(-512, 0)
 polygon = PackedVector2Array(0, -410, 512, -410, 512, 410, 0, 410)
 uv = PackedVector2Array(0, 0, 512, 0, 512, 820, 0, 820)
 polygons = [PackedInt32Array(0, 1, 2, 3)]
+groups = ["book_deform_target"]
+metadata/book_side = "front"
 
 [node name="StaticPageRight" type="Polygon2D" parent="Visual"]
 z_index = 1
 polygon = PackedVector2Array(0, -410, 512, -410, 512, 410, 0, 410)
 uv = PackedVector2Array(0, 0, 512, 0, 512, 820, 0, 820)
 polygons = [PackedInt32Array(0, 1, 2, 3)]
+groups = ["book_deform_target"]
+metadata/book_side = "back"
 
 [node name="DynamicFlipPoly" type="Polygon2D" parent="Visual" node_paths=PackedStringArray("anim_player")]
 z_index = 10
@@ -1978,3 +1981,5 @@ position = Vector2(-256, 0)
 zoom = Vector2(0.4390244, 0.4390244)
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+
+

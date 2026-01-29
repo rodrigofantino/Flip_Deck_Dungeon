@@ -30,7 +30,7 @@ func _refresh_texts() -> void:
 
 func _on_language_pressed() -> void:
 	LocalizationManager.next_language()
-	_refresh_texts() # 🔑 refrescás SOLO ESTA PANTALLA
+	_refresh_texts() # ðŸ”‘ refrescÃ¡s SOLO ESTA PANTALLA
 
 func _on_back_pressed() -> void:
 	get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")

@@ -11,6 +11,13 @@ const COLLECTION_SAVE_PATH := "user://save/card_collection.json"
 # Ruta del archivo de guardado de la colección base
 const RUN_DECK_SAVE_PATH := "user://save/run_deck.json"
 # Ruta del archivo de guardado del deck de la run actual
+const DEFAULT_TUTORIAL_COUNTS := {
+	"hero_knight": 1,
+	"slime": 3,
+	"wolf": 3,
+	"spider": 3,
+	"forest_spirit": 1
+}
 
 
 # =========================
@@ -120,7 +127,7 @@ static func ensure_collection() -> PlayerCollection:
 	if existing != null and _is_valid_tutorial_collection(existing):
 		return existing
 
-	var collection := _build_default_collection()
+	var collection := build_default_tutorial_collection()
 	save_collection(collection)
 	return collection
 
@@ -153,6 +160,9 @@ static func reset_progress() -> void:
 		DirAccess.remove_absolute("user://save/save_run.json")
 	ensure_collection()
 
+static func build_default_tutorial_collection() -> PlayerCollection:
+	return _build_default_collection()
+
 
 static func _build_default_collection() -> PlayerCollection:
 	var collection := PlayerCollection.new()
@@ -160,25 +170,16 @@ static func _build_default_collection() -> PlayerCollection:
 	if CardDatabase.definitions.is_empty():
 		CardDatabase.load_definitions()
 
-	var def_hero: CardDefinition = CardDatabase.get_definition("hero_knight")
-	var def_slime: CardDefinition = CardDatabase.get_definition("slime")
-	var def_wolf: CardDefinition = CardDatabase.get_definition("wolf")
-	var def_spider: CardDefinition = CardDatabase.get_definition("spider")
-	var def_spirit: CardDefinition = CardDatabase.get_definition("forest_spirit")
-
-	if def_hero != null:
-		collection.add_card(_build_instance(def_hero))
-	if def_slime != null:
-		for i in range(3):
-			collection.add_card(_build_instance(def_slime))
-	if def_wolf != null:
-		for i in range(3):
-			collection.add_card(_build_instance(def_wolf))
-	if def_spider != null:
-		for i in range(3):
-			collection.add_card(_build_instance(def_spider))
-	if def_spirit != null:
-		collection.add_card(_build_instance(def_spirit))
+	for def_id in DEFAULT_TUTORIAL_COUNTS.keys():
+		var def: CardDefinition = CardDatabase.get_definition(def_id)
+		if def == null:
+			push_warning("[SaveSystem] Falta definicion tutorial: " + def_id)
+			continue
+		if not def.is_tutorial:
+			push_warning("[SaveSystem] La definicion no es tutorial: " + def_id)
+		var count := int(DEFAULT_TUTORIAL_COUNTS[def_id])
+		for i in range(count):
+			collection.add_card(_build_instance(def))
 
 	return collection
 
@@ -204,24 +205,19 @@ static func _is_valid_tutorial_collection(collection: PlayerCollection) -> bool:
 	if collection == null:
 		return false
 
-	var counts := {
-		"hero_knight": 0,
-		"slime": 0,
-		"wolf": 0,
-		"spider": 0,
-		"forest_spirit": 0
-	}
+	var counts := {}
+	for def_id in DEFAULT_TUTORIAL_COUNTS.keys():
+		counts[def_id] = 0
 
 	for card in collection.get_all_cards():
 		var def_id := String(card.definition_id)
 		if counts.has(def_id):
 			counts[def_id] += 1
 
-	return counts["hero_knight"] == 1 \
-		and counts["slime"] == 3 \
-		and counts["wolf"] == 3 \
-		and counts["spider"] == 3 \
-		and counts["forest_spirit"] == 1
+	for def_id in DEFAULT_TUTORIAL_COUNTS.keys():
+		if counts.get(def_id, 0) != int(DEFAULT_TUTORIAL_COUNTS[def_id]):
+			return false
+	return true
 
 
 # =========================

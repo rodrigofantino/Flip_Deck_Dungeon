@@ -2,18 +2,22 @@
 
 [ext_resource type="Script" uid="uid://cnp4m15bflwr1" path="res://scripts/UI/trait_card.gd" id="1_sre6j"]
 [ext_resource type="Shader" uid="uid://drvu7g3tqytn7" path="res://shaders/folio_ui.gdshader" id="2_do2nj"]
-[ext_resource type="Texture2D" uid="uid://bpce1qatafbe2" path="res://assets/shaders/white_shader.png" id="3_2bn80"]
+[ext_resource type="Texture2D" uid="uid://v66da6lv2dth" path="res://assets/shaders/white_shader.png" id="3_2bn80"]
 [ext_resource type="Script" uid="uid://46ya5adlp6ec" path="res://scripts/UI/hover_tilt.gd" id="4_qvmol"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_orh1m"]
 shader = ExtResource("2_do2nj")
-shader_parameter/opacity = 0.15
-shader_parameter/gloss = 0.14800000703
+shader_parameter/distortion_strength = 0.02
+shader_parameter/reflect_strength = 0.08
+shader_parameter/alpha_strength = 0.06
+shader_parameter/foil_dir = Vector2(0, 0)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ciy0v"]
 shader = ExtResource("2_do2nj")
-shader_parameter/opacity = 0.08
-shader_parameter/gloss = 0.15
+shader_parameter/distortion_strength = 0.02
+shader_parameter/reflect_strength = 0.08
+shader_parameter/alpha_strength = 0.06
+shader_parameter/foil_dir = Vector2(0, 0)
 
 [node name="TraitCard" type="Control"]
 layout_mode = 3
@@ -63,6 +67,5 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_trim_flags = 128
 
-[node name="HoverTilt" type="Node" parent="PanelContainer/MarginContainer" node_paths=PackedStringArray("target")]
+[node name="HoverTilt" type="Node" parent="PanelContainer/MarginContainer"]
 script = ExtResource("4_qvmol")
-target = NodePath("../../..")

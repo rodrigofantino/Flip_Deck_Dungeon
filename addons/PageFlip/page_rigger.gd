@@ -294,7 +294,7 @@ func _create_rig_logic(current_page_size: Vector2 = Vector2.ZERO):
 	# Prepare Gradient Texture
 	var applied_shadow_tex: Texture2D = null
 	if not shadow_gradient:
-		shadow_gradient = preload("uid://rm7bporlv3cf")
+		shadow_gradient = preload("res://addons/PageFlip/Assets/shadow_gradient.tres")
 	var dup = shadow_gradient.duplicate()
 	if dup is GradientTexture2D:
 		dup.width = int(tex_size.x)

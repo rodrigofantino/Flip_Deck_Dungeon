@@ -92,16 +92,18 @@ func _apply_book_scale() -> void:
 		return
 	book.scale = Vector2.ONE
 	var cam := book.get_node_or_null("Camera2D")
-	if cam:
-		var camera := cam as Camera2D
-		camera.make_current()
-		var view_h := get_viewport().get_visible_rect().size.y
-		if view_h > 0.0:
-			var total_book_h := book.target_page_size.y
-			var zoom := (view_h * fit_height_ratio) / total_book_h
-			camera.zoom = Vector2(zoom, zoom)
-		else:
-			camera.zoom = Vector2(fixed_zoom, fixed_zoom)
+	if not cam:
+		return
+	var camera := cam as Camera2D
+	camera.make_current()
+	var view_size := _get_viewport_size()
+	var view_h := view_size.y
+	if view_h <= 0.0:
+		camera.zoom = Vector2(fixed_zoom, fixed_zoom)
+		return
+	var total_book_h := book.target_page_size.y
+	var zoom := (view_h * fit_height_ratio) / total_book_h
+	camera.zoom = Vector2(zoom, zoom)
 
 func _apply_book_position() -> void:
 	if book == null:
@@ -109,7 +111,7 @@ func _apply_book_position() -> void:
 	var vc := book.visuals_container
 	if vc == null:
 		return
-	var view := get_viewport().get_visible_rect().size
+	var view := _get_viewport_size()
 	var half_width := book.target_page_size.x * 0.5
 	if book.is_book_open:
 		vc.global_position = Vector2(view.x * 0.5 - half_width, view.y * 0.5)
@@ -118,6 +120,15 @@ func _apply_book_position() -> void:
 		vc.global_position = Vector2(view.x * 0.5 - half_width, y)
 		vc.skew = 0.0
 		vc.rotation = 0.0
+
+func _get_viewport_size() -> Vector2:
+	var vp := get_viewport()
+	if not vp:
+		return Vector2.ZERO
+	var visible := vp.get_visible_rect().size
+	if visible != Vector2.ZERO:
+		return visible
+	return vp.size
 
 func _deferred_show_book() -> void:
 	await get_tree().process_frame
@@ -148,3 +159,6 @@ func _wire_ui() -> void:
 	back_button.pressed.connect(func() -> void:
 		get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")
 	)
+
+
+

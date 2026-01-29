@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c4k1u2r3s4h5p"]
 
-[ext_resource type="Script" uid="uid://d7h8o9p0s1h2p" path="res://scripts/UI/shop.gd" id="1_s0h0p"]
+[ext_resource type="Script" uid="uid://etgdbpmlm7cx" path="res://scripts/UI/shop.gd" id="1_s0h0p"]
 
 [node name="Shop" type="Control"]
 layout_mode = 3
@@ -30,12 +30,12 @@ offset_top = 20.0
 offset_right = 140.0
 offset_bottom = 50.0
 grow_horizontal = 2
-horizontal_alignment = 1
 text = "Shop"
+horizontal_alignment = 1
 
 [node name="UnopenedLabel" type="Label" parent="."]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -280.0
@@ -43,12 +43,12 @@ offset_top = 20.0
 offset_right = -20.0
 offset_bottom = 50.0
 grow_horizontal = 0
-horizontal_alignment = 2
 text = "Unopened packs: 0"
+horizontal_alignment = 2
 
 [node name="GoldLabel" type="Label" parent="."]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -280.0
@@ -56,8 +56,8 @@ offset_top = 54.0
 offset_right = -20.0
 offset_bottom = 84.0
 grow_horizontal = 0
-horizontal_alignment = 2
 text = "Gold: 0"
+horizontal_alignment = 2
 
 [node name="FeedbackLabel" type="Label" parent="."]
 layout_mode = 1
@@ -70,7 +70,6 @@ offset_right = 160.0
 offset_bottom = 82.0
 grow_horizontal = 2
 horizontal_alignment = 1
-text = ""
 
 [node name="PacksContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
@@ -112,20 +111,20 @@ color = Color(0.6, 0.85, 0.6, 1)
 [node name="PackNameLabel" type="Label" parent="PacksContainer/ForestPack/Content"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-horizontal_alignment = 1
 text = "Forest Pack"
+horizontal_alignment = 1
 
 [node name="PriceLabel" type="Label" parent="PacksContainer/ForestPack/Content"]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
-horizontal_alignment = 1
 text = "20g"
+horizontal_alignment = 1
 
 [node name="OwnedLabel" type="Label" parent="PacksContainer/ForestPack/Content"]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
-horizontal_alignment = 1
 text = "Owned (unopened): 0"
+horizontal_alignment = 1
 
 [node name="Buttons" type="HBoxContainer" parent="PacksContainer/ForestPack/Content"]
 layout_mode = 2
@@ -166,20 +165,20 @@ color = Color(0.12, 0.35, 0.2, 1)
 [node name="PackNameLabel" type="Label" parent="PacksContainer/DarkForestPack/Content"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-horizontal_alignment = 1
 text = "Dark Forest Pack"
+horizontal_alignment = 1
 
 [node name="PriceLabel" type="Label" parent="PacksContainer/DarkForestPack/Content"]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
-horizontal_alignment = 1
 text = "50g"
+horizontal_alignment = 1
 
 [node name="OwnedLabel" type="Label" parent="PacksContainer/DarkForestPack/Content"]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
-horizontal_alignment = 1
 text = "Owned (unopened): 0"
+horizontal_alignment = 1
 
 [node name="Buttons" type="HBoxContainer" parent="PacksContainer/DarkForestPack/Content"]
 layout_mode = 2
@@ -199,10 +198,12 @@ text = "Buy"
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
 offset_top = -60.0
 offset_right = 224.0
 offset_bottom = -20.0
+grow_horizontal = 2
 grow_vertical = 0
 text = "Back"

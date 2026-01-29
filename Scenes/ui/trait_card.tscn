@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cnp4m15bflwr1" path="res://scripts/UI/trait_card.gd" id="1_f3ond"]
 [ext_resource type="Script" uid="uid://46ya5adlp6ec" path="res://scripts/UI/hover_tilt.gd" id="2_ciy0v"]
 [ext_resource type="Shader" uid="uid://drvu7g3tqytn7" path="res://shaders/folio_ui.gdshader" id="2_pe8pf"]
-[ext_resource type="Texture2D" uid="uid://bpce1qatafbe2" path="res://assets/shaders/white_shader.png" id="3_orh1m"]
+[ext_resource type="Texture2D" uid="uid://v66da6lv2dth" path="res://assets/shaders/white_shader.png" id="3_orh1m"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ciy0v"]
 shader = ExtResource("2_pe8pf")

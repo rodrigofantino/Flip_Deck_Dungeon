@@ -225,6 +225,16 @@ enum JumpTarget {
 ## External back cover texture.
 @export var tex_cover_back_out: Texture2D
 
+@export_category("Manual Positioning")
+## Whether to apply the inspector offsets instead of just the computed centering logic.
+@export var enable_manual_offsets: bool = false
+## Additional position to apply while the book is closed.
+@export var manual_closed_offset: Vector2 = Vector2.ZERO
+## Position to apply when the book is open facing the front cover.
+@export var manual_open_front_offset: Vector2 = Vector2.ZERO
+## Position to apply when the book is open facing the back cover.
+@export var manual_open_back_offset: Vector2 = Vector2.ZERO
+
 
 # ==============================================================================
 # 2. INTERNAL STATE
@@ -235,6 +245,7 @@ var is_animating: bool = false
 var going_forward: bool = true
 var page_width: float
 var is_book_open: bool = false
+var _last_viewport_size: Vector2 = Vector2.ZERO
 
 var _runtime_pages: Array[String] = []
 var _spine_poly: Polygon2D
@@ -296,9 +307,9 @@ func _apply_newold_config(val):
 	apply_newold_preset = false
 	print("[BookController] Applying 'Newold' configuration...")
 	blank_page_color = Color.WHITE
-	blank_page_texture = preload("uid://cen51wqc15b14")
+	blank_page_texture = preload("res://addons/PageFlip/Assets/blank_page.png")
 	spine_color = Color.WHITE
-	spine_texture = preload("uid://cit41jypw2sy1")
+	spine_texture = preload("res://addons/PageFlip/Assets/spine.png")
 	spine_width = 12.0
 	covers_are_rigid = true
 	closed_scale = Vector2(0.815, 0.45)
@@ -316,15 +327,15 @@ func _apply_newold_config(val):
 	stripe_darken_ratio = 0.848
 	volume_stack_offset = Vector2(0, 0)
 	landing_overlap = 0.15
-	sfx_book_impact = preload("uid://bhitebdghyhua")
-	sfx_page_flip = preload("uid://bylfc3b5pmbij")
+	sfx_book_impact = preload("res://addons/PageFlip/Assets/book_impact.ogg")
+	sfx_page_flip = preload("res://addons/PageFlip/Assets/page_flip.ogg")
 	impact_sync_offset = 0.15
 	target_page_size = Vector2(512, 820)
 	page_stretch_mode = PageStretchOption.SCALE
-	tex_cover_front_out = preload("uid://dbdwbowx32d3v")
-	tex_cover_front_in = preload("uid://dt1tiecgw5rip")
-	tex_cover_back_in = preload("uid://dt1tiecgw5rip")
-	tex_cover_back_out = preload("uid://bjowpx1ap4uxt")
+	tex_cover_front_out = preload("res://assets/card_book/card_book_cover_front.png")
+	tex_cover_front_in = preload("res://assets/card_book/card_book_inside.png")
+	tex_cover_back_in = preload("res://assets/card_book/card_book_inside.png")
+	tex_cover_back_out = preload("res://assets/card_book/card_book_cover_back.png")
 	_apply_new_size()
 	dynamic_poly.animation_preset = DynamicPage.PagePreset.LIGHT_MAGAZINE
 	notify_property_list_changed()
@@ -493,6 +504,7 @@ func _initial_config():
 	_update_static_visuals_immediate()
 	_update_volume_visuals()
 	_check_scene_activation.call_deferred()
+	_refresh_position()
 
 
 # ==============================================================================
@@ -822,7 +834,7 @@ func _pageflip_set_input_enabled(give_control_to_book: bool):
 			_active_interactive_is_right = not give_control_to_book
 
 
-## Internal function (formerly go_to_page) that handles the actual jump logic 
+## Internal function (formerly go_to_page) that handles the actual jump logicÂ 
 ## using specific spread indices.
 func _go_to_page(target_spread_idx: int) -> void:
 	if is_animating: return
@@ -1078,7 +1090,16 @@ func _get_compensation_offset(is_closed: bool, is_back: bool) -> Vector2:
 	if is_closed and is_back: t_rot *= -1.0
 	target_vec *= t_scale
 	target_vec = target_vec.rotated(deg_to_rad(t_rot))
+	if enable_manual_offsets:
+		target_vec += _get_manual_offset(is_closed, is_back)
 	return -target_vec
+
+func _get_manual_offset(is_closed: bool, is_back: bool) -> Vector2:
+	if not enable_manual_offsets:
+		return Vector2.ZERO
+	if is_closed:
+		return manual_closed_offset
+	return manual_open_back_offset if is_back else manual_open_front_offset
 
 
 func _animate_container_transform(target_is_closed: bool, is_back: bool, duration: float):
@@ -1206,6 +1227,16 @@ func _check_scene_activation() -> void:
 			node.emit_signal("manage_pageflip", false)
 			node.set_process_input(true); node.set_process_unhandled_input(true); scene_found = true
 	if not scene_found: _pageflip_set_input_enabled(true)
+
+
+func _refresh_position():
+	if visuals_container == null:
+		return
+	var closed = (current_spread == -1 or current_spread == total_spreads)
+	var is_back = (current_spread == total_spreads)
+	var screen_center = _get_screen_center()
+	var offset = _get_compensation_offset(closed, is_back)
+	visuals_container.global_position = screen_center + offset - Vector2(target_page_size.x / 2, 0.0)
 
 func _get_screen_center() -> Vector2:
 	if center_on_owner:

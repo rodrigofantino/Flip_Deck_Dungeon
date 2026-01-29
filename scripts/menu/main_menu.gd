@@ -8,7 +8,7 @@ func _ready() -> void:
 
 
 	# Asumimos que los botones ya existen en la escena
-	# y están conectados por señal (_on_*_pressed)
+	# y estÃ¡n conectados por seÃ±al (_on_*_pressed)
 	var title_label: Label = $Label
 	var play_button: Button = $VBoxContainer/PlayButton
 	var continue_button: Button = $VBoxContainer/ContinueButton
