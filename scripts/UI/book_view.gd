@@ -656,18 +656,18 @@ func _determine_target_side(node: Node) -> String:
 		return "back"
 	return "front"
 
-func _get_top_vertex_indices(base: PackedVector2Array, node: Polygon2D) -> Array:
+func _get_top_vertex_indices(base: PackedVector2Array, node: CanvasItem) -> Array:
 	if base.size() == 0:
 		return []
-	var transform := node.get_global_transform()
-	var min_y := transform.xform(base[0]).y
+	var first_global := node.to_global(base[0])
+	var min_y: float = first_global.y
 	for i in range(base.size()):
-		var global_y := transform.xform(base[i]).y
+		var global_y: float = node.to_global(base[i]).y
 		min_y = min(min_y, global_y)
 	var threshold: float = max(1.0, abs(min_y) * 0.01)
 	var results: Array = []
 	for i in range(base.size()):
-		var global_y := transform.xform(base[i]).y
+		var global_y: float = node.to_global(base[i]).y
 		if abs(global_y - min_y) <= threshold:
 			results.append(i)
 	return results
