@@ -368,16 +368,14 @@ func _is_point_over_book(global_pos: Vector2) -> bool:
 	return local.x >= min_x and local.x <= max_x and local.y >= min_y and local.y <= max_y
 
 func _is_point_over_card_view(global_pos: Vector2) -> bool:
-	var vp := get_viewport()
-	if vp == null:
-		return false
-	var target := vp.gui_pick(global_pos)
-	while target:
-		if target is CardView:
+	for node in get_tree().get_nodes_in_group("card_view"):
+		if not node is CardView:
+			continue
+		var ctrl := node as CardView
+		if not ctrl.is_visible_in_tree():
+			continue
+		if ctrl.get_global_rect().has_point(global_pos):
 			return true
-		if target == self:
-			break
-		target = target.get_parent()
 	return false
 
 func _is_back_closed() -> bool:

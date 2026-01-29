@@ -39,6 +39,8 @@ var flip_sfx: AudioStreamPlayer = null
 
 func _ready() -> void:
 	_setup_flip_sfx()
+	if not is_in_group("card_view"):
+		add_to_group("card_view")
 
 func _setup_flip_sfx() -> void:
 	if flip_sfx != null:
