@@ -22,6 +22,7 @@ extends Control
 @export var supported_transition_duration: float = 0.35
 @export var supported: bool = true
 @export var perspective_debug_print: bool = false
+@export var permitir_flip: bool = false
 
 @onready var book: PageFlip2D = $Book
 var _resize_version: int = 0
@@ -235,6 +236,8 @@ func _recenter_book_internal() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if book == null:
+		return
+	if not permitir_flip:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var vc := book.visuals_container
