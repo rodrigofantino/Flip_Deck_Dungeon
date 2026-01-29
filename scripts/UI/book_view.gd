@@ -161,9 +161,10 @@ func _apply_book_scale() -> void:
 		_base_scale = Vector2(scale, scale)
 		book.scale = _base_scale * closed_scale_multiplier
 
-func _apply_book_position() -> void:
+func _apply_book_position(ignore_anim: bool = false) -> void:
 	if book and book.is_animating:
-		return
+		if not ignore_anim:
+			return
 	var view := size
 	var container_scale := book.closed_scale if not book.is_book_open else book.open_scale
 	if container_scale == Vector2.ZERO:
@@ -229,7 +230,7 @@ func _enable_page_inputs() -> void:
 func _recenter_book_internal() -> void:
 	if book and book.is_animating:
 		return
-	_apply_book_position()
+	_apply_book_position(true)
 	_dbg("recenter_internal")
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -478,7 +479,7 @@ func _on_viewport_resized() -> void:
 		if version != _resize_version:
 			return
 		call_deferred("_apply_book_scale")
-		call_deferred("_apply_book_position")
+	call_deferred("_apply_book_position", true)
 		call_deferred("_recenter_book_internal")
 		call_deferred("_force_visibility")
 	)
@@ -722,7 +723,7 @@ func _initial_layout() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_apply_book_scale()
-	_apply_book_position()
+	_apply_book_position(true)
 	_force_visibility()
 	_apply_saved_offsets()
 	_dbg("initial_layout")
