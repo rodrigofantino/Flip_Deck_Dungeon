@@ -14,6 +14,7 @@ var _battle_tracks: Array[AudioStream] = []
 var _menu_index: int = 0
 var _battle_index: int = 0
 var _fade_tween: Tween = null
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_menu_player = AudioStreamPlayer.new()
@@ -24,8 +25,11 @@ func _ready() -> void:
 	_battle_player.bus = _get_music_bus()
 	_menu_player.volume_db = menu_volume_db
 	_battle_player.volume_db = -80.0
+	_rng.randomize()
 	_menu_tracks = _load_tracks(menu_music_dir)
 	_battle_tracks = _load_tracks(battle_music_dir)
+	_menu_index = _get_random_index_for(_menu_tracks)
+	_battle_index = _get_random_index_for(_battle_tracks)
 	_menu_player.finished.connect(func() -> void:
 		if _state == "menu":
 			_play_next_menu()
@@ -115,9 +119,20 @@ func _load_tracks(dir_path: String) -> Array[AudioStream]:
 					result.append(stream)
 		file_name = dir.get_next()
 	dir.list_dir_end()
-	result.sort_custom(func(a: AudioStream, b: AudioStream) -> bool:
-		return a.resource_path < b.resource_path
-	)
+	_shuffle_playlist(result)
 	return result
+
+func _shuffle_playlist(tracks: Array[AudioStream]) -> void:
+	var count := tracks.size()
+	for i in range(count - 1, 0, -1):
+		var j := _rng.randi_range(0, i)
+		var temp := tracks[i]
+		tracks[i] = tracks[j]
+		tracks[j] = temp
+
+func _get_random_index_for(tracks: Array) -> int:
+	if tracks.is_empty():
+		return 0
+	return _rng.randi_range(0, tracks.size() - 1)
 
 
