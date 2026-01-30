@@ -1,8 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://d3ddts4gppkmx"]
 
 [ext_resource type="Script" uid="uid://b0v24hehn8yh2" path="res://scripts/UI/collection.gd" id="1_1kq8g"]
-[ext_resource type="PackedScene" uid="uid://c6j2v0v7e2k1p" path="res://Scenes/ui/collection_slot.tscn" id="2_s1ot"]
-[ext_resource type="PackedScene" uid="uid://dtt1b34yncqy2" path="res://Scenes/cards/card_view.tscn" id="3_cv"]
 [ext_resource type="PackedScene" uid="uid://blg50faekwh8p" path="res://Scenes/ui/book_view.tscn" id="4_book"]
 [ext_resource type="Texture2D" uid="uid://ckorh78mxu17p" path="res://assets/card_book/colection_background.png" id="5_bg"]
 
@@ -14,8 +12,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_1kq8g")
-slot_scene = ExtResource("2_s1ot")
-card_view_scene = ExtResource("3_cv")
+
+[node name="CollectionBackground" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5_bg")
+expand_mode = 2
+stretch_mode = 3
+mouse_filter = 1
 
 [node name="BookView" parent="." instance=ExtResource("4_book")]
 visible = false
@@ -28,26 +36,6 @@ debug_book = true
 perspective_top_inset_px = -100.0
 perspective_top_drop_px = -200.0
 perspective_top_tilt_px = 0.0
-
-[node name="CollectionBackground" type="TextureRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("5_bg")
-expand_mode = 1
-stretch_mode = 6
-
-[node name="Background" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.08, 0.08, 0.08, 1)
 
 [node name="TopBar" type="HBoxContainer" parent="."]
 layout_mode = 1
@@ -81,59 +69,6 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(90, 36)
 layout_mode = 2
 text = "Next"
-
-[node name="Spread" type="HBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -540.0
-offset_top = -300.0
-offset_right = 540.0
-offset_bottom = 300.0
-grow_horizontal = 2
-grow_vertical = 2
-alignment = 1
-
-[node name="LeftPage" type="ColorRect" parent="Spread"]
-custom_minimum_size = Vector2(480, 560)
-layout_mode = 2
-mouse_filter = 2
-color = Color(0.75, 0.75, 0.75, 1)
-
-[node name="LeftGrid" type="GridContainer" parent="Spread/LeftPage"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = -24.0
-grow_horizontal = 2
-grow_vertical = 2
-columns = 3
-
-[node name="RightPage" type="ColorRect" parent="Spread"]
-custom_minimum_size = Vector2(480, 560)
-layout_mode = 2
-mouse_filter = 2
-color = Color(0.75, 0.75, 0.75, 1)
-
-[node name="RightGrid" type="GridContainer" parent="Spread/RightPage"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = -24.0
-grow_horizontal = 2
-grow_vertical = 2
-columns = 3
 
 [node name="SelectionPanel" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -334,3 +269,4 @@ text = "Add all"
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Back"
+

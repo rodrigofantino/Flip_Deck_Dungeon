@@ -114,6 +114,9 @@ func _prepare_collection_pages() -> void:
 	_ensure_visual_deform_targets()
 	call_deferred("_cache_deform_targets")
 
+func _refresh_book_content() -> void:
+	_prepare_collection_pages()
+
 func _ensure_visual_deform_targets() -> void:
 	if not book:
 		return
