@@ -116,6 +116,17 @@ func _prepare_collection_pages() -> void:
 
 func _refresh_book_content() -> void:
 	_prepare_collection_pages()
+	_restore_page_interaction()
+
+func _restore_page_interaction() -> void:
+	if book == null:
+		return
+	if book.is_animating:
+		return
+	if not book.is_book_open:
+		return
+	if book.has_method("_check_scene_activation"):
+		book.call("_check_scene_activation")
 
 func _ensure_visual_deform_targets() -> void:
 	if not book:

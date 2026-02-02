@@ -1,12 +1,3 @@
-[gd_resource type="Resource" script_class="BoosterPackDefinition" load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://data/booster_packs/booster_pack_definitinos.gd" id="1_8y1tf"]
+[gd_resource type="Resource" format=3 uid="uid://b5r41c2mwpibr"]
 
 [resource]
-name_key = "BOOSTER_PACK_DARK_FOREST_NAME"
-art = null
-pack_type = "dark_forest"
-count = 0
-
-
-

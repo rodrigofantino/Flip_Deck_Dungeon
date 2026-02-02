@@ -57,6 +57,8 @@ const COIN_DROP_CURVE_POWER: float = 0.45
 # ==========================================
 
 func _ready() -> void:
+	# Mantener el conteo/sfx de oro activo aunque la escena se pause (victoria/derrota).
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process(false)
 	coin_drop_stream = load(COIN_DROP_SFX_PATH)
 	coin_drop_rng.randomize()

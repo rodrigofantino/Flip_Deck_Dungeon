@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://cw4ptkrjbqbu3" path="res://scripts/game/card_view.gd" id="2_6x6fe"]
 [ext_resource type="Texture2D" uid="uid://c1x62iswoiqc7" path="res://assets/cards/frame/card_front_final.png" id="3_f0mpd"]
 [ext_resource type="Theme" uid="uid://dvb51r2kvkod0" path="res://data/variant_themes.tres" id="4_liruf"]
-[ext_resource type="SpriteFrames" path="res://assets/icons/status_effects/heal/heal_effect_frames.tres" id="4_w0j8b"]
+[ext_resource type="SpriteFrames" uid="uid://d0epu1mldbnrm" path="res://assets/icons/status_effects/heal/heal_effect_frames.tres" id="4_w0j8b"]
 [ext_resource type="Shader" uid="uid://xlrjtlyatv7" path="res://shaders/shader_platinadomuyblanco.gdshader" id="5_f0mpd"]
 [ext_resource type="Texture2D" uid="uid://08ow6h6j0rfn" path="res://assets/cards/frame/card_back_final.png" id="5_nus5u"]
 [ext_resource type="Script" uid="uid://c3kl6cgmpigjq" path="res://scripts/UI/MotionTiltDriver.gd" id="6_by25d"]
@@ -12,9 +12,9 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_nus5u"]
 shader = ExtResource("5_f0mpd")
 shader_parameter/distortion_strength = 0.050000002375
-shader_parameter/reflect_strength = 0.18000000855
-shader_parameter/alpha_strength = 0.174000008265
-shader_parameter/foil_dir = Vector2(0, 0)
+shader_parameter/reflect_strength = 0.2550000121125
+shader_parameter/alpha_strength = 0.25200001197
+shader_parameter/foil_dir = Vector2(1.07, 0)
 
 [node name="CardView" type="Control"]
 layout_mode = 3
@@ -180,7 +180,6 @@ target_control = NodePath("..")
 foil_layer = NodePath("../FoilLayer")
 
 [node name="FoilLayer" type="Control" parent="."]
-visible = false
 material = SubResource("ShaderMaterial_nus5u")
 layout_mode = 1
 anchors_preset = 15

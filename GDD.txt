@@ -2,7 +2,8 @@ FLIP DECK DUNGEON
 GAME DESIGN DOCUMENT (GDD)
 
 ========================
-1. VISION GENERAL
+
+VISION GENERAL
 ========================
 Flip Deck Dungeon es un roguelike de cartas con combates por turnos donde todas las cartas
 son entidades vivas con HP, dano, nivel y traits.
@@ -11,107 +12,330 @@ Plataforma: PC (Steam)
 Motor: Godot 4.x
 Duracion de runs: corta / media
 Enfoque: decisiones claras, progresion persistente, rejugabilidad.
+Fantasia secundaria: coleccion TCG (sobres, holos, binder).
 
 ========================
 2. PILARES DE DISENO
-========================
-- Cartas como entidades vivas
-- Una sola fuente de verdad
-- Runs cortas pero profundas
-- Progresion clara y acumulativa
-- Riesgo vs recompensa
+
+Cartas como entidades vivas
+
+Una sola fuente de verdad
+
+Runs cortas pero profundas
+
+Progresion clara y acumulativa
+
+Riesgo vs recompensa
+
+Coleccionismo TCG sin romper el roguelite (pool, no mazo fijo con copias)
 
 ========================
 3. CORE FANTASY
-========================
+
 El jugador encarna a un heroe representado por una carta.
-Los enemigos tambien son cartas que se enfrentan una a una.
-Cada combate debilita o fortalece la run.
+Los enemigos tambien son cartas que se enfrentan en combates rapidos.
+
+Cada combate debilita o fortalece la run mediante:
+
+Escalado de amenaza (dificultad)
+
+Acumulacion de cofre (recompensa condicionada a ganar)
+
+Loot tactico (acciones e items) que mejora al heroe durante la run
 
 ========================
 4. LOOP PRINCIPAL
-========================
+
 MACRO LOOP:
-- Inicio de run
-- Combates secuenciales
-- Recompensas
-- Level up y traits
-- Derrota o victoria
-- Retorno al meta
+
+Inicio de run (eleccion de heroe + dungeon + pool)
+
+Combates secuenciales
+
+Encrucijadas (decisiones de riesgo, seguro y reglas)
+
+Boss final (siempre)
+
+Derrota o victoria
+
+Retorno al meta (oro / dust del gremio, desbloqueos)
 
 MICRO LOOP:
-- Robar enemigo
-- Combate
-- Resolucion
-- Limpieza de estado
+
+Robar/Generar encuentro desde los mazos activos
+
+Combate
+
+Resolucion (muerte, drops, dust)
+
+Limpieza de estado
 
 ========================
 5. SISTEMA DE CARTAS
-========================
+
 Tipos:
-- Heroe
-- Enemigo
+
+Heroe
+
+Enemigo
+
+Item (equipamiento)
+
+Accion (consumible / one-shot)
+
+Boss (variante especial, generalmente holo)
 
 Cada carta tiene:
-- ID
-- Definicion base
-- Nivel
-- HP actual / maximo
-- Dano
-- Traits
+
+ID
+
+Definicion base
+
+Nivel (si aplica)
+
+HP actual / maximo (si aplica)
+
+Dano (si aplica)
+
+Traits
+
+Nota: fuera de la run, las cartas se coleccionan como “entradas unicas”.
+Dentro de la run, el sistema puede generar copias temporales segun la pool habilitada.
 
 ========================
 6. SISTEMA DE COMBATE
-========================
+
 Combate por turnos:
-- Turno heroe
-- Turno enemigo
-- Aplicacion de dano
-- Chequeo de muerte
-- Fin de ronda
+
+Turno heroe
+
+Turno enemigos
+
+Aplicacion de dano
+
+Chequeo de muerte
+
+Fin de ronda
+
+Encuentros:
+
+1 heroe contra 1 a 3 enemigos (segun mazos activos, tier y amenaza)
+
+El boss es el encuentro final de la run (siempre)
+
+Drops al morir enemigos:
+
+A veces el enemigo deja una carta de loot a la mano/botin:
+
+Accion (se usa una vez y se descarta; ej: heal, cleanse, remove poison)
+
+Item (se equipa; ej: arma/armadura/accesorio; slots definidos por implementacion)
+
+Guardrails de UI:
+
+Límite de mano/botin (para evitar inflacion de cartas) y reglas claras de descarte/seleccion.
 
 ========================
 7. SISTEMA DE TRAITS
-========================
+
 Traits como modificadores de reglas.
 Se aplican mediante hooks:
-- Inicio de combate
-- Ataque
-- Dano
-- Muerte
+
+Inicio de combate
+
+Ataque
+
+Dano
+
+Muerte
+
+Traits de run (encrucijadas):
+
+Se ofrecen como opcion en encrucijadas (estilo “Loop Hero”: cambian reglas, con trade-offs)
+
+No son buffs planos: deben modificar el loop (riesgo/recompensa, drops, amenaza, etc.)
+
+Se limitan por run (cap) para mantener claridad y balance.
 
 ========================
 8. TUTORIAL
-========================
-- Run guiada
-- Sin RNG duro
-- Ensenia todo el juego
-- Cartas de tutorial no se pierden
+
+Run guiada
+
+Sin RNG duro
+
+Ensenia todo el juego
+
+Cartas de tutorial no se pierden
+
+Puede funcionar como “run de rescate” (entrada gratuita, sin castigo) para evitar deadlocks.
 
 ========================
 9. META PROGRESION
-========================
-- Oro persistente
-- Sobres (boosters)
-- Coleccion
-- Boton Continue para continuar run guardada
+
+Oro persistente
+
+Dust del gremio persistente
+
+Sobres (boosters)
+
+Coleccion
+
+Boton Continue para continuar run guardada
+
+Oro: economia operativa (compras, fees, heroes, sobres).
+Dust del gremio: desbloqueos de contenido (dungeons, contratos, bosses/variantes, etc.).
 
 ========================
 10. COLECCION
-========================
-Libro de cartas
+
+Libro de cartas (Binder)
+
+En coleccion: se ven cartas obtenidas + sombras de cartas no desbloqueadas
+
+En jugar: se ven solo cartas obtenidas (sin sombras)
+
 Filtros por rareza y bioma
+
+Sobres:
+
+Pueden otorgar enemigos, items, acciones, heroes (marco dorado), bosses (holo).
+
+Precio con rampa: cada 5 sobres comprados, el precio sube +20%.
+
+Duplicados:
+
+Se pueden convertir en polvo (dust del gremio)
+
+O usarse para mejorar cartas (upgrade level)
+
+Mejoras de cartas (upgrade):
+
+Mejorar una carta aumenta el dust que entrega cuando participa en la run
+
+El jugador puede mejorar una carta y aun asi elegir no llevarla en la pool
+
+Pool para run:
+
+Fuera de la run el jugador habilita una pool minima de X cartas distintas (ej: 15)
+
+La pool define que cartas pueden aparecer durante la run (copias temporales)
+
+No se eligen “copias” fuera de la run: solo se habilitan posibilidades.
 
 ========================
 11. POPUPS Y FLOW DE VICTORIA/DERROTA
-========================
-- Derrota: popup con boton para volver al menu
-- Victoria: popup con celebracion, oro obtenido y boton para volver al menu
-- La victoria no ofrece traits ni level up si no hay enemigos restantes
+
+Derrota: popup con boton para volver al menu
+
+Victoria: popup con celebracion, recompensa y boton para volver al menu
+
+La victoria no ofrece traits ni level up si no hay enemigos restantes
+
+Cofre y conversion:
+
+El cofre de la run se cobra solo en victoria
+
+Al ganar, el jugador liquida el cofre en el gremio para obtener oro o dust del gremio (modelo simple V1: eleccion)
 
 ========================
 12. PRINCIPIOS
+
+Sistemas antes que contenido
+
+Datos > UI
+
+Claridad > complejidad
+
+Toda eleccion importante debe ser legible (amenaza, cofre, mazos activos)
+
 ========================
-- Sistemas antes que contenido
-- Datos > UI
-- Claridad > complejidad
+13. DUST DE RUN, AMENAZA Y COFRE
+
+Al derrotar un enemigo:
+
+La carta del enemigo se quema
+
+Genera dust_total
+
+Ese dust se divide en:
+
+Amenaza: escala enemigos comunes y boss (tiers capados)
+
+Cofre: recompensa acumulada (solo se cobra si se gana)
+
+Esto sostiene el pilar “riesgo vs recompensa”:
+
+Matar mas aumenta el cofre, pero tambien sube la amenaza (boss mas duro)
+
+========================
+14. AFFIX / SUFFIX EN ENEMIGOS
+
+Para sostener variedad y escalado sin inflar solo numeros:
+
+Afijo: modifica stats (defensa/ataque/iniciativa)
+
+Sufijo: agrega habilidad especial (trigger simple)
+
+Regla por tier (referencial):
+
+Tier bajo: sin sufijo o solo afijo
+
+Tier medio: afijo + chance de sufijo
+
+Tier alto: afijo + sufijo garantizado
+
+========================
+15. BOSS HOLO Y VARIANTES
+
+Cada run tiene un boss final (siempre)
+
+La dungeon define el boss o el pool de bosses posibles
+
+Los bosses holo son coleccionables/desbloqueos (no stats fijos fuera de la run)
+
+Dentro de la run:
+
+El boss rola prefijo/sufijo(s) de forma aleatoria segun tier
+
+Se revela solo dentro de la run
+
+Se usan pools e incompatibilidades para evitar combinaciones injustas
+
+========================
+16. ENCRUCIJADAS Y MAZOS ACTIVOS
+
+La run se compone de “mazos activos” (pools de encuentros).
+
+La run base inicia con 1 mazo
+
+Encrucijadas permiten aumentar mazos activos (cap V1: 3)
+
+Efecto de aumentar mazos:
+
+Mas enemigos / encuentros mas densos
+
+Mejor recompensa (multiplicador de cofre con diminishing returns)
+
+Mayor dificultad (shock de amenaza y/o mayor probabilidad de sufijos)
+
+Encrucijada (3 opciones):
+
+Agregar mazo (profundizar)
+
+Asegurar + invertir cofre (seguro parcial + crecimiento futuro, con restricciones para no ser dominante)
+
+Elegir un trait de run (3 opciones, con trade-offs)
+
+========================
+17. CONTRATOS (DIFICULTAD OPT-IN)
+
+Contratos del gremio:
+
+Se desbloquean con dust del gremio (meta)
+
+Se eligen antes de entrar a la run
+
+Aumentan dificultad (stats + reglas) y aumentan payout (cofre)
+
+Principio: la dificultad adicional es opt-in, no castigo permanente automatico.

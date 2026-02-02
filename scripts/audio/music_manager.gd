@@ -17,10 +17,14 @@ var _fade_tween: Tween = null
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
+	# Mantener musica y crossfades activos incluso si el juego esta pausado.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_menu_player = AudioStreamPlayer.new()
 	_battle_player = AudioStreamPlayer.new()
 	add_child(_menu_player)
 	add_child(_battle_player)
+	_menu_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	_battle_player.process_mode = Node.PROCESS_MODE_ALWAYS
 	_menu_player.bus = _get_music_bus()
 	_battle_player.bus = _get_music_bus()
 	_menu_player.volume_db = menu_volume_db
@@ -83,7 +87,7 @@ func _play_next_battle() -> void:
 	_battle_player.stream = _battle_tracks[_battle_index]
 	_battle_player.play()
 
-func _crossfade(from_player: AudioStreamPlayer, to_player: AudioStreamPlayer, from_db: float, to_db: float) -> void:
+func _crossfade(from_player: AudioStreamPlayer, to_player: AudioStreamPlayer, _from_db: float, to_db: float) -> void:
 	if _fade_tween and _fade_tween.is_running():
 		_fade_tween.kill()
 	_fade_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -134,5 +138,3 @@ func _get_random_index_for(tracks: Array) -> int:
 	if tracks.is_empty():
 		return 0
 	return _rng.randi_range(0, tracks.size() - 1)
-
-

@@ -1,29 +1,19 @@
 [gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://cjhhd2kiydms7"]
 
-[ext_resource type="Texture2D" uid="uid://gapkvcnrdbp2" path="res://assets/cards/art/tutorial_forest_slime.png" id="1_fhrye"]
+[ext_resource type="Texture2D" uid="uid://b004gidpi74yj" path="res://assets/cards/art/tutorial_forest_slime.png" id="1_fhrye"]
 [ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/card_definition.gd" id="1_m8xw4"]
-[ext_resource type="Texture2D" uid="uid://dfbhfgvv73pq0" path="res://assets/cards/frame/card_forest_front.png" id="2_q3xwj"]
+[ext_resource type="Texture2D" uid="uid://y17wevh7ckms" path="res://assets/cards/frame/card_forest_front.png" id="2_q3xwj"]
 
 [resource]
 script = ExtResource("1_m8xw4")
 definition_id = "slime"
-
-
-
-
-level = 1
-initiative = 1
-max_hp = 2
-damage = 1
 display_name = "TUTORIAL_SLIME_NAME"
 description = "TUTORIAL_SLIME_DESCRIPTION"
 art = ExtResource("1_fhrye")
 frame_texture = ExtResource("2_q3xwj")
+max_hp = 2
+damage = 1
 card_type = "enemy"
 is_persistent = true
 is_tutorial = true
 biome_modifier = "Base Set"
-
-
-
-

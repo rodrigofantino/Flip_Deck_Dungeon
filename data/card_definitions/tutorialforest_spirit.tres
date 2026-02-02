@@ -1,29 +1,20 @@
 [gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://bs1p7qv7lmtjr"]
 
 [ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/card_definition.gd" id="1_e8p1m"]
-[ext_resource type="Texture2D" uid="uid://drfn6e6nga2ed" path="res://assets/cards/art/tutorial_forest_spirit.png" id="1_y4wcp"]
-[ext_resource type="Texture2D" uid="uid://dfbhfgvv73pq0" path="res://assets/cards/frame/card_forest_front.png" id="2_y5c37"]
+[ext_resource type="Texture2D" uid="uid://b7tkrv1jq6m0b" path="res://assets/cards/art/tutorial_forest_spirit.png" id="1_y4wcp"]
+[ext_resource type="Texture2D" uid="uid://y17wevh7ckms" path="res://assets/cards/frame/card_forest_front.png" id="2_y5c37"]
 
 [resource]
 script = ExtResource("1_e8p1m")
 definition_id = "forest_spirit"
-
-
-
-
-level = 1
-initiative = 4
-max_hp = 7
-damage = 2
 display_name = "TUTORIAL_FOREST_SPIRIT_NAME"
 description = "TUTORIAL_FOREST_SPIRIT_DESCRIPTION"
 art = ExtResource("1_y4wcp")
 frame_texture = ExtResource("2_y5c37")
+max_hp = 7
+damage = 2
+initiative = 4
 card_type = "enemy"
 is_persistent = true
 is_tutorial = true
 biome_modifier = "Base Set"
-
-
-
-

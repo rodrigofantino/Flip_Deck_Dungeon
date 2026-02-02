@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://d3ddts4gppkmx"]
+[gd_scene load_steps=5 format=3 uid="uid://d3ddts4gppkmx"]
 
 [ext_resource type="Script" uid="uid://b0v24hehn8yh2" path="res://scripts/UI/collection.gd" id="1_1kq8g"]
+[ext_resource type="PackedScene" uid="uid://wyjiokspuqjw" path="res://Scenes/shaders_and_particles/candle_fire.tscn" id="3_e3jig"]
 [ext_resource type="PackedScene" uid="uid://blg50faekwh8p" path="res://Scenes/ui/book_view.tscn" id="4_book"]
 [ext_resource type="Texture2D" uid="uid://ckorh78mxu17p" path="res://assets/card_book/colection_background.png" id="5_bg"]
 
@@ -23,7 +24,36 @@ grow_vertical = 2
 texture = ExtResource("5_bg")
 expand_mode = 2
 stretch_mode = 3
-mouse_filter = 1
+
+[node name="CandleFire" parent="CollectionBackground" instance=ExtResource("3_e3jig")]
+layout_mode = 0
+offset_left = 247.0
+offset_top = 185.0
+offset_right = 294.0
+offset_bottom = 205.0
+
+[node name="CandleFire2" parent="CollectionBackground" instance=ExtResource("3_e3jig")]
+layout_mode = 0
+offset_left = 200.0
+offset_top = 164.0
+offset_right = 247.0
+offset_bottom = 184.0
+
+[node name="CandleFire4" parent="CollectionBackground" instance=ExtResource("3_e3jig")]
+layout_mode = 0
+offset_left = -14.000007
+offset_top = 519.0
+offset_right = 104.99999
+offset_bottom = 547.0
+scale = Vector2(1.81, 1.81)
+
+[node name="CandleFire3" parent="CollectionBackground" instance=ExtResource("3_e3jig")]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 562.0
+offset_right = 165.0
+offset_bottom = 590.0
+scale = Vector2(1.81, 1.81)
 
 [node name="BookView" parent="." instance=ExtResource("4_book")]
 visible = false
@@ -33,9 +63,10 @@ open_center_offset = Vector2(-50, -150)
 closed_front_offset = Vector2(-30, -280)
 closed_back_offset = Vector2(-30, -300)
 debug_book = true
-perspective_top_inset_px = -100.0
-perspective_top_drop_px = -200.0
+perspective_top_inset_px = 0.0
+perspective_top_drop_px = 0.0
 perspective_top_tilt_px = 0.0
+supported = false
 
 [node name="TopBar" type="HBoxContainer" parent="."]
 layout_mode = 1
@@ -269,4 +300,3 @@ text = "Add all"
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Back"
-

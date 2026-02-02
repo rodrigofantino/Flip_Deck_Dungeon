@@ -1,5 +1,5 @@
 extends Node
-class_name SaveSystem
+class_name SaveSystemScript
 # Este script se encarga de escribir y leer
 # el progreso permanente del jugador y la colección base
 
@@ -379,5 +379,14 @@ static func build_run_deck_from_selection(
 
 
 static func _ensure_save_dir() -> void:
-	if not DirAccess.dir_exists_absolute(SAVE_DIR):
-		DirAccess.make_dir_absolute(SAVE_DIR)
+	# Asegura que exista user://save en cualquier plataforma/export.
+	# NOTA: make_dir_absolute puede fallar silenciosamente; usamos DirAccess.open + make_dir_recursive.
+
+	var dir: DirAccess = DirAccess.open("user://")
+	if dir == null:
+		push_error("[SaveSystem] No se pudo abrir user:// (sin permisos o ruta inválida). user_dir=%s" % OS.get_user_data_dir())
+		return
+
+	var err: Error = dir.make_dir_recursive("save")
+	if err != OK and err != ERR_ALREADY_EXISTS:
+		push_error("[SaveSystem] No se pudo crear user://save. Error=%s user_dir=%s" % [str(err), OS.get_user_data_dir()])

@@ -5,7 +5,7 @@ Act as a senior game-engineer assistant for this repository. Prioritize correctn
 We are building **Flip Deck Dungeon**, a dark-fantasy roguelike deck/dungeon game in **Godot 4.5**.
 
 ## Session bootstrap (MANDATORY)
-At the start of every new Codex session (before proposing or writing changes):
+At the start of every new Codex session ( only once per sesión):
 1. Open and read the project design docs:
    - `IDD.txt`
    - `GDD.txt`
@@ -131,12 +131,12 @@ For any request that requires edits or analysis:
 - The final response must include the checklist with all completed items marked, and any remaining items clearly labeled as blocked or out of scope.
 
 ### Checklist format (use this)
-- Show te list of tasks and ask if the list is ok if its ok don´t ask again.
 - [ ] Step 1 ...
 - [x] Step 2 ...
 
 ## Communication style
 - Start with a short plan (3–7 bullets).
+- Show the complete list of things to do and update once a thing in the list is done.
 - Then list files to change.
 - Provide only relevant snippets/diffs and explain where they go.
 - If there are alternatives, give 2 options max and recommend one.

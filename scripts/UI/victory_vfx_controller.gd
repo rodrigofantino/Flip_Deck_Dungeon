@@ -149,7 +149,7 @@ func _schedule_bursts_and_shine() -> void:
 	var t := create_tween()
 	t.tween_callback(Callable(self, "_burst_big")).set_delay(0.25)
 	t.tween_callback(Callable(self, "_burst_corners")).set_delay(0.45)
-	t.tween_callback(Callable(self, "_emit_gold_flourish")).set_delay(0.55)
+	t.tween_callback(Callable(self, "_emit_gold_flourish")).set_delay(0.30)
 	t.tween_callback(Callable(self, "_play_shine")).set_delay(0.60)
 	t.tween_callback(Callable(self, "_burst_mini")).set_delay(0.75)
 	active_tweens.append(t)

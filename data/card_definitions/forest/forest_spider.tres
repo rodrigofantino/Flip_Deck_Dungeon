@@ -1,28 +1,17 @@
-[gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://cpslbv82gfkif"]
 
-[ext_resource type="Script" path="res://data/card_definition.gd" id="1_def"]
-[ext_resource type="Texture2D" path="res://assets/cards/art/tutorial_forest_spider.png" id="2_art"]
-[ext_resource type="Texture2D" path="res://assets/cards/frame/card_forest_front.png" id="3_frame"]
+[ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/card_definition.gd" id="1_def"]
+[ext_resource type="Texture2D" uid="uid://bqqkqwc8trygk" path="res://assets/cards/art/tutorial_forest_spider.png" id="2_art"]
+[ext_resource type="Texture2D" uid="uid://y17wevh7ckms" path="res://assets/cards/frame/card_forest_front.png" id="3_frame"]
 
 [resource]
 script = ExtResource("1_def")
 definition_id = "forest_spider"
-
-
-
-
-level = 1
-initiative = 8
-max_hp = 2
-damage = 1
 display_name = "FOREST_SPIDER_NAME"
 description = "FOREST_SPIDER_DESCRIPTION"
 art = ExtResource("2_art")
 frame_texture = ExtResource("3_frame")
+max_hp = 2
+damage = 1
+initiative = 8
 card_type = "enemy"
-is_persistent = false
-is_tutorial = false
-biome_modifier = "Forest"
-
-
-

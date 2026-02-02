@@ -420,7 +420,11 @@ func save_run():
 		"active_enemy_id": active_enemy_id
 	}
 
-	var file = FileAccess.open("user://save/save_run.json", FileAccess.WRITE)
+	SaveSystem._ensure_save_dir()
+	var file := FileAccess.open("user://save/save_run.json", FileAccess.WRITE)
+	if file == null:
+		push_error("[RunManager] No se pudo abrir save_run.json. user_dir=%s" % OS.get_user_data_dir())
+		return
 	file.store_string(JSON.stringify(data, "\t"))
 	file.close()
 
@@ -428,7 +432,10 @@ func load_run():
 	if not FileAccess.file_exists("user://save/save_run.json"):
 		return
 
-	var file = FileAccess.open("user://save/save_run.json", FileAccess.READ)
+	var file := FileAccess.open("user://save/save_run.json", FileAccess.READ)
+	if file == null:
+		push_error("[RunManager] No se pudo abrir save_run.json para lectura. user_dir=%s" % OS.get_user_data_dir())
+		return
 	var content = file.get_as_text()
 	file.close()
 

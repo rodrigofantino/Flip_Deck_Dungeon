@@ -19,7 +19,7 @@ var gold_count_tween: Tween = null
 var gold_shine_container: Control = null
 var gold_shine_band: ColorRect = null
 var gold_shine_tween: Tween = null
-const GOLD_COUNT_DURATION: float = 5.0
+const GOLD_COUNT_DURATION: float = 4.0
 const TITLE_COLOR_INTERVAL: float = 0.18
 const TITLE_BREATHE_SCALE: float = 1.03
 
@@ -42,7 +42,7 @@ const COIN_SFX_PATH: String = "res://audio/sfx/single_coin.mp3"
 const COIN_SFX_BUS: String = "SFX"
 const COIN_SFX_MAX_TOTAL: int = 128
 const COIN_SFX_MAX_CONCURRENT: int = 32
-const COIN_SFX_CURVE_POWER: float = 0.45
+const COIN_SFX_CURVE_POWER: float = 2.2
 
 func _ready() -> void:
 	visible = false

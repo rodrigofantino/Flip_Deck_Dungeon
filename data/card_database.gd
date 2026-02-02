@@ -2,6 +2,15 @@ extends Node
 class_name CardDatabases
 # Base de datos global de definiciones de cartas
 
+# Preloads garantizan que las definiciones de tutorial estén en la build final
+const TUTORIAL_DEFINITION_PRELOADS := {
+	"hero_knight": preload("res://data/card_definitions/tutorialhero_knight.tres"),
+	"slime": preload("res://data/card_definitions/tutorialslime.tres"),
+	"wolf": preload("res://data/card_definitions/tutorialwolf.tres"),
+	"spider": preload("res://data/card_definitions/tutorialspider.tres"),
+	"forest_spirit": preload("res://data/card_definitions/tutorialforest_spirit.tres")
+}
+
 var definitions: Dictionary = {}
 # Diccionario que guarda todas las CardDefinition cargadas
 
@@ -13,6 +22,7 @@ func load_definitions() -> void:
 	# Carga todas las definiciones desde la carpeta y subcarpetas
 	definitions.clear()
 	_scan_card_definitions("res://data/card_definitions")
+	_register_preloaded_tutorial_definitions()
 
 	# Alias legacy para no romper referencias viejas
 	if definitions.has("hero_knight"):
@@ -47,3 +57,15 @@ func _scan_card_definitions(path: String) -> void:
 					definitions[card_def.definition_id] = card_def
 
 	dir.list_dir_end()
+
+func _register_preloaded_tutorial_definitions() -> void:
+	for def_id in TUTORIAL_DEFINITION_PRELOADS.keys():
+		if definitions.has(def_id):
+			continue
+
+		var card_def: CardDefinition = TUTORIAL_DEFINITION_PRELOADS[def_id]
+		if card_def == null:
+			push_error("[CardDatabase] No se pudo cargar la definicion tutorial preloaded: %s" % def_id)
+			continue
+
+		definitions[def_id] = card_def

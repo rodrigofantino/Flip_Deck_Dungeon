@@ -111,5 +111,3 @@ func _fit_slots() -> void:
 		if child is CollectionSlot:
 			var slot := child as CollectionSlot
 			slot.custom_minimum_size = cell_size
-
-

@@ -1,29 +1,20 @@
 [gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://8uhw5s1lgeiy"]
 
 [ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/card_definition.gd" id="1_b88mt"]
-[ext_resource type="Texture2D" uid="uid://uqs2r63ynem6" path="res://assets/cards/art/tutorial_forest_spider.png" id="1_rv6wv"]
-[ext_resource type="Texture2D" uid="uid://dfbhfgvv73pq0" path="res://assets/cards/frame/card_forest_front.png" id="2_vnucy"]
+[ext_resource type="Texture2D" uid="uid://bqqkqwc8trygk" path="res://assets/cards/art/tutorial_forest_spider.png" id="1_rv6wv"]
+[ext_resource type="Texture2D" uid="uid://y17wevh7ckms" path="res://assets/cards/frame/card_forest_front.png" id="2_vnucy"]
 
 [resource]
 script = ExtResource("1_b88mt")
 definition_id = "spider"
-
-
-
-
-level = 1
-initiative = 7
-max_hp = 1
-damage = 1
 display_name = "TUTORIAL_SPIDER_NAME"
 description = "TUTORIAL_SPIDER_DESCRIPTION"
 art = ExtResource("1_rv6wv")
 frame_texture = ExtResource("2_vnucy")
+max_hp = 1
+damage = 1
+initiative = 7
 card_type = "enemy"
 is_persistent = true
 is_tutorial = true
 biome_modifier = "Base Set"
-
-
-
-

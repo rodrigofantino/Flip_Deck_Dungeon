@@ -1,29 +1,18 @@
-[gd_resource type="Resource" script_class="CardDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://0gtvoonn3037"]
 
-[ext_resource type="Script" path="res://data/card_definition.gd" id="1_def"]
-[ext_resource type="Texture2D" path="res://assets/cards/frame/card_dark_forest_front.png" id="2_frame"]
-[ext_resource type="Texture2D" path="res://assets/cards/art/dark_forest/dark_forest_spider.png" id="3_art"]
+[ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/card_definition.gd" id="1_def"]
+[ext_resource type="Texture2D" uid="uid://i2wuc44n8s8c" path="res://assets/cards/frame/card_dark_forest_front.png" id="2_frame"]
+[ext_resource type="Texture2D" uid="uid://byf37di1qmwb5" path="res://assets/cards/art/dark_forest/dark_forest_spider.png" id="3_art"]
 
 [resource]
 script = ExtResource("1_def")
 definition_id = "dark_forest_spider"
-
-
-
-
-level = 1
-initiative = 8
-max_hp = 3
-damage = 2
 display_name = "DARK_FOREST_SPIDER_NAME"
 description = "DARK_FOREST_SPIDER_DESCRIPTION"
 art = ExtResource("3_art")
 frame_texture = ExtResource("2_frame")
+max_hp = 3
+damage = 2
+initiative = 8
 card_type = "enemy"
-is_persistent = false
-is_tutorial = false
 biome_modifier = "Dark Forest"
-
-
-
-

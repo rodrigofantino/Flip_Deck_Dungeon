@@ -8,6 +8,3 @@ trait_id = "Sharp_Edge"
 display_name = "TRAIT_SHARP_EDGE_NAME"
 description = "Daño +2."
 hero_damage_bonus = 2
-
-
-
