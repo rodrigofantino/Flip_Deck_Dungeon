@@ -38,7 +38,7 @@ operator = 2
 input_name = "time"
 
 [sub_resource type="VisualShaderNodeFrame" id="VisualShaderNodeFrame_ny0p3"]
-size = Vector2(373, 674)
+size = Vector2(244.00002, 462)
 title = "texture2"
 tint_color_enabled = true
 tint_color = Color(0.64038086, 0.9384651, 0.953125, 0.75)
@@ -66,7 +66,7 @@ operator = 1
 [sub_resource type="VisualShaderNodeClamp" id="VisualShaderNodeClamp_84bp2"]
 
 [sub_resource type="VisualShaderNodeFrame" id="VisualShaderNodeFrame_byq4u"]
-size = Vector2(373, 694)
+size = Vector2(264, 482)
 title = "texture3"
 tint_color_enabled = true
 tint_color = Color(0.64038086, 0.9384651, 0.953125, 0.75)
@@ -90,21 +90,21 @@ tint_color_enabled = true
 tint_color = Color(0.64038086, 0.9384651, 0.953125, 0.75)
 
 [sub_resource type="VisualShaderNodeFrame" id="VisualShaderNodeFrame_5fvit"]
-size = Vector2(373, 674)
+size = Vector2(284, 462)
 title = "texture3"
 tint_color_enabled = true
 tint_color = Color(0.64038086, 0.9384651, 0.953125, 0.75)
 attached_nodes = PackedInt32Array(7, 8)
 
 [sub_resource type="VisualShaderNodeFrame" id="VisualShaderNodeFrame_lv6lg"]
-size = Vector2(373, 654)
+size = Vector2(264.00012, 442)
 title = "texture4"
 tint_color_enabled = true
 tint_color = Color(0.64038086, 0.9384651, 0.953125, 0.75)
 attached_nodes = PackedInt32Array(11, 12)
 
 [sub_resource type="VisualShaderNodeFrame" id="VisualShaderNodeFrame_nm0hh"]
-size = Vector2(373, 694)
+size = Vector2(284, 482)
 title = "texture5"
 tint_color_enabled = true
 tint_color = Color(0.64038086, 0.9384651, 0.953125, 0.75)

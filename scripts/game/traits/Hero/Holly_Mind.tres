@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://cvk4es14v3kkw"]
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://c21jsmrrckies"]
 
 [ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_mkq8b"]
 
