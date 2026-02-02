@@ -1,0 +1,42 @@
+[gd_scene load_steps=4 format=3 uid="uid://b3po5060xhcb2"]
+
+[ext_resource type="Texture2D" uid="uid://bme2lcgu4ey0d" path="res://assets/shaders/textures/floaty_128.png" id="1_vxkcr"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_ev7l0"]
+particles_animation = true
+particles_anim_h_frames = 8
+particles_anim_v_frames = 8
+particles_anim_loop = true
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_vxkcr"]
+particle_flag_disable_z = true
+gravity = Vector3(0, 20, 0)
+radial_accel_min = -2.2351742e-06
+radial_accel_max = 12.669997
+color = Color(1.8049031e-06, 0.65442014, 0.200483, 1)
+
+[node name="Node2D" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_right = 3.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+material = SubResource("CanvasItemMaterial_ev7l0")
+position = Vector2(542, 337)
+texture = ExtResource("1_vxkcr")
+lifetime = 1.38
+process_material = SubResource("ParticleProcessMaterial_vxkcr")

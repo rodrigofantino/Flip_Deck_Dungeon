@@ -1,0 +1,47 @@
+[gd_scene load_steps=12 format=3 uid="uid://ba3qbxkrqeedw"]
+
+[ext_resource type="Shader" uid="uid://cc7lxv3ib6jfa" path="res://shaders/fire_shader.tres" id="1_qll1h"]
+[ext_resource type="Texture2D" uid="uid://bu82bsqmpjspd" path="res://assets/shaders/textures/T_VFX_Noise_12.PNG" id="2_qk44a"]
+[ext_resource type="Texture2D" uid="uid://7a10i4aaevbw" path="res://assets/shaders/textures/T_Gradient_circle22.jpg" id="3_cgj8o"]
+[ext_resource type="Texture2D" uid="uid://clgy1icrvewcu" path="res://assets/shaders/textures/T_1_pixel.jpg" id="3_gekha"]
+
+[sub_resource type="Gradient" id="Gradient_m8xqe"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_j8wtg"]
+gradient = SubResource("Gradient_m8xqe")
+fill_to = Vector2(0, 0.8540773)
+
+[sub_resource type="Gradient" id="Gradient_m2jkb"]
+offsets = PackedFloat32Array(0, 0.27218935, 0.49112427, 0.84615386, 1)
+colors = PackedColorArray(0, 0, 0, 0, 1, 0, 0, 0.614, 0.80480283, 0.19966345, 0.07016479, 1, 0.85646725, 0.6029493, 0.3264042, 1, 0.85646725, 1, 0.3264042, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_dwpnq"]
+gradient = SubResource("Gradient_m2jkb")
+
+[sub_resource type="Gradient" id="Gradient_5s8l7"]
+offsets = PackedFloat32Array(0, 0.7218935)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_67lav"]
+gradient = SubResource("Gradient_5s8l7")
+fill_from = Vector2(1, 1)
+fill_to = Vector2(1, 0.42060086)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cgj8o"]
+shader = ExtResource("1_qll1h")
+shader_parameter/scale = Vector2(1.715, 1.805)
+shader_parameter/speed = Vector2(0.015, 0.61)
+shader_parameter/Texture_A = ExtResource("2_qk44a")
+shader_parameter/Texture_add = SubResource("GradientTexture2D_j8wtg")
+shader_parameter/Texture_multilpy = ExtResource("3_cgj8o")
+shader_parameter/Texture_substrack = SubResource("GradientTexture2D_67lav")
+shader_parameter/Texture_color_1D = SubResource("GradientTexture1D_dwpnq")
+
+[node name="StaticEffects" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="StaticFire" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_cgj8o")
+position = Vector2(0, -0.9999695)
+scale = Vector2(113.62499, 150.75002)
+texture = ExtResource("3_gekha")

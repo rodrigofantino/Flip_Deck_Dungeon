@@ -1,3 +1,8 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+# Build/export artifacts
+/Flip_Deck_Dungeon_0.1.exe
+/Flip_Deck_Dungeon_0.1.console.exe
+/Flip_Deck_Dungeon_0.1.console.exe~RFfadd21.TMP
+/Flip Deck Dungeon.pck

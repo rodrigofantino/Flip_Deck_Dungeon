@@ -1,0 +1,74 @@
+[gd_resource type="SpriteFrames" load_steps=17 format=3 uid="uid://d0epu1mldbnrm"]
+
+[ext_resource type="Texture2D" uid="uid://cgfgufobgnh4g" path="res://assets/icons/status_effects/heal/heal_effect_00.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://ccr8ghihxrdrf" path="res://assets/icons/status_effects/heal/heal_effect_01.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://cj2et37ymifuj" path="res://assets/icons/status_effects/heal/heal_effect_02.png" id="3"]
+[ext_resource type="Texture2D" uid="uid://imy1ajsfe7kv" path="res://assets/icons/status_effects/heal/heal_effect_03.png" id="4"]
+[ext_resource type="Texture2D" uid="uid://bhfq36h5ren3m" path="res://assets/icons/status_effects/heal/heal_effect_04.png" id="5"]
+[ext_resource type="Texture2D" uid="uid://cmyq4w7fhf2p1" path="res://assets/icons/status_effects/heal/heal_effect_05.png" id="6"]
+[ext_resource type="Texture2D" uid="uid://berw7r3h6u8ga" path="res://assets/icons/status_effects/heal/heal_effect_06.png" id="7"]
+[ext_resource type="Texture2D" uid="uid://dufgs5efwcf6w" path="res://assets/icons/status_effects/heal/heal_effect_07.png" id="8"]
+[ext_resource type="Texture2D" uid="uid://f68c80jhllbx" path="res://assets/icons/status_effects/heal/heal_effect_08.png" id="9"]
+[ext_resource type="Texture2D" uid="uid://bgf776mono8kr" path="res://assets/icons/status_effects/heal/heal_effect_09.png" id="10"]
+[ext_resource type="Texture2D" uid="uid://w4cedwk8j7xk" path="res://assets/icons/status_effects/heal/heal_effect_10.png" id="11"]
+[ext_resource type="Texture2D" uid="uid://fb475bne6u1" path="res://assets/icons/status_effects/heal/heal_effect_11.png" id="12"]
+[ext_resource type="Texture2D" uid="uid://vjmqmwd0c3cj" path="res://assets/icons/status_effects/heal/heal_effect_12.png" id="13"]
+[ext_resource type="Texture2D" uid="uid://kmuqv8a4qvrr" path="res://assets/icons/status_effects/heal/heal_effect_13.png" id="14"]
+[ext_resource type="Texture2D" uid="uid://cb1qgdf6vb080" path="res://assets/icons/status_effects/heal/heal_effect_14.png" id="15"]
+[ext_resource type="Texture2D" uid="uid://c6gwept8qc2qf" path="res://assets/icons/status_effects/heal/heal_effect_15.png" id="16"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16")
+}],
+"loop": true,
+"name": &"default",
+"speed": 12.0
+}]
