@@ -8,8 +8,10 @@ Este documento lista lo que YA esta implementado en el proyecto.
 ========================
 - Run con heroe y enemigos en combate por turnos
 - Robo de enemigo, combate, resolucion y limpieza de estado
-- Recompensas al derrotar enemigos (oro y XP)
+- Recompensas al derrotar enemigos (oro y XP por nivel del enemigo)
 - Al subir de nivel, el heroe se cura al maximo y su carta refleja el nivel de la run (no persistente)
+- Al subir de nivel, TODOS los enemigos de la run suben tambien su nivel visible
+- Al subir de nivel, hero y enemigos escalan stats base (+20%) y futuras spawns heredan ese nivel
 
 ========================
 2. NUEVA RUN Y SELECCION DE CARTAS
@@ -77,6 +79,8 @@ Este documento lista lo que YA esta implementado en el proyecto.
 - Battle HUD
 - Collection UI base
 - Battle HUD muestra chance de atacar primero
+- Mano de items (loot) con layout en abanico, hover y drag & drop
+- Zona de equipamiento bajo el heroe con slots por tipo
 
 ========================
 9. LOCALIZACION
@@ -91,6 +95,7 @@ Este documento lista lo que YA esta implementado en el proyecto.
 - Arte tutorial y dark forest
 - Definiciones de cartas dark forest
 - Frames de cartas actualizados
+- Arte de items (cascos) y fondo de carta de item
 
 ========================
 11. SISTEMA DE INICIATIVA
@@ -99,6 +104,16 @@ Este documento lista lo que YA esta implementado en el proyecto.
 - Formula: clamp(0.15, 0.85, 0.5 + (hero_init - enemy_init) * 0.05)
 - Sorteo por combate usando RNG del proyecto
 - Orden de ataque respeta la iniciativa; si el primero mata, el segundo no ataca
+
+========================
+14. LOOT ITEMS Y EQUIPAMIENTO (V1)
+========================
+- ItemCardDefinition resource con stats flat y tipos de item
+- Drop de items al morir enemigo (debug: solo cascos)
+- Mano de items (max 5) con FIFO y visual en abanico
+- Drag & drop a equipamiento por slots de tipo (helmet, armour, gloves, boots, one_hand, two_hands, amulet, ring)
+- Reemplazo por tipo y aplicacion de stats en hero (armour, damage, life, initiative, lifesteal, thorns, regen, crit)
+- Armour reduce daño recibido (shield se trata como armour)
 
 ========================
 12. LIBRO DE COLECCION 3D (PROTOTIPO)

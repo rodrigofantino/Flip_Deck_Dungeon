@@ -24,7 +24,6 @@ const MAX_HAND_SIZE: int = 5
 const MAX_EQUIP_SLOTS: int = 8
 const ITEM_DROP_CHANCE: float = 0.25
 const ITEM_CATALOG_DEFAULT_PATH: String = "res://data/item_catalog_default.tres"
-const DEBUG_DROP_ONLY_HELMETS: bool = true
 
 @export var item_catalog: ItemCatalog
 
@@ -407,14 +406,9 @@ func try_drop_item_from_enemy() -> void:
 	if item_drop_rng.randf() > ITEM_DROP_CHANCE:
 		return
 	var pool: Array[ItemCardDefinition] = []
-	if DEBUG_DROP_ONLY_HELMETS:
-		for item_def in item_catalog.items:
-			if item_def != null and item_def.item_type == "helmet":
-				pool.append(item_def)
-	else:
-		for item_def in item_catalog.items:
-			if item_def != null:
-				pool.append(item_def)
+	for item_def in item_catalog.items:
+		if item_def != null:
+			pool.append(item_def)
 	if pool.is_empty():
 		return
 	var idx := item_drop_rng.randi_range(0, pool.size() - 1)

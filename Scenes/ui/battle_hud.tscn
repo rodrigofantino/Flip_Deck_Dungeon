@@ -72,17 +72,17 @@ text = "Combat"
 
 [node name="AutoDrawCheck" type="CheckButton" parent="Controls"]
 layout_mode = 0
-offset_left = 897.0
-offset_top = 74.0
-offset_right = 941.0
-offset_bottom = 98.0
+offset_left = 754.0
+offset_top = 176.0
+offset_right = 798.0
+offset_bottom = 200.0
 
 [node name="AutoCombatCheck" type="CheckButton" parent="Controls"]
 layout_mode = 0
-offset_left = 897.0
-offset_top = 39.0
-offset_right = 941.0
-offset_bottom = 63.0
+offset_left = 754.0
+offset_top = 141.0
+offset_right = 798.0
+offset_bottom = 165.0
 
 [node name="PauseButton" type="Button" parent="."]
 layout_mode = 1
