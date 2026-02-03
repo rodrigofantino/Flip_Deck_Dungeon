@@ -1,4 +1,4 @@
-extends Control
+﻿extends Control
 
 # ==========================================
 # NODOS DE LA ESCENA
@@ -19,6 +19,7 @@ var defeat_popup: DefeatPopup = null
 var run_initialized: bool = false
 var suppress_level_up_popup: bool = false
 var victory_gold_awarded: bool = false
+var end_of_wave_pending: bool = false
 
 # =========================
 # VICTORY POPUP
@@ -34,6 +35,14 @@ var card_views: Dictionary = {}
 # value: CardView
 
 # =========================
+
+# =========================
+# CROSSROADS POPUP
+# =========================
+@export var crossroads_popup_scene: PackedScene
+var crossroads_popup: CrossroadsPopup = null
+var crossroads_open: bool = false
+
 # LEVEL UP POPUP
 # =========================
 @export var level_up_popup_scene: PackedScene
@@ -59,7 +68,7 @@ var enemy_card_view: CardView = null
 var combat_manager: CombatManager
 
 # ==========================================
-# CONFIGURACIÃ“N
+# CONFIGURACIÃƒÆ’Ã¢â‚¬Å“N
 # ==========================================
 
 @export var card_view_scene: PackedScene
@@ -83,14 +92,14 @@ enum BattlePhase {
 var current_phase: BattlePhase = BattlePhase.IDLE
 
 # ==========================================
-# CONFIGURACIÃ“N DE AUTOMATIZACIÃ“N
+# CONFIGURACIÃƒÆ’Ã¢â‚¬Å“N DE AUTOMATIZACIÃƒÆ’Ã¢â‚¬Å“N
 # ==========================================
 
 var auto_draw_enabled: bool = false
 var auto_combat_enabled: bool = false
 
 # ==========================================
-# LOOP AUTOMÃTICO DE BATALLA
+# LOOP AUTOMÃƒÆ’Ã‚ÂTICO DE BATALLA
 # ==========================================
 
 func _process(_delta: float) -> void:
@@ -107,7 +116,7 @@ func _process_battle_flow() -> void:
 				_draw_enemy()
 
 		BattlePhase.ENEMY_ACTIVE:
-			pass # El combate se dispara por seÃ±al, no por polling
+			pass # El combate se dispara por seÃƒÆ’Ã‚Â±al, no por polling
 
 		BattlePhase.UI_LOCKED:
 			pass
@@ -138,6 +147,7 @@ func _ready() -> void:
 	_connect_run_signals()
 	_update_hud_state()
 	RunState.hero_level_up.connect(_on_hero_level_up)
+	RunState.crossroads_requested.connect(_on_crossroads_requested)
 	RunState.enemy_stats_changed.connect(_on_enemy_stats_changed)
 	
 	
@@ -167,7 +177,7 @@ func _connect_battle_hud() -> void:
 	battle_hud.pause_pressed.connect(_on_pause_pressed)
 
 # ==========================================
-# HÃ‰ROE
+# HÃƒÆ’Ã¢â‚¬Â°ROE
 # ==========================================
 
 func spawn_hero() -> void:
@@ -191,7 +201,7 @@ func spawn_hero() -> void:
 			hero_card.show_back()
 			hero_card.flip_to_front()
 
-		# ðŸ”‘ Setear HP real inicial
+		# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ Setear HP real inicial
 		hero_card_view.refresh(hero_data)
 
 # ==========================================	
@@ -210,7 +220,7 @@ func setup_enemy_deck() -> void:
 
 	var current_y_offset := 0.0
 
-	# ðŸ”¥ DIBUJAMOS DE ABAJO HACIA ARRIBA
+	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ DIBUJAMOS DE ABAJO HACIA ARRIBA
 	for i in range(RunState.enemy_draw_queue.size() - 1, -1, -1):
 		var enemy_data := RunState.enemy_draw_queue[i]
 
@@ -235,22 +245,22 @@ func spawn_enemy_from_deck() -> void:
 	if enemy_deck == null or enemy_slot == null:
 		return
 
-	# 1ï¸âƒ£ ROBAR DEL MAZO LÃ“GICO
+	# 1ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ ROBAR DEL MAZO LÃƒÆ’Ã¢â‚¬Å“GICO
 	var enemy_data: Dictionary = RunState.draw_enemy_card()
 	if enemy_data.is_empty():
 		return
 
-	# 2ï¸âƒ£ BUSCAR LA CARD VIEW EXISTENTE
+	# 2ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ BUSCAR LA CARD VIEW EXISTENTE
 	var card: CardView = card_views.get(enemy_data.id, null)
 	if card == null:
 		push_error("No CardView found for enemy: " + enemy_data.id)
 		return
 
-	# 3ï¸âƒ£ REPARENT (deck â†’ slot) manteniendo posiciÃ³n global
+	# 3ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ REPARENT (deck ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ slot) manteniendo posiciÃƒÆ’Ã‚Â³n global
 	card.reparent(enemy_slot, true)
 	card.show_back()
 
-	# 4ï¸âƒ£ ANIMACIÃ“N
+	# 4ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ ANIMACIÃƒÆ’Ã¢â‚¬Å“N
 	var slot_rect := enemy_slot.get_global_rect()
 	var scaled_size := card_base_size * card.scale
 	var end_pos := slot_rect.get_center() - (scaled_size * 0.5)
@@ -268,7 +278,7 @@ func _set_enemy_active(card: CardView) -> void:
 	enemy_card_view = card
 	RunState.active_enemy_id = card.card_id
 
-	# ðŸ”‘ Setear HP real del enemigo activo
+	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ Setear HP real del enemigo activo
 	var enemy_data: Variant = RunState.get_card(card.card_id)
 	if enemy_data != null:
 		card.refresh(enemy_data)
@@ -277,7 +287,7 @@ func _set_enemy_active(card: CardView) -> void:
 	_update_hud_state()
 	_update_initiative_chance_for_active_enemy()
 
-	# ðŸ”¥ AUTO-COMBAT: primer ataque automÃ¡tico
+	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ AUTO-COMBAT: primer ataque automÃƒÆ’Ã‚Â¡tico
 	if auto_combat_enabled:
 		# Esperamos 1 frame para que:
 		# - termine el flip
@@ -311,29 +321,39 @@ func _handle_enemy_defeated() -> void:
 	var victory_after_defeat := not _has_remaining_enemies_after_defeat(enemy_card_view.card_id)
 	suppress_level_up_popup = victory_after_defeat
 
-	# 1ï¸âƒ£ Recompensas
+	# 1ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Recompensas
 	if enemy_data != null:
 		RunState.apply_enemy_rewards(enemy_data)
 	suppress_level_up_popup = false
 
-	# 2ï¸âƒ£ Eliminar del estado
+	var has_remaining_enemies: bool = not victory_after_defeat
+	RunState.register_enemy_defeated(has_remaining_enemies)
+
+
+	# 2ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Eliminar del estado
 	RunState.cards.erase(enemy_card_view.card_id)
 
-	# ðŸ”‘ 3ï¸âƒ£ Recalcular danger level (RunManager manda)
+	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ 3ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Recalcular danger level (RunManager manda)
 	RunState.recalculate_danger_level()
 
-	# 4ï¸âƒ£ Visual
+	# 4ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Visual
 	enemy_card_view.queue_free()
 	card_views.erase(enemy_card_view.card_id)
 	enemy_card_view = null
 	if _has_remaining_enemies():
-		current_phase = BattlePhase.IDLE
+		if crossroads_open:
+			current_phase = BattlePhase.UI_LOCKED
+		else:
+			current_phase = BattlePhase.IDLE
 		_update_hud_state()
 	else:
-		_show_victory()
-#######################################################
-#### REVISAR LVL UP
-######################################################
+		_open_end_of_wave_crossroads()
+
+func _open_end_of_wave_crossroads() -> void:
+	if crossroads_open:
+		return
+	end_of_wave_pending = true
+	_on_crossroads_requested()
 
 func _connect_run_signals() -> void:
 	RunState.hero_level_up.connect(_on_hero_level_up)
@@ -349,16 +369,8 @@ func _on_hero_level_up(new_level: int) -> void:
 		return
 	if not _has_remaining_enemies():
 		return
-	print("[BattleTable] HERO LEVEL UP â†’ Pausando batalla")
+	print("[BattleTable] HERO LEVEL UP ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Sin popup de traits")
 	RunState.save_run()
-
-	current_phase = BattlePhase.UI_LOCKED
-	get_tree().paused = true
-
-	_update_hud_state()
-
-	get_tree().paused = true
-	_show_level_up_popup(new_level)
 	if hero_card_view != null:
 		hero_card_view.play_heal_effect()
 
@@ -379,7 +391,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# Instanciar CardView
 	var card: CardView = card_view_scene.instantiate()
 	cards_layer.add_child(card)
-	# Base size explÃ­cito para layout interno del CardView
+	# Base size explÃƒÆ’Ã‚Â­cito para layout interno del CardView
 	card.custom_minimum_size = card_base_size
 	card.size = card_base_size
 	# Asegurar layout fijo del Control (sin anchors dependientes del parent)
@@ -395,10 +407,10 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# =========================
 	if card_data.has("id"):
 		card.card_id = String(card_data["id"])
-		card_views[card.card_id] = card   # ðŸ”‘ REGISTRO CENTRAL
+		card_views[card.card_id] = card   # ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ REGISTRO CENTRAL
 
 	# =========================
-	# DEFINICIÃ“N (Resource)
+	# DEFINICIÃƒÆ’Ã¢â‚¬Å“N (Resource)
 	# =========================
 	var def_id: String = String(card_data["definition"])
 	var definition: CardDefinition = CardDatabase.get_definition(def_id)
@@ -406,7 +418,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 		card.setup_from_definition(definition)
 
 	# =========================
-	# POSICIÃ“N BASE
+	# POSICIÃƒÆ’Ã¢â‚¬Å“N BASE
 	# =========================
 	var slot_rect: Rect2 = slot.get_global_rect()
 
@@ -420,7 +432,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 		card.scale = Vector2(final_scale, final_scale)
 
 	# =========================
-	# POSICIÃ“N CENTRADA (GLOBAL)
+	# POSICIÃƒÆ’Ã¢â‚¬Å“N CENTRADA (GLOBAL)
 	# =========================
 	var scaled_size := card_base_size * card.scale
 	card.global_position = slot_rect.get_center() - (scaled_size * 0.5)
@@ -443,7 +455,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 
 
 # ==========================================
-# COMBATE - DAÃ‘O
+# COMBATE - DAÃƒÆ’Ã¢â‚¬ËœO
 # ==========================================
 # YA NO ES PARTE MAS DE BATTLE TABLE SE OCUPA COMBAT CONTEXT DE ESTO
 
@@ -487,7 +499,7 @@ func _show_level_up_popup(new_level: int) -> void:
 		enemy_traits
 	)
 func _on_traits_confirmed(hero_trait_res: TraitResource, enemy_trait_res: TraitResource) -> void:
-	print("ðŸ§ª CONFIRMED TRAITS")
+	print("ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Âª CONFIRMED TRAITS")
 	print("   hero:", hero_trait_res)
 	print("   enemy:", enemy_trait_res)
 
@@ -496,12 +508,12 @@ func _on_traits_confirmed(hero_trait_res: TraitResource, enemy_trait_res: TraitR
 	RunState.save_run()
 
 
-	# ðŸ”‘ ACTUALIZAR VISUAL DEL HÃ‰ROE
+	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ ACTUALIZAR VISUAL DEL HÃƒÆ’Ã¢â‚¬Â°ROE
 	refresh_card_view("th")
 	if hero_card_view != null:
 		hero_card_view.stop_heal_effect()
 
-	# ðŸ”¥ refrescar TODOS los enemigos existentes
+	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ refrescar TODOS los enemigos existentes
 	for card_id in RunState.cards.keys():
 		if card_id == "th":
 			continue
@@ -513,7 +525,79 @@ func _on_traits_confirmed(hero_trait_res: TraitResource, enemy_trait_res: TraitR
 	current_phase = BattlePhase.IDLE
 	_update_hud_state()
 
-	
+
+# ==========================================
+# CROSSROADS
+# ==========================================
+func _get_or_create_crossroads_popup() -> CrossroadsPopup:
+	if crossroads_popup != null:
+		return crossroads_popup
+	if crossroads_popup_scene == null:
+		push_error("CrossroadsPopup scene not assigned")
+		return null
+	crossroads_popup = crossroads_popup_scene.instantiate()
+	add_child(crossroads_popup)
+	crossroads_popup.process_mode = Node.PROCESS_MODE_ALWAYS
+	crossroads_popup.z_index = 150
+	crossroads_popup.add_deck_pressed.connect(_on_crossroads_add_deck)
+	crossroads_popup.withdraw_pressed.connect(_on_crossroads_withdraw)
+	crossroads_popup.trait_pressed.connect(_on_crossroads_trait)
+	crossroads_popup.popup_closed.connect(_on_crossroads_closed)
+	return crossroads_popup
+
+func _on_crossroads_requested() -> void:
+	if crossroads_open:
+		return
+	var popup := _get_or_create_crossroads_popup()
+	if popup == null:
+		return
+	crossroads_open = true
+	current_phase = BattlePhase.UI_LOCKED
+	_update_hud_state()
+	var preview := RunState.get_withdraw_preview()
+	popup.show_popup(
+		RunState.get_run_gold(),
+		RunState.get_active_decks_count(),
+		RunState.can_add_deck(),
+		int(preview.get("withdraw", 0)),
+		int(preview.get("cost", 0))
+	)
+
+func _on_crossroads_add_deck() -> void:
+	RunState.add_deck()
+	RunState.save_run()
+	_close_crossroads_popup(false)
+
+func _on_crossroads_withdraw() -> void:
+	RunState.apply_withdraw_25_cost_75()
+	RunState.save_run()
+	_close_crossroads_popup(false)
+
+func _on_crossroads_trait() -> void:
+	_close_crossroads_popup(true)
+	_show_level_up_popup(RunState.hero_level)
+
+func _close_crossroads_popup(keep_paused: bool) -> void:
+	if crossroads_popup == null:
+		return
+	crossroads_popup.hide_popup(keep_paused)
+
+func _on_crossroads_closed() -> void:
+	crossroads_open = false
+	if end_of_wave_pending:
+		end_of_wave_pending = false
+		if RunState.try_start_next_wave():
+			setup_enemy_deck()
+			current_phase = BattlePhase.IDLE
+			_update_hud_state()
+		else:
+			_show_victory()
+		return
+	if current_phase == BattlePhase.UI_LOCKED:
+		current_phase = BattlePhase.IDLE
+		_update_hud_state()
+
+
 func _on_draw_pressed() -> void:
 	if current_phase != BattlePhase.IDLE:
 		return
@@ -532,7 +616,7 @@ func _on_auto_draw_toggled(enabled: bool) -> void:
 func _on_auto_combat_toggled(enabled: bool) -> void:
 	auto_combat_enabled = enabled
 
-	# ðŸ”‘ Si se activa el auto-combat y hay un enemigo listo,
+	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ Si se activa el auto-combat y hay un enemigo listo,
 	# arrancamos inmediatamente una ronda.
 	if auto_combat_enabled and current_phase == BattlePhase.ENEMY_ACTIVE:
 		_start_combat()
@@ -589,13 +673,13 @@ func _refresh_all_card_views() -> void:
 
 # ==========================================
 # DRAW ENEMIGO (REAL)
-# Esta funciÃ³n NO cambia estado.
-# El estado se actualiza Ãºnicamente cuando
+# Esta funciÃƒÆ’Ã‚Â³n NO cambia estado.
+# El estado se actualiza ÃƒÆ’Ã‚Âºnicamente cuando
 # la carta llega al slot (_set_enemy_active)
 # ==========================================
 
 func _draw_enemy() -> void:
-	# VerificaciÃ³n de seguridad: solo robamos si la mesa estÃ¡ vacÃ­a (IDLE)
+	# VerificaciÃƒÆ’Ã‚Â³n de seguridad: solo robamos si la mesa estÃƒÆ’Ã‚Â¡ vacÃƒÆ’Ã‚Â­a (IDLE)
 	if current_phase != BattlePhase.IDLE:
 		return
 	# Cambiamos a RESOLVING inmediatamente para bloquear otros robos
@@ -638,7 +722,7 @@ func _show_defeat() -> void:
 		add_child(defeat_popup)
 		defeat_popup.process_mode = Node.PROCESS_MODE_ALWAYS
 		defeat_popup.z_index = 100
-		# ConexiÃ³n segura
+		# ConexiÃƒÆ’Ã‚Â³n segura
 		defeat_popup.back_to_menu_pressed.connect(_on_back_to_menu)
 
 	defeat_popup.show_popup()
@@ -674,7 +758,7 @@ func _show_victory() -> void:
 #######################################
 
 # ==========================================
-# ANIMACIÃ“N DE ATAQUE (HOVER + TAMBALÃ‰O)
+# ANIMACIÃƒÆ’Ã¢â‚¬Å“N DE ATAQUE (HOVER + TAMBALÃƒÆ’Ã¢â‚¬Â°O)
 # ==========================================
 
 func _play_attack_animation(attacker: CardView, target: CardView) -> void:
@@ -685,19 +769,19 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 	var start_pos: Vector2 = attacker.global_position
 	var target_pos: Vector2 = target.global_position
 
-	# DirecciÃ³n hacia el objetivo
+	# DirecciÃƒÆ’Ã‚Â³n hacia el objetivo
 	var direction: Vector2 = (target_pos - start_pos).normalized()
 
 	# =========================
-	# PARÃMETROS DE ANIMACIÃ“N
+	# PARÃƒÆ’Ã‚ÂMETROS DE ANIMACIÃƒÆ’Ã¢â‚¬Å“N
 	# =========================
 
-	var lift_height := 35.0              # cuÃ¡nto flota
+	var lift_height := 35.0              # cuÃƒÆ’Ã‚Â¡nto flota
 	var attack_distance := 0.85          # porcentaje de la distancia real
 	var wiggle_amount := 10.0            # tambaleo lateral
-	var impact_recoil := 12.0            # pequeÃ±o rebote al impactar
+	var impact_recoil := 12.0            # pequeÃƒÆ’Ã‚Â±o rebote al impactar
 
-	# CÃ¡lculos
+	# CÃƒÆ’Ã‚Â¡lculos
 	var lift_offset := Vector2(0, -lift_height)
 	var full_distance := target_pos.distance_to(start_pos)
 	var attack_offset := direction * full_distance * attack_distance
@@ -713,7 +797,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 	tween.set_trans(Tween.TRANS_CUBIC)
 	tween.set_ease(Tween.EASE_OUT)
 
-	# 1ï¸âƒ£ Levantar carta (hover)
+	# 1ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Levantar carta (hover)
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -721,7 +805,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.15
 	)
 
-	# 2ï¸âƒ£ Tambaleo 1
+	# 2ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Tambaleo 1
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -729,7 +813,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.08
 	)
 
-	# 3ï¸âƒ£ Tambaleo 2 (lado contrario)
+	# 3ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Tambaleo 2 (lado contrario)
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -737,7 +821,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.08
 	)
 
-	# 4ï¸âƒ£ Avance fuerte hacia el enemigo
+	# 4ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Avance fuerte hacia el enemigo
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -745,7 +829,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.12
 	)
 
-	# 5ï¸âƒ£ Micro recoil (impacto)
+	# 5ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Micro recoil (impacto)
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -753,7 +837,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.06
 	)
 
-	# 6ï¸âƒ£ Volver a hover
+	# 6ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Volver a hover
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -761,7 +845,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 		0.12
 	)
 
-	# 7ï¸âƒ£ Volver a la mesa
+	# 7ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Volver a la mesa
 	tween.tween_property(
 		attacker,
 		"global_position",
@@ -772,7 +856,7 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 	await tween.finished
 
 # ==========================================
-# COMBAT MANAGER â†’ VISUAL
+# COMBAT MANAGER ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ VISUAL
 # ==========================================
 
 func _on_attack_started(attacker_id: String, target_id: String) -> void:
@@ -798,13 +882,15 @@ func _on_card_died(card_id: String) -> void:
 		auto_draw_enabled = false
 		auto_combat_enabled = false
 		_show_defeat()
-		SaveSystem.remove_from_run_deck(card_id)
 		RunState.save_run()
 		return
 
+	var enemy_data: Dictionary = RunState.get_card(card_id)
+	var def_id: String = String(enemy_data.get("definition", ""))
 	RunState.active_enemy_id = ""
 	_handle_enemy_defeated()
-	SaveSystem.remove_from_run_deck(card_id)
+	if def_id != "":
+		RunState.remove_run_deck_type(def_id)
 	RunState.save_run()
 
 func _on_combat_finished(victory: bool) -> void:

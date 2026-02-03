@@ -9,4 +9,3 @@ display_name = "Cursed Growth"
 description = "Daño x1.5."
 trait_type = 1
 enemy_damage_multiplier = 1.5
-

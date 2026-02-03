@@ -1,21 +1,22 @@
-[gd_resource type="Resource" script_class="TraitDatabase" load_steps=12 format=3 uid="uid://b2yfxt0giqctb"]
+[gd_resource type="Resource" script_class="TraitDatabase" load_steps=13 format=3 uid="uid://b2yfxt0giqctb"]
 
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_m1xxw"]
 [ext_resource type="Script" uid="uid://tevuasv0oa7k" path="res://data/traits/trait_database.gd" id="2_pb50k"]
-[ext_resource type="Resource" uid="uid://btsqqhcceu0y8" path="res://scripts/game/traits/hero/brute_force.tres" id="3_brute"]
-[ext_resource type="Resource" uid="uid://bu44n605pcs1t" path="res://scripts/game/traits/hero/divine_vigor.tres" id="4_divine"]
-[ext_resource type="Resource" uid="uid://cvk4es14v3kkw" path="res://scripts/game/traits/hero/holly_mind.tres" id="5_holly"]
-[ext_resource type="Resource" uid="uid://tey53252pkmd" path="res://scripts/game/traits/hero/holy_strength.tres" id="6_holy"]
-[ext_resource type="Resource" uid="uid://dajaupftkywm1" path="res://scripts/game/traits/hero/sharp_edge.tres" id="7_sharp"]
-[ext_resource type="Resource" uid="uid://dhur1vjwra78u" path="res://scripts/game/traits/enemy/abyss_shell.tres" id="8_abyss"]
-[ext_resource type="Resource" uid="uid://4soefvveoxi2" path="res://scripts/game/traits/enemy/cursed_growth.tres" id="9_cursed"]
-[ext_resource type="Resource" uid="uid://befk2jqj310fc" path="res://scripts/game/traits/enemy/enemy_legion.tres" id="10_legion"]
-[ext_resource type="Resource" uid="uid://7fxj6bbnkaes" path="res://scripts/game/traits/enemy/impending_growth.tres" id="11_impending"]
-[ext_resource type="Resource" uid="uid://dkgwcugwiw40j" path="res://scripts/game/traits/enemy/shadow_presence.tres" id="12_shadow"]
+[ext_resource type="Resource" uid="uid://bxuflr7qlgfsu" path="res://scripts/game/traits/hero/Brute_Force.tres" id="3_brute"]
+[ext_resource type="Resource" uid="uid://bi06nffsmegkx" path="res://scripts/game/traits/hero/Divine_Vigor.tres" id="4_divine"]
+[ext_resource type="Resource" uid="uid://c21jsmrrckies" path="res://scripts/game/traits/hero/Holly_Mind.tres" id="5_holly"]
+[ext_resource type="Resource" uid="uid://cbfjadgvs0l5m" path="res://scripts/game/traits/hero/Holy_Strength.tres" id="6_holy"]
+[ext_resource type="Resource" uid="uid://b1mvqhw2dvaom" path="res://scripts/game/traits/hero/Sharp_Edge.tres" id="7_sharp"]
+[ext_resource type="Resource" uid="uid://b03tk7h8b0wvf" path="res://scripts/game/traits/enemy/Abyss_Shell.tres" id="8_abyss"]
+[ext_resource type="Resource" uid="uid://bd8ec2a58bc3" path="res://scripts/game/traits/enemy/Cursed_Growth.tres" id="9_cursed"]
+[ext_resource type="Resource" uid="uid://c5jh7l7lyft7r" path="res://scripts/game/traits/enemy/Enemy_Legion.tres" id="10_legion"]
+[ext_resource type="Resource" uid="uid://dkp0so8wlk4k0" path="res://scripts/game/traits/enemy/Impending_Growth.tres" id="11_impending"]
+[ext_resource type="Resource" uid="uid://d1yk8jx0pfxk4" path="res://scripts/game/traits/enemy/Shadow_Presence.tres" id="12_shadow"]
 
 [resource]
 script = ExtResource("2_pb50k")
 hero_traits_folder = "res://scripts/game/traits/hero"
 enemy_traits_folder = "res://scripts/game/traits/enemy"
-hero_traits_fallback = [ExtResource("3_brute"), ExtResource("4_divine"), ExtResource("5_holly"), ExtResource("6_holy"), ExtResource("7_sharp")]
-enemy_traits_fallback = [ExtResource("8_abyss"), ExtResource("9_cursed"), ExtResource("10_legion"), ExtResource("11_impending"), ExtResource("12_shadow")]
+hero_traits_fallback = Array[ExtResource("1_m1xxw")]([ExtResource("3_brute"), ExtResource("4_divine"), ExtResource("5_holly"), ExtResource("6_holy"), ExtResource("7_sharp")])
+enemy_traits_fallback = Array[ExtResource("1_m1xxw")]([ExtResource("8_abyss"), ExtResource("9_cursed"), ExtResource("10_legion"), ExtResource("11_impending"), ExtResource("12_shadow")])
 metadata/_custom_type_script = "uid://tevuasv0oa7k"

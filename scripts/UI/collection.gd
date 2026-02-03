@@ -50,8 +50,8 @@ class PackView:
 	var color: Color
 
 var selection_mode: bool = false
-var selected_hero_id: String = ""
-var selected_enemy_ids: Dictionary = {}
+var selected_hero_def_id: String = ""
+var selected_enemy_types: Dictionary = {}
 var selected_pack: PackView = null
 var open_defs: Array[CardDefinition] = []
 var open_cards: Array[CardView] = []
@@ -199,9 +199,10 @@ func _update_navigation_state() -> void:
 
 func _init_selection_ui() -> void:
 	selection_mode = RunState.selection_pending
+	print("[Collection] selection_pending=", RunState.selection_pending)
 	if selection_panel:
 		selection_panel.visible = true
-		selection_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		selection_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	_set_booster_interactivity(true)
 	if select_hero_label:
 		select_hero_label.text = tr("COLLECTION_SELECT_HERO")
@@ -224,19 +225,24 @@ func _clear_selection_visuals() -> void:
 
 func _on_page_slot_clicked(slot: CollectionSlot) -> void:
 	if not selection_mode:
+		if RunState.selection_pending:
+			selection_mode = true
+		else:
+			return
+	if not slot.is_obtained:
 		return
-	if slot.current_instance_id == "":
+	if slot.current_def_id == "":
 		return
 	if slot.current_card_type == "hero":
-		if selected_hero_id == slot.current_instance_id:
-			selected_hero_id = ""
+		if selected_hero_def_id == slot.current_def_id:
+			selected_hero_def_id = ""
 		else:
-			selected_hero_id = slot.current_instance_id
+			selected_hero_def_id = slot.current_def_id
 	elif slot.current_card_type == "enemy":
-		if selected_enemy_ids.has(slot.current_instance_id):
-			selected_enemy_ids.erase(slot.current_instance_id)
+		if selected_enemy_types.has(slot.current_def_id):
+			selected_enemy_types.erase(slot.current_def_id)
 		else:
-			selected_enemy_ids[slot.current_instance_id] = true
+			selected_enemy_types[slot.current_def_id] = true
 	_update_selection_state()
 
 func _update_slot_selection(slot: CollectionSlot) -> void:
@@ -244,9 +250,10 @@ func _update_slot_selection(slot: CollectionSlot) -> void:
 		return
 	var selected := false
 	if slot.current_card_type == "hero":
-		selected = slot.current_instance_id == selected_hero_id
+		selected = slot.current_def_id == selected_hero_def_id
 	elif slot.current_card_type == "enemy":
-		selected = selected_enemy_ids.has(slot.current_instance_id)
+		selected = selected_enemy_types.has(slot.current_def_id)
+	print("[Collection] slot select:", slot.current_def_id, " type=", slot.current_card_type, " selected=", selected)
 	slot.set_selected(selected)
 
 func _update_selection_state() -> void:
@@ -259,8 +266,8 @@ func _update_selection_state() -> void:
 			start_dungeon_button.visible = false
 		_clear_selection_visuals()
 		return
-	var has_hero := selected_hero_id != ""
-	var has_enemies := selected_enemy_ids.size() > 0
+	var has_hero := selected_hero_def_id != ""
+	var has_enemies := selected_enemy_types.size() > 0
 	if select_hero_label:
 		_set_hint_visible(select_hero_label, not has_hero)
 	if select_enemies_label:
@@ -288,18 +295,78 @@ func _set_booster_interactivity(enabled: bool) -> void:
 		booster_popup.visible = enabled and booster_popup.visible
 
 func _on_start_dungeon_pressed() -> void:
-	if selected_hero_id == "" or selected_enemy_ids.size() == 0:
+	print("[Collection] StartDungeon pressed. hero=", selected_hero_def_id, " enemies=", selected_enemy_types.size())
+	if selected_hero_def_id == "" or selected_enemy_types.size() == 0:
+		push_warning("[Collection] StartDungeon blocked. hero or enemies missing.")
 		return
+	var scene_path := "res://Scenes/battle_table.tscn"
+	print("[Collection] checking scene exists:", scene_path)
+	if not ResourceLoader.exists(scene_path):
+		push_error("[Collection] battle_table.tscn no existe en %s" % scene_path)
+		return
+	print("[Collection] scene exists OK")
+	var file := FileAccess.open(scene_path, FileAccess.READ)
+	if file == null:
+		push_error("[Collection] No se pudo abrir battle_table.tscn. Error=%s" % str(FileAccess.get_open_error()))
+	else:
+		var first_line := file.get_line()
+		file.close()
+		print("[Collection] battle_table first line:", first_line)
 	var enemies: Array[String] = []
-	for key in selected_enemy_ids.keys():
+	for key in selected_enemy_types.keys():
 		enemies.append(String(key))
-	var run_deck := SaveSystem.build_run_deck_from_selection(selected_hero_id, enemies)
-	if run_deck.is_empty():
-		return
-	SaveSystem.save_run_deck(run_deck)
+	print("[Collection] enemies list size=", enemies.size())
 	RunState.reset_run()
+	print("[Collection] RunState.reset_run OK")
+	RunState.set_run_selection(selected_hero_def_id, enemies)
+	print("[Collection] RunState.set_run_selection OK")
+	RunState.build_run_deck_from_selection()
+	print("[Collection] RunState.build_run_deck_from_selection OK")
 	RunState.selection_pending = false
-	get_tree().change_scene_to_file("res://Scenes/battle_table.tscn")
+	print("[Collection] selection_pending=false")
+	var err := get_tree().change_scene_to_file(scene_path)
+	print("[Collection] change_scene_to_file err=", err)
+	if err != OK:
+		_debug_battle_table_deps()
+		var packed = ResourceLoader.load(scene_path, "PackedScene", ResourceLoader.CACHE_MODE_IGNORE)
+		var is_null: bool = packed == null
+		var is_valid: bool = is_instance_valid(packed)
+		var class_name_str: String = ""
+		if is_valid:
+			class_name_str = packed.get_class()
+		print(
+			"[Collection] ResourceLoader.load(scene_path)=",
+			packed,
+			" typeof=",
+			typeof(packed),
+			" null=",
+			is_null,
+			" valid=",
+			is_valid,
+			" class=",
+			class_name_str
+		)
+		if is_null or not is_valid:
+			push_error("[Collection] battle_table.tscn no cargo o es invalido")
+
+func _debug_battle_table_deps() -> void:
+	var deps := [
+		"res://scripts/UI/crossroads_popup.gd",
+		"res://scripts/game/battle_table.gd",
+		"res://Scenes/cards/card_view.tscn",
+		"res://assets/stonefglordark.png",
+		"res://Scenes/ui/battle_hud.tscn",
+		"res://Scenes/ui/defeat_popup.tscn",
+		"res://Scenes/ui/victory_popup.tscn",
+		"res://Scenes/ui/xp_hud.tscn",
+		"res://Scenes/ui/level_up_popup.tscn",
+		"res://Scenes/ui/crossroads_popup_fixed.tscn",
+		"res://Scenes/ui/pause_popup.tscn",
+	]
+	for path in deps:
+		var res = ResourceLoader.load(path)
+		var ok := res != null and is_instance_valid(res)
+		print("[Collection] dep load:", path, " ok=", ok, " type=", typeof(res))
 
 func _on_prev_pressed() -> void:
 	_change_book_page(false)
@@ -438,7 +505,7 @@ func _on_open_card_clicked(card: CardView) -> void:
 	if open_cards.size() > 0 and card != open_cards[open_cards.size() - 1]:
 		return
 	var card_def := open_defs[index]
-	var instance_id := _add_card_to_collection(card_def)
+	_add_card_to_collection(card_def)
 	open_cards.remove_at(index)
 	open_defs.remove_at(index)
 	card.queue_free()
@@ -450,15 +517,12 @@ func _add_card_to_collection(def: CardDefinition) -> String:
 		return ""
 	if open_collection == null:
 		open_collection = SaveSystem.ensure_collection()
-	var card := CardFactory.create_card(def)
-	if card == null:
-		return ""
-	open_collection.add_card(card)
+	open_collection.add_type(def.definition_id, 1)
 	SaveSystem.save_collection(open_collection)
 	_refresh_boosters()
 	_refresh_book_content()
-	_go_to_card_page(card.instance_id)
-	return card.instance_id
+	_go_to_card_page(def.definition_id)
+	return def.definition_id
 
 func _on_add_all_pressed() -> void:
 	for def_item in open_defs.duplicate():
@@ -588,8 +652,8 @@ func _get_pack_pool(pack_type: String) -> Array[CardDefinition]:
 		pool.append(card_def)
 	return pool
 
-func _go_to_card_page(instance_id: String) -> void:
-	if instance_id == "":
+func _go_to_card_page(definition_id: String) -> void:
+	if definition_id == "":
 		return
 	var book_node := _get_book()
 	if book_node == null:
@@ -600,8 +664,14 @@ func _go_to_card_page(instance_id: String) -> void:
 	var collection := SaveSystem.load_collection()
 	if collection == null:
 		collection = SaveSystem.ensure_collection()
-	var cards := collection.get_all_cards()
-	if cards.is_empty():
+	var types: Array[String] = []
+	if RunState.selection_pending:
+		types = collection.get_all_types()
+	else:
+		for def_id in CardDatabase.definitions.keys():
+			types.append(String(def_id))
+		types.sort()
+	if types.is_empty():
 		return
 	var slots_per_page: int = 9
 	if book_view != null:
@@ -610,9 +680,9 @@ func _go_to_card_page(instance_id: String) -> void:
 			var override_pages: int = exported_value as int
 			if override_pages > 0:
 				slots_per_page = override_pages
-	for i in range(cards.size()):
-		var card := cards[i]
-		if card.instance_id == instance_id:
+	for i in range(types.size()):
+		var def_id := String(types[i])
+		if def_id == definition_id:
 			var page_index := int(i / max(1, slots_per_page))
 			var target_page := page_index + 1
 			book_page.call("go_to_page", target_page, PageFlip2D.JumpTarget.CONTENT_PAGE)

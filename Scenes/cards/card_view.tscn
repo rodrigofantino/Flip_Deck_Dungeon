@@ -3,7 +3,7 @@
 [ext_resource type="Theme" uid="uid://csalfsfxb4l4i" path="res://data/card_theme.tres" id="1_1glvy"]
 [ext_resource type="Script" uid="uid://cw4ptkrjbqbu3" path="res://scripts/game/card_view.gd" id="2_6x6fe"]
 [ext_resource type="Texture2D" uid="uid://c1x62iswoiqc7" path="res://assets/cards/frame/card_front_final.png" id="3_f0mpd"]
-[ext_resource type="Theme" uid="uid://dvb51r2kvkod0" path="res://data/variant_themes.tres" id="4_liruf"]
+[ext_resource type="Theme" uid="uid://bsiefqa7xtg7a" path="res://data/Variant_themes.tres" id="4_liruf"]
 [ext_resource type="SpriteFrames" uid="uid://d0epu1mldbnrm" path="res://assets/icons/status_effects/heal/heal_effect_frames.tres" id="4_w0j8b"]
 [ext_resource type="Shader" uid="uid://xlrjtlyatv7" path="res://shaders/shader_platinadomuyblanco.gdshader" id="5_f0mpd"]
 [ext_resource type="Texture2D" uid="uid://08ow6h6j0rfn" path="res://assets/cards/frame/card_back_final.png" id="5_nus5u"]

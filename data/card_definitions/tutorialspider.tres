@@ -15,6 +15,7 @@ max_hp = 1
 damage = 1
 initiative = 7
 card_type = "enemy"
+boss = false
 is_persistent = true
 is_tutorial = true
 biome_modifier = "Base Set"

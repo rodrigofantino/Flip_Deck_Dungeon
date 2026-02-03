@@ -1,52 +1,42 @@
-extends Resource
+﻿extends Resource
 class_name PlayerCollection
 
-@export var cards: Array[CardInstance] = []
+@export var obtained_types: Array[String] = []
+@export var owned_count: Dictionary = {}
+@export var upgrade_level: Dictionary = {}
+@export var pool_enabled_types: Array[String] = []
 @export var gold: int = 0
 @export var booster_packs: Dictionary = {}
 
 # =========================
-# API PÚBLICA
+# API PUBLICA
 # =========================
 
-func add_card(card: CardInstance) -> void:
-	if card == null:
-		push_error("Intento de agregar una carta null")
+func add_type(definition_id: String, amount: int = 1) -> void:
+	if definition_id == "":
+		push_error("Intento de agregar una carta sin definition_id")
 		return
-
-	if has_instance(card.instance_id):
-		push_error("La carta ya existe en la colección: " + card.instance_id)
+	if amount <= 0:
 		return
+	if not obtained_types.has(definition_id):
+		obtained_types.append(definition_id)
+	var current := int(owned_count.get(definition_id, 0))
+	owned_count[definition_id] = current + amount
 
-	cards.append(card)
+func has_type(definition_id: String) -> bool:
+	return obtained_types.has(definition_id)
 
+func get_owned_count(definition_id: String) -> int:
+	return int(owned_count.get(definition_id, 0))
 
-func remove_card_by_instance_id(instance_id: String) -> void:
-	for i in cards.size():
-		if cards[i].instance_id == instance_id:
-			cards.remove_at(i)
-			return
-
-	push_warning("No se encontró la carta para remover: " + instance_id)
-
-
-func get_card_by_instance_id(instance_id: String) -> CardInstance:
-	for card in cards:
-		if card.instance_id == instance_id:
-			return card
-	return null
-
-
-func has_instance(instance_id: String) -> bool:
-	return get_card_by_instance_id(instance_id) != null
-
-
-func get_all_cards() -> Array[CardInstance]:
-	return cards.duplicate()
-
+func get_all_types() -> Array[String]:
+	return obtained_types.duplicate()
 
 func clear() -> void:
-	cards.clear()
+	obtained_types.clear()
+	owned_count.clear()
+	upgrade_level.clear()
+	pool_enabled_types.clear()
 
 func add_booster(pack_type: String, amount: int = 1) -> void:
 	if pack_type == "":

@@ -1,4 +1,4 @@
-extends Control
+﻿extends Control
 class_name CollectionSlot
 
 @export var card_view_scene: PackedScene
@@ -10,19 +10,19 @@ class_name CollectionSlot
 
 var card_view: CardView = null
 var current_def_id: String = ""
-var current_instance_id: String = ""
 var current_card_type: String = ""
+var is_obtained: bool = false
 
 signal slot_clicked(slot: CollectionSlot)
 
-func set_occupied(definition: CardDefinition, instance_id: String = "") -> void:
+func set_occupied(definition: CardDefinition, obtained: bool = true) -> void:
 	_clear_card()
-	background.color = Color(0.2, 0.2, 0.2, 0.85)
+	is_obtained = obtained
+	background.color = Color(0.2, 0.2, 0.2, 0.85) if obtained else Color(0.1, 0.1, 0.1, 0.7)
 	if card_view_scene == null or definition == null:
 		return
 	current_def_id = definition.definition_id
 	current_card_type = definition.card_type
-	current_instance_id = instance_id
 
 	card_view = card_view_scene.instantiate()
 	card_container.add_child(card_view)
@@ -35,6 +35,7 @@ func set_occupied(definition: CardDefinition, instance_id: String = "") -> void:
 	card_view.offset_bottom = card_base_size.y
 	card_view.setup_from_definition(definition)
 	card_view.show_front()
+	card_view.modulate = Color(1, 1, 1, 1) if obtained else Color(0.35, 0.35, 0.35, 0.65)
 	_set_mouse_filter_recursive(card_view, Control.MOUSE_FILTER_IGNORE)
 	card_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	call_deferred("_fit_card")
@@ -44,8 +45,8 @@ func set_empty() -> void:
 	_clear_card()
 	background.color = Color(0.15, 0.15, 0.15, 0.5)
 	current_def_id = ""
-	current_instance_id = ""
 	current_card_type = ""
+	is_obtained = false
 
 func _clear_card() -> void:
 	if card_view != null:
@@ -77,12 +78,12 @@ func _ready() -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		print("[CollectionSlot] Click:", name, "inst:", current_instance_id, "def:", current_def_id)
+		print("[CollectionSlot] Click:", name, "def:", current_def_id)
 		slot_clicked.emit(self)
 
 func set_selected(selected: bool) -> void:
 	if selection_outline:
-		selection_outline.visible = selected
+		selection_outline.visible = selected and is_obtained
 
 func _fit_card() -> void:
 	if card_view == null:

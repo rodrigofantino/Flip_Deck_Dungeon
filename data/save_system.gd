@@ -1,14 +1,14 @@
-extends Node
+﻿extends Node
 class_name SaveSystemScript
 # Este script se encarga de escribir y leer
-# el progreso permanente del jugador y la colección base
+# el progreso permanente del jugador y la colecciÃ³n base
 
 
 const SAVE_DIR := "user://save"
 const PROFILE_SAVE_PATH := "user://save/save_profile.json"
 # Ruta del archivo de guardado del perfil (carpeta segura de usuario)
 const COLLECTION_SAVE_PATH := "user://save/card_collection.json"
-# Ruta del archivo de guardado de la colección base
+# Ruta del archivo de guardado de la colecciÃ³n base
 const RUN_DECK_SAVE_PATH := "user://save/run_deck.json"
 # Ruta del archivo de guardado del deck de la run actual
 const DEFAULT_TUTORIAL_COUNTS := {
@@ -21,13 +21,13 @@ const DEFAULT_TUTORIAL_COUNTS := {
 
 
 # =========================
-# API PÚBLICA
+# API PÃšBLICA
 # =========================
 
 static func save_profile(collection: PlayerCollection) -> void:
 	# Guarda el perfil del jugador en disco
 	var data := Serialization.player_collection_to_dict(collection)
-	# Convierte la colección del jugador a datos planos
+	# Convierte la colecciÃ³n del jugador a datos planos
 
 	_ensure_save_dir()
 
@@ -75,7 +75,7 @@ static func load_profile() -> PlayerCollection:
 	# Intenta parsear el texto a datos JSON
 
 	if err != OK:
-		# Maneja error si el JSON está corrupto
+		# Maneja error si el JSON estÃ¡ corrupto
 		push_error("Error parseando JSON de perfil")
 		return null
 
@@ -84,7 +84,7 @@ static func load_profile() -> PlayerCollection:
 
 
 # =========================
-# COLECCIÓN BASE
+# COLECCIÃ“N BASE
 # =========================
 
 static func save_collection(collection: PlayerCollection) -> void:
@@ -94,7 +94,7 @@ static func save_collection(collection: PlayerCollection) -> void:
 
 	var file := FileAccess.open(COLLECTION_SAVE_PATH, FileAccess.WRITE)
 	if file == null:
-		push_error("No se pudo abrir archivo de colección")
+		push_error("No se pudo abrir archivo de colecciÃ³n")
 		return
 
 	file.store_string(JSON.stringify(data))
@@ -107,7 +107,7 @@ static func load_collection() -> PlayerCollection:
 
 	var file := FileAccess.open(COLLECTION_SAVE_PATH, FileAccess.READ)
 	if file == null:
-		push_error("No se pudo abrir archivo de colección")
+		push_error("No se pudo abrir archivo de colecciÃ³n")
 		return null
 
 	var content := file.get_as_text()
@@ -116,7 +116,7 @@ static func load_collection() -> PlayerCollection:
 	var json := JSON.new()
 	var err := json.parse(content)
 	if err != OK:
-		push_error("Error parseando JSON de colección")
+		push_error("Error parseando JSON de colecciÃ³n")
 		return null
 
 	return Serialization.player_collection_from_dict(json.data)
@@ -178,11 +178,9 @@ static func _build_default_collection() -> PlayerCollection:
 		if not def.is_tutorial:
 			push_warning("[SaveSystem] La definicion no es tutorial: " + def_id)
 		var count := int(DEFAULT_TUTORIAL_COUNTS[def_id])
-		for i in range(count):
-			collection.add_card(_build_instance(def))
+		collection.add_type(def_id, count)
 
 	return collection
-
 
 static func _build_instance(def: CardDefinition) -> CardInstance:
 	var card := CardInstance.new()
@@ -205,17 +203,8 @@ static func _is_valid_tutorial_collection(collection: PlayerCollection) -> bool:
 	if collection == null:
 		return false
 
-	var counts := {}
 	for def_id in DEFAULT_TUTORIAL_COUNTS.keys():
-		counts[def_id] = 0
-
-	for card in collection.get_all_cards():
-		var def_id := String(card.definition_id)
-		if counts.has(def_id):
-			counts[def_id] += 1
-
-	for def_id in DEFAULT_TUTORIAL_COUNTS.keys():
-		if counts.get(def_id, 0) != int(DEFAULT_TUTORIAL_COUNTS[def_id]):
+		if collection.get_owned_count(def_id) != int(DEFAULT_TUTORIAL_COUNTS[def_id]):
 			return false
 	return true
 
@@ -224,7 +213,7 @@ static func _is_valid_tutorial_collection(collection: PlayerCollection) -> bool:
 # RUN DECK
 # =========================
 
-static func save_run_deck(run_deck: Array[Dictionary]) -> void:
+static func save_run_deck(run_deck: Array[String]) -> void:
 	_ensure_save_dir()
 	var file := FileAccess.open(RUN_DECK_SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -234,7 +223,7 @@ static func save_run_deck(run_deck: Array[Dictionary]) -> void:
 	file.close()
 
 
-static func load_run_deck() -> Array[Dictionary]:
+static func load_run_deck() -> Array[String]:
 	if not FileAccess.file_exists(RUN_DECK_SAVE_PATH):
 		return []
 
@@ -251,10 +240,14 @@ static func load_run_deck() -> Array[Dictionary]:
 		push_error("Error parseando JSON de run deck")
 		return []
 
-	var result: Array[Dictionary] = []
+	var result: Array[String] = []
 	for entry in data:
-		if typeof(entry) == TYPE_DICTIONARY:
-			result.append(entry)
+		if typeof(entry) == TYPE_STRING:
+			result.append(String(entry))
+		elif typeof(entry) == TYPE_DICTIONARY:
+			var def_id := String(entry.get("definition_id", ""))
+			if def_id != "":
+				result.append(def_id)
 	return result
 
 
@@ -269,114 +262,40 @@ static func clear_run_save() -> void:
 	clear_run_deck()
 
 
-static func remove_from_run_deck(run_id: String) -> void:
-	if run_id == "":
+static func remove_from_run_deck(definition_id: String) -> void:
+	if definition_id == "":
 		return
 	var deck := load_run_deck()
 	if deck.is_empty():
 		return
 	for i in range(deck.size() - 1, -1, -1):
-		var entry: Dictionary = deck[i]
-		if String(entry.get("run_id", "")) == run_id:
+		if deck[i] == definition_id:
 			deck.remove_at(i)
+			break
 	save_run_deck(deck)
 
 
-static func build_tutorial_run_deck() -> Array[Dictionary]:
-	var collection := ensure_collection()
+static func build_tutorial_run_deck() -> Array[String]:
+	var result: Array[String] = []
 	if CardDatabase.definitions.is_empty():
 		CardDatabase.load_definitions()
-
-	var run_deck: Array[Dictionary] = []
-	var hero_added := false
-	var counters := {}
-
-	for card in collection.get_all_cards():
-		var def: CardDefinition = CardDatabase.get_definition(card.definition_id)
+	for def_id in DEFAULT_TUTORIAL_COUNTS.keys():
+		var def: CardDefinition = CardDatabase.get_definition(def_id)
 		if def == null:
 			continue
-		if not def.is_tutorial:
+		if def.card_type != "enemy":
 			continue
-
-		if def.card_type == "hero":
-			if hero_added:
-				continue
-			run_deck.append({
-				"run_id": "th",
-				"collection_id": card.instance_id,
-				"definition_id": def.definition_id,
-				"is_persistent": def.is_persistent
-			})
-			hero_added = true
-			continue
-
-		var key := def.definition_id
-		var index := int(counters.get(key, 0)) + 1
-		counters[key] = index
-		var run_id := "t_%s_%d" % [key, index]
-		run_deck.append({
-			"run_id": run_id,
-			"collection_id": card.instance_id,
-			"definition_id": def.definition_id,
-			"is_persistent": def.is_persistent
-		})
-
-		if not def.is_persistent:
-			collection.remove_card_by_instance_id(card.instance_id)
-
-	save_collection(collection)
-	return run_deck
+		var count := int(DEFAULT_TUTORIAL_COUNTS[def_id])
+		for i in range(count):
+			result.append(def_id)
+	return result
 
 
 static func build_run_deck_from_selection(
-	hero_instance_id: String,
-	enemy_instance_ids: Array[String]
-) -> Array[Dictionary]:
-	var collection := ensure_collection()
-	if CardDatabase.definitions.is_empty():
-		CardDatabase.load_definitions()
-
-	var run_deck: Array[Dictionary] = []
-	var hero_card := collection.get_card_by_instance_id(hero_instance_id)
-	if hero_card == null:
-		return []
-
-	var hero_def: CardDefinition = CardDatabase.get_definition(hero_card.definition_id)
-	if hero_def == null:
-		return []
-
-	run_deck.append({
-		"run_id": "th",
-		"collection_id": hero_card.instance_id,
-		"definition_id": hero_def.definition_id,
-		"is_persistent": hero_def.is_persistent
-	})
-
-	var counters := {}
-	for instance_id in enemy_instance_ids:
-		var enemy_card := collection.get_card_by_instance_id(instance_id)
-		if enemy_card == null:
-			continue
-		var def: CardDefinition = CardDatabase.get_definition(enemy_card.definition_id)
-		if def == null:
-			continue
-		var key := def.definition_id
-		var index := int(counters.get(key, 0)) + 1
-		counters[key] = index
-		var run_id := "e_%s_%d" % [key, index]
-		run_deck.append({
-			"run_id": run_id,
-			"collection_id": enemy_card.instance_id,
-			"definition_id": def.definition_id,
-			"is_persistent": def.is_persistent
-		})
-
-		if not def.is_persistent:
-			collection.remove_card_by_instance_id(enemy_card.instance_id)
-
-	save_collection(collection)
-	return run_deck
-
+	_hero_definition_id: String,
+	enemy_definition_ids: Array[String]
+) -> Array[String]:
+	return enemy_definition_ids.duplicate()
 
 static func _ensure_save_dir() -> void:
 	# Asegura que exista user://save en cualquier plataforma/export.
@@ -384,7 +303,7 @@ static func _ensure_save_dir() -> void:
 
 	var dir: DirAccess = DirAccess.open("user://")
 	if dir == null:
-		push_error("[SaveSystem] No se pudo abrir user:// (sin permisos o ruta inválida). user_dir=%s" % OS.get_user_data_dir())
+		push_error("[SaveSystem] No se pudo abrir user:// (sin permisos o ruta invÃ¡lida). user_dir=%s" % OS.get_user_data_dir())
 		return
 
 	var err: Error = dir.make_dir_recursive("save")

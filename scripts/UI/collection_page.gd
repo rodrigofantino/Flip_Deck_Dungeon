@@ -1,4 +1,4 @@
-extends Control
+﻿extends Control
 
 signal manage_pageflip(give_control_to_book: bool)
 
@@ -9,8 +9,8 @@ signal manage_pageflip(give_control_to_book: bool)
 @onready var grid: GridContainer = $Grid
 
 var _page_index: int = 0
-var _card_keys: Array[String] = []
-var _collection_map: Dictionary = {}
+var _card_types: Array[String] = []
+var _card_obtained: Array[bool] = []
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -58,13 +58,26 @@ func _load_collection() -> void:
 	var collection := SaveSystem.load_collection()
 	if collection == null:
 		collection = SaveSystem.ensure_collection()
-	_collection_map.clear()
-	_card_keys.clear()
-	for card in collection.get_all_cards():
-		var key := String(card.instance_id)
-		var def_id := String(card.definition_id)
-		_card_keys.append(key)
-		_collection_map[key] = def_id
+	var obtained := {}
+	for def_id in collection.get_all_types():
+		obtained[String(def_id)] = true
+	var is_play_mode := RunState.selection_pending
+	_card_types.clear()
+	_card_obtained.clear()
+	if is_play_mode:
+		var ids := collection.get_all_types()
+		ids.sort()
+		for def_id in ids:
+			_card_types.append(String(def_id))
+			_card_obtained.append(true)
+	else:
+		var all_ids: Array[String] = []
+		for def_id in CardDatabase.definitions.keys():
+			all_ids.append(String(def_id))
+		all_ids.sort()
+		for def_id in all_ids:
+			_card_types.append(def_id)
+			_card_obtained.append(obtained.has(def_id))
 
 func _refresh() -> void:
 	if _page_index < 0:
@@ -79,12 +92,12 @@ func _refresh() -> void:
 		if child is CollectionSlot:
 			var slot := child as CollectionSlot
 			var global_index := start_index + slot_index
-			if global_index < _card_keys.size():
-				var key := _card_keys[global_index]
-				var def_id := String(_collection_map.get(key, ""))
+			if global_index < _card_types.size():
+				var def_id := String(_card_types[global_index])
 				var def: CardDefinition = CardDatabase.get_definition(def_id)
 				if def != null:
-					slot.set_occupied(def, key)
+					var obtained := _card_obtained[global_index] if global_index < _card_obtained.size() else true
+					slot.set_occupied(def, obtained)
 				else:
 					slot.set_empty()
 			else:

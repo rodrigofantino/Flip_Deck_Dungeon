@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://c6u72gt7nh3p4"]
+[gd_scene load_steps=11 format=3 uid="uid://c6u72gt7nh3p4"]
 
 [ext_resource type="Script" uid="uid://266r1e7fm203" path="res://scripts/game/battle_table.gd" id="1_f743b"]
 [ext_resource type="PackedScene" uid="uid://dtt1b34yncqy2" path="res://Scenes/cards/card_view.tscn" id="2_udct1"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://bq3a6o0ulb6fm" path="res://Scenes/ui/victory_popup.tscn" id="6_4h7lb"]
 [ext_resource type="PackedScene" uid="uid://buf3cc7nbc5w4" path="res://Scenes/ui/xp_hud.tscn" id="6_j8cen"]
 [ext_resource type="PackedScene" uid="uid://dbv8f10a2jvwh" path="res://Scenes/ui/level_up_popup.tscn" id="7_x57qr"]
+[ext_resource type="PackedScene" uid="uid://b7r1m5m8f0k2a" path="res://Scenes/ui/crossroads_popup_fixed.tscn" id="9_cxrs"]
 [ext_resource type="PackedScene" uid="uid://c2p2m7p4y3w1q" path="res://Scenes/ui/pause_popup.tscn" id="8_p9p7r"]
 
 [node name="BattleTable" type="Control"]
@@ -22,6 +23,7 @@ script = ExtResource("1_f743b")
 defeat_popup_scene = ExtResource("5_tmutd")
 victory_popup_scene = ExtResource("6_4h7lb")
 level_up_popup_scene = ExtResource("7_x57qr")
+crossroads_popup_scene = ExtResource("9_cxrs")
 pause_popup_scene = ExtResource("8_p9p7r")
 card_view_scene = ExtResource("2_udct1")
 
@@ -137,3 +139,4 @@ grow_vertical = 0
 
 [node name="LevelUpPopup" parent="UI" instance=ExtResource("7_x57qr")]
 layout_mode = 1
+

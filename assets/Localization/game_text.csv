@@ -69,3 +69,11 @@ COLLECTION_OPEN_ADD_ALL,Add all,Agregar todas
 COLLECTION_SELECT_HERO,Choose a hero,Elige un héroe
 COLLECTION_SELECT_ENEMIES,Choose enemies,Elige enemigos
 COLLECTION_START_DUNGEON,Start Dungeon,Iniciar Dungeon
+CROSSROADS_TITLE,Crossroads,Encrucijada
+CROSSROADS_ACTIVE_DECKS,Active decks: {value}/{max},Mazos activos: {value}/{max}
+CROSSROADS_RUN_GOLD,Run gold: {value},Oro de la run: {value}
+CROSSROADS_WITHDRAW_LABEL,Withdraw: +{value},Retirar: +{value}
+CROSSROADS_COST_LABEL,Cost: -{value},Costo: -{value}
+CROSSROADS_OPTION_ADD_DECK,Add deck,Agregar mazo
+CROSSROADS_OPTION_WITHDRAW,Withdraw,Retirar
+CROSSROADS_OPTION_TRAIT,Trait,Rasgo

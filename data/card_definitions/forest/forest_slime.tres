@@ -14,3 +14,4 @@ frame_texture = ExtResource("3_frame")
 max_hp = 3
 damage = 1
 card_type = "enemy"
+boss = false

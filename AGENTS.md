@@ -49,19 +49,45 @@ Ask only when the request is impossible to execute without a missing fact (e.g.,
 ### Preference resolution
 If asked to choose naming, foldering, or minor UX behavior, choose the option most consistent with existing repo conventions. Do not ask.
 
+## Git autonomy (LOCAL) — NO CONFIRMATIONS
+For LOCAL git operations (no remote interaction), proceed without asking questions or requesting confirmation in chat.
+
+**Allowed without confirmation (LOCAL ONLY):**
+- `git status`, `git diff`, `git log`
+- `git add` (including `git add -A` when appropriate)
+- `git commit -m "..."` (create commits autonomously)
+- `git restore` / `git checkout -- <file>` (only to revert uncommitted changes)
+- `git reset --soft` (only if needed to amend a commit locally)
+- `git stash` / `git stash pop` (local safety)
+
+**Rules for local commits:**
+1) Stage only files relevant to the task (avoid unrelated noise).
+2) Never commit generated/export artifacts (respect `.gitignore`).
+3) Choose a clear commit message using this format:
+   - `feat: ...`, `fix: ...`, `chore: ...`, `docs: ...`
+4) After committing, report:
+   - commit message used
+   - files included (short list)
+   - `git status` summary (clean/dirty)
+
 ### Hard stops (must ask before proceeding)
-- Any Git operation that touches a remote (GitHub/GitLab/etc.), including:
-  - `git push`, `git pull`, `git fetch`, `git clone`
-  - creating/updating remotes, changing branches, rebasing with remote
-  - using PAT tokens, SSH keys, credentials, or GitHub CLI auth
+Codex MUST ask before:
+
+**A) Any Git operation that touches a remote**
+- `git push`, `git pull`, `git fetch`, `git clone`
+- creating/updating remotes, changing branches with remote tracking, rebasing with remote, force pushes
+- using PAT tokens, SSH keys, credentials, or GitHub CLI auth
+
+**B) Destructive operations**
 - Deleting or removing any files (including `.tscn`, `.tres`, `.gd`, assets, data, localization), or large directory cleanups.
 - Any change that effectively deletes content:
   - moving files in a way that breaks references without updating them
   - replacing a file with an empty/stub version
   - removing scenes/resources from the project
-- Security/auth/payments/secrets/credentials/tokens (beyond the git-auth case above)
 - Changing save/data formats in a breaking way or irreversible migrations
 - Anything that risks corrupting user data
+
+Everything else is allowed without asking.
 
 ## Project layout (HARD RULES)
 Always place/modify files under these paths and **respect existing subfolders by logic** (biome, feature, UI, etc.):

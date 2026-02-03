@@ -2,340 +2,232 @@ FLIP DECK DUNGEON
 GAME DESIGN DOCUMENT (GDD)
 
 ========================
-
-VISION GENERAL
+1. VISIÓN GENERAL
 ========================
 Flip Deck Dungeon es un roguelike de cartas con combates por turnos donde todas las cartas
-son entidades vivas con HP, dano, nivel y traits.
+son entidades vivas con HP, daño, nivel y traits.
 
 Plataforma: PC (Steam)
 Motor: Godot 4.x
-Duracion de runs: corta / media
-Enfoque: decisiones claras, progresion persistente, rejugabilidad.
-Fantasia secundaria: coleccion TCG (sobres, holos, binder).
+Duración de runs: corta / media
+Enfoque: decisiones claras, progresión persistente y alta rejugabilidad.
+Fantasía secundaria: colección TCG (sobres, rarezas, holos, binder).
 
 ========================
-2. PILARES DE DISENO
-
-Cartas como entidades vivas
-
-Una sola fuente de verdad
-
-Runs cortas pero profundas
-
-Progresion clara y acumulativa
-
-Riesgo vs recompensa
-
-Coleccionismo TCG sin romper el roguelite (pool, no mazo fijo con copias)
+2. PILARES DE DISEÑO
+========================
+- Cartas como entidades vivas
+- Una sola fuente de verdad
+- Runs cortas pero profundas
+- Progresión clara (run vs meta)
+- Riesgo vs recompensa explícito
+- Coleccionismo TCG sin romper el roguelike
+  (pool habilitada, no mazos fijos con copias)
 
 ========================
 3. CORE FANTASY
+========================
+El jugador encarna a un héroe representado por una carta.
+Los enemigos también son cartas que se enfrentan en combates rápidos y letales.
 
-El jugador encarna a un heroe representado por una carta.
-Los enemigos tambien son cartas que se enfrentan en combates rapidos.
+Cada run progresa mediante:
+- Oleadas (escalado automático de poder)
+- Encrucijadas (decisiones estructurales)
+- Loot táctico (ítems y acciones temporales)
 
-Cada combate debilita o fortalece la run mediante:
-
-Escalado de amenaza (dificultad)
-
-Acumulacion de cofre (recompensa condicionada a ganar)
-
-Loot tactico (acciones e items) que mejora al heroe durante la run
+La fantasía es la de profundizar en una dungeon viva,
+donde cada decisión vuelve el camino más peligroso y más rentable.
 
 ========================
 4. LOOP PRINCIPAL
-
+========================
 MACRO LOOP:
-
-Inicio de run (eleccion de heroe + dungeon + pool)
-
-Combates secuenciales
-
-Encrucijadas (decisiones de riesgo, seguro y reglas)
-
-Boss final (siempre)
-
-Derrota o victoria
-
-Retorno al meta (oro / dust del gremio, desbloqueos)
+- Inicio de run
+  - Elección de héroe
+  - Elección de dungeon
+  - Habilitación de pool mínima de cartas
+- Oleadas de combate
+- Encrucijadas post-oleada
+- Boss final (siempre)
+- Derrota, escape o victoria
+- Retorno al meta (Guild Coins, desbloqueos)
 
 MICRO LOOP:
-
-Robar/Generar encuentro desde los mazos activos
-
-Combate
-
-Resolucion (muerte, drops, dust)
-
-Limpieza de estado
+- Generar encuentro desde los mazos activos
+- Combate
+- Resolución (muerte, drops, dust de run)
+- Limpieza de estado
+- Avance de oleada
 
 ========================
-5. SISTEMA DE CARTAS
-
-Tipos:
-
-Heroe
-
-Enemigo
-
-Item (equipamiento)
-
-Accion (consumible / one-shot)
-
-Boss (variante especial, generalmente holo)
-
-Cada carta tiene:
-
-ID
-
-Definicion base
-
-Nivel (si aplica)
-
-HP actual / maximo (si aplica)
-
-Dano (si aplica)
-
-Traits
-
-Nota: fuera de la run, las cartas se coleccionan como “entradas unicas”.
-Dentro de la run, el sistema puede generar copias temporales segun la pool habilitada.
+5. SISTEMA DE OLEADAS
+========================
+- Una run está compuesta por oleadas.
+- Cada oleada corresponde a limpiar un mazo enemigo activo.
+- Al completar una oleada:
+  - Todas las cartas activas de la run suben +1 nivel.
+- El nivel de oleada es temporal y no afecta la colección ni el meta.
 
 ========================
-6. SISTEMA DE COMBATE
+6. SISTEMA DE CARTAS
+========================
+Tipos de cartas:
+- Héroe (persistente)
+- Enemigo (persistente)
+- Ítem (solo de run, equipable)
+- Acción (solo de run, consumible)
+- Boss (variante especial, generalmente holo)
 
+Atributos de carta:
+- ID
+- Definición base
+- Nivel
+- HP actual / máximo (si aplica)
+- Daño (si aplica)
+- Traits
+
+Nota:
+Fuera de la run, las cartas existen como entradas únicas de colección.
+Dentro de la run, el sistema puede generar copias temporales desde la pool habilitada.
+
+========================
+7. SISTEMA DE COMBATE
+========================
 Combate por turnos:
-
-Turno heroe
-
-Turno enemigos
-
-Aplicacion de dano
-
-Chequeo de muerte
-
-Fin de ronda
+- Turno del héroe
+- Turno de enemigos (loop multi-enemigo)
+- Aplicación de daño
+- Chequeo de muerte
+- Fin de ronda
 
 Encuentros:
+- 1 héroe contra 1 a N enemigos según mazos activos, oleada y amenaza.
+- El boss es siempre el encuentro final.
 
-1 heroe contra 1 a 3 enemigos (segun mazos activos, tier y amenaza)
+Drops:
+Al morir un enemigo puede dropear una carta a la mano:
+- Acción (one-shot: heal, cleanse, bomb, etc.)
+- Ítem (equipable)
 
-El boss es el encuentro final de la run (siempre)
-
-Drops al morir enemigos:
-
-A veces el enemigo deja una carta de loot a la mano/botin:
-
-Accion (se usa una vez y se descarta; ej: heal, cleanse, remove poison)
-
-Item (se equipa; ej: arma/armadura/accesorio; slots definidos por implementacion)
-
-Guardrails de UI:
-
-Límite de mano/botin (para evitar inflacion de cartas) y reglas claras de descarte/seleccion.
+Guardrails:
+- Límite de mano/botín
+- Reglas claras de descarte y reemplazo
 
 ========================
-7. SISTEMA DE TRAITS
+8. ÍTEMS Y SLOTS DE ARMAMENTO
+========================
+- Los ítems existen solo durante la run.
+- Se juegan desde la mano.
+- Al equiparse:
+  - Ocupan un slot del héroe
+  - Reemplazan el ítem anterior del slot (se destruye)
 
-Traits como modificadores de reglas.
-Se aplican mediante hooks:
+Slots base (ejemplo):
+- Arma
+- Armadura
+- Accesorio
 
-Inicio de combate
-
-Ataque
-
-Dano
-
-Muerte
-
-Traits de run (encrucijadas):
-
-Se ofrecen como opcion en encrucijadas (estilo “Loop Hero”: cambian reglas, con trade-offs)
-
-No son buffs planos: deben modificar el loop (riesgo/recompensa, drops, amenaza, etc.)
-
-Se limitan por run (cap) para mantener claridad y balance.
+Los ítems pueden:
+- Modificar stats
+- Agregar traits temporales
+- Habilitar ataques a múltiples enemigos (ej: Fireball)
 
 ========================
-8. TUTORIAL
+9. SISTEMA DE TRAITS
+========================
+Traits como modificadores de reglas aplicados mediante hooks:
+- Inicio de combate
+- Ataque
+- Daño
+- Muerte
 
-Run guiada
+Traits de héroe (run):
+- Se ofrecen en Encrucijadas
+- Impacto sustancial
+- Limitados por run (cap)
 
-Sin RNG duro
-
-Ensenia todo el juego
-
-Cartas de tutorial no se pierden
-
-Puede funcionar como “run de rescate” (entrada gratuita, sin castigo) para evitar deadlocks.
+No son buffs planos:
+modifican el loop (riesgo, drops, combate, economía).
 
 ========================
-9. META PROGRESION
+10. ENCRUCIJADAS (POST-OLEADA)
+========================
+Al finalizar cada oleada se abre una Encrucijada con 4 opciones:
 
-Oro persistente
+1) Agregar un mazo
+   - Se suma un nuevo mazo enemigo
+   - Aumenta dificultad y potencial de recompensa
+   - Escalable (cap V1: 3–5)
 
-Dust del gremio persistente
+2) Elegir trait de héroe
+   - Power spike claro
+   - Modifica la run
 
-Sobres (boosters)
+3) Escapar
+   - Finaliza la run
+   - El jugador conserva solo el 25% del Dust
+   - Se convierte en Guild Coins
 
-Coleccion
-
-Boton Continue para continuar run guardada
-
-Oro: economia operativa (compras, fees, heroes, sobres).
-Dust del gremio: desbloqueos de contenido (dungeons, contratos, bosses/variantes, etc.).
+4) Continuar
+   - No se gasta Dust
+   - La run sigue igual
 
 ========================
-10. COLECCION
+11. DUST DE RUN Y ECONOMÍA
+========================
+Dust:
+- Existe solo dentro de la dungeon
+- Moneda temporal de run
+- Se obtiene al derrotar enemigos
+- Se gasta solo en Encrucijadas
 
-Libro de cartas (Binder)
+Fin de run:
+- Al terminar la run (victoria o escape),
+  todo el Dust restante se convierte automáticamente en Guild Coins.
+- Fuera de la dungeon no existe Dust.
 
-En coleccion: se ven cartas obtenidas + sombras de cartas no desbloqueadas
+========================
+12. META PROGRESIÓN (GUILD)
+========================
+Guild Coins:
+- Única moneda persistente
+- Se usa para:
+  - Comprar sobres
+  - Desbloquear héroes
+  - Upgrades persistentes
+  - Contratos
 
-En jugar: se ven solo cartas obtenidas (sin sombras)
-
-Filtros por rareza y bioma
+========================
+13. COLECCIÓN
+========================
+- Binder de cartas
+- Cartas desbloqueadas + sombras de no desbloqueadas
+- Filtros por rareza y bioma
 
 Sobres:
-
-Pueden otorgar enemigos, items, acciones, heroes (marco dorado), bosses (holo).
-
-Precio con rampa: cada 5 sobres comprados, el precio sube +20%.
+- Pueden otorgar enemigos, héroes, ítems, acciones y bosses (holo).
 
 Duplicados:
+- Se desintegran en Guild Coins
+- O se invierten para subir el nivel de la carta
 
-Se pueden convertir en polvo (dust del gremio)
-
-O usarse para mejorar cartas (upgrade level)
-
-Mejoras de cartas (upgrade):
-
-Mejorar una carta aumenta el dust que entrega cuando participa en la run
-
-El jugador puede mejorar una carta y aun asi elegir no llevarla en la pool
-
-Pool para run:
-
-Fuera de la run el jugador habilita una pool minima de X cartas distintas (ej: 15)
-
-La pool define que cartas pueden aparecer durante la run (copias temporales)
-
-No se eligen “copias” fuera de la run: solo se habilitan posibilidades.
+Cartas de mayor nivel:
+- Son más fuertes
+- Generan más valor económico
 
 ========================
-11. POPUPS Y FLOW DE VICTORIA/DERROTA
-
-Derrota: popup con boton para volver al menu
-
-Victoria: popup con celebracion, recompensa y boton para volver al menu
-
-La victoria no ofrece traits ni level up si no hay enemigos restantes
-
-Cofre y conversion:
-
-El cofre de la run se cobra solo en victoria
-
-Al ganar, el jugador liquida el cofre en el gremio para obtener oro o dust del gremio (modelo simple V1: eleccion)
+14. BOSSES, AFFIX Y VARIANTES
+========================
+- Cada run tiene un boss final
+- Prefijos y sufijos escalan por oleada
+- Pools e incompatibilidades evitan combinaciones injustas
+- Bosses holo son desbloqueos coleccionables
 
 ========================
-12. PRINCIPIOS
-
-Sistemas antes que contenido
-
-Datos > UI
-
-Claridad > complejidad
-
-Toda eleccion importante debe ser legible (amenaza, cofre, mazos activos)
-
+15. PRINCIPIOS FINALES
 ========================
-13. DUST DE RUN, AMENAZA Y COFRE
-
-Al derrotar un enemigo:
-
-La carta del enemigo se quema
-
-Genera dust_total
-
-Ese dust se divide en:
-
-Amenaza: escala enemigos comunes y boss (tiers capados)
-
-Cofre: recompensa acumulada (solo se cobra si se gana)
-
-Esto sostiene el pilar “riesgo vs recompensa”:
-
-Matar mas aumenta el cofre, pero tambien sube la amenaza (boss mas duro)
-
-========================
-14. AFFIX / SUFFIX EN ENEMIGOS
-
-Para sostener variedad y escalado sin inflar solo numeros:
-
-Afijo: modifica stats (defensa/ataque/iniciativa)
-
-Sufijo: agrega habilidad especial (trigger simple)
-
-Regla por tier (referencial):
-
-Tier bajo: sin sufijo o solo afijo
-
-Tier medio: afijo + chance de sufijo
-
-Tier alto: afijo + sufijo garantizado
-
-========================
-15. BOSS HOLO Y VARIANTES
-
-Cada run tiene un boss final (siempre)
-
-La dungeon define el boss o el pool de bosses posibles
-
-Los bosses holo son coleccionables/desbloqueos (no stats fijos fuera de la run)
-
-Dentro de la run:
-
-El boss rola prefijo/sufijo(s) de forma aleatoria segun tier
-
-Se revela solo dentro de la run
-
-Se usan pools e incompatibilidades para evitar combinaciones injustas
-
-========================
-16. ENCRUCIJADAS Y MAZOS ACTIVOS
-
-La run se compone de “mazos activos” (pools de encuentros).
-
-La run base inicia con 1 mazo
-
-Encrucijadas permiten aumentar mazos activos (cap V1: 3)
-
-Efecto de aumentar mazos:
-
-Mas enemigos / encuentros mas densos
-
-Mejor recompensa (multiplicador de cofre con diminishing returns)
-
-Mayor dificultad (shock de amenaza y/o mayor probabilidad de sufijos)
-
-Encrucijada (3 opciones):
-
-Agregar mazo (profundizar)
-
-Asegurar + invertir cofre (seguro parcial + crecimiento futuro, con restricciones para no ser dominante)
-
-Elegir un trait de run (3 opciones, con trade-offs)
-
-========================
-17. CONTRATOS (DIFICULTAD OPT-IN)
-
-Contratos del gremio:
-
-Se desbloquean con dust del gremio (meta)
-
-Se eligen antes de entrar a la run
-
-Aumentan dificultad (stats + reglas) y aumentan payout (cofre)
-
-Principio: la dificultad adicional es opt-in, no castigo permanente automatico.
+- Sistemas antes que contenido
+- Datos > UI
+- Claridad > complejidad
+- Toda decisión importante debe ser legible
+  (oleada, amenaza, mazos activos, riesgo)

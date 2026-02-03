@@ -15,4 +15,5 @@ max_hp = 8
 damage = 2
 initiative = 3
 card_type = "enemy"
+boss = false
 biome_modifier = "Dark Forest"

@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 class_name RunManager
 # Nodo global que mantiene y controla la run actual
 
@@ -18,19 +18,24 @@ var cards := {}
 var enemy_draw_queue: Array[Dictionary] = [] # orden real de robo
 
 # =========================
-# SEÃ‘ALES DE PROGRESIÃ“N
+# SEÃƒÆ’Ã¢â‚¬ËœALES DE PROGRESIÃƒÆ’Ã¢â‚¬Å“N
 # =========================
 
 signal gold_changed(new_gold: int)
 signal danger_level_changed(new_danger: int)
 signal enemy_stats_changed()
+signal active_decks_changed(new_count: int)
+signal crossroads_requested()
 
 # =========================
-# ESTADO ECONOMÃA / RIESGO
+# ESTADO ECONOMÃƒÆ’Ã‚ÂA / RIESGO
 # =========================
 
 var gold: int = 0
 var danger_level: int = 0
+var active_decks_count: int = 1
+var enemies_defeated_count: int = 0
+@export var crossroads_every_n: int = 3
 
 # =========================
 # TRAITS ACTIVOS
@@ -43,7 +48,19 @@ var selection_pending: bool = false
 var active_enemy_id: String = ""
 
 # =========================
-# PROGRESIÃ“N DEL JUGADOR
+# SELECCION / RUN DECK (TYPES)
+# =========================
+var selected_hero_def_id: String = ""
+var selected_enemy_types: Array[String] = []
+var run_deck_types: Array[String] = []
+var run_seed: int = 0
+var enemy_spawn_counter: int = 0
+const RUN_DECK_SIZE: int = 10
+var current_wave: int = 1
+const MAX_WAVES: int = 3
+
+# =========================
+# PROGRESIÃƒÆ’Ã¢â‚¬Å“N DEL JUGADOR
 # =========================
 
 signal hero_xp_changed(current_xp: int, xp_to_next: int)
@@ -86,12 +103,16 @@ func init_run() -> void:
 	if run_loaded:
 		return
 
+	if selected_hero_def_id == "":
+		return
+
+
 	if cards.is_empty() or not cards.has("th"):
 		cards.clear()
 		_build_cards_from_run_deck()
 		_sync_hero_card_level(false)
 
-	# ðŸ”‘ APLICAR TRAITS ACTIVOS A ENEMIGOS YA EXISTENTES
+	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ APLICAR TRAITS ACTIVOS A ENEMIGOS YA EXISTENTES
 	for card in cards.values():
 		if card.get("id", "") == "th":
 			recalc_card_stats(card, active_hero_traits)
@@ -101,22 +122,64 @@ func init_run() -> void:
 
 
 # =========================
+# =========================
+# SELECCION / RUN DECK (TYPES)
+# =========================
+func set_run_selection(hero_def_id: String, enemy_types: Array[String]) -> void:
+	selected_hero_def_id = hero_def_id
+	selected_enemy_types = enemy_types.duplicate()
+	run_deck_types.clear()
+	enemy_draw_queue.clear()
+	enemy_spawn_counter = 0
+	run_seed = int(Time.get_ticks_msec())
+	current_wave = 1
+
+func build_run_deck_from_selection() -> void:
+	if selected_enemy_types.is_empty():
+		return
+	if run_seed == 0:
+		run_seed = int(Time.get_ticks_msec())
+	_build_run_deck_types()
+	SaveSystem.save_run_deck(run_deck_types)
+
+func _build_run_deck_types() -> void:
+	run_deck_types.clear()
+	if selected_enemy_types.is_empty():
+		return
+	if run_seed == 0:
+		run_seed = int(Time.get_ticks_msec())
+	var rng := RandomNumberGenerator.new()
+	rng.seed = run_seed
+	for i in range(RUN_DECK_SIZE):
+		var idx := rng.randi_range(0, selected_enemy_types.size() - 1)
+		run_deck_types.append(selected_enemy_types[idx])
+
+func remove_run_deck_type(definition_id: String) -> void:
+	if definition_id == "":
+		return
+	for i in range(run_deck_types.size()):
+		if run_deck_types[i] == definition_id:
+			run_deck_types.remove_at(i)
+			return
+
+func _generate_enemy_id(definition_id: String) -> String:
+	enemy_spawn_counter += 1
+	return "e_%s_%d" % [definition_id, enemy_spawn_counter]
+
 # CREATE CARD INSTANCE (RUNTIME)
 # =========================
 func create_card_instance(
 	id: String,
 	definition_key: String,
-	is_tutorial := false,
-	collection_id: String = ""
-) -> void:
+	is_tutorial := false
+) -> Dictionary:
 	var def: CardDefinition = CardDatabase.get_definition(definition_key)
 	if def == null:
 		push_error("Definition no encontrada: " + definition_key)
-		return
+		return {}
 
 	var card := {
 		"id": id,
-		"collection_id": collection_id,
 		"definition": definition_key,
 		"is_tutorial": is_tutorial,
 
@@ -136,7 +199,7 @@ func create_card_instance(
 
 	cards[id] = card
 
-	# ðŸ”‘ APLICAR TRAITS ACTIVOS
+	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ APLICAR TRAITS ACTIVOS
 	if id == "th":
 		recalc_card_stats(card, active_hero_traits)
 	else:
@@ -144,12 +207,14 @@ func create_card_instance(
 
 
 	# =========================
-	# ðŸ§¬ APLICAR TRAITS A ENEMIGOS NUEVOS
+	# ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Â¬ APLICAR TRAITS A ENEMIGOS NUEVOS
 	# =========================
 	if id != "th":
 		for trait_res: TraitResource in active_enemy_traits:
 			print("[TRAIT] Aplicando trait activo a enemigo NUEVO:", id)
 			
+
+	return card
 
 func recalc_card_stats(
 	card: Dictionary,
@@ -213,7 +278,7 @@ func draw_enemy_card() -> Dictionary:
 	recalc_card_stats(enemy, active_enemy_traits)
 
 	print(
-		"[DRAW] TOP OF DECK â†’",
+		"[DRAW] TOP OF DECK ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢",
 		enemy.get("definition", "???"),
 		"| Power:",
 		calculate_enemy_power(enemy),
@@ -299,9 +364,53 @@ func apply_enemy_rewards(enemy: Dictionary) -> void:
 	_add_gold(gold_reward)
 	_add_hero_xp(xp_reward)
 
+func register_enemy_defeated(has_remaining_enemies: bool) -> void:
+	enemies_defeated_count += 1
+	# Crossroads se maneja al final del mazo en BattleTable
+	if not has_remaining_enemies:
+		return
+
+
 func _add_gold(amount: int) -> void:
 	gold += amount
 	gold_changed.emit(gold)
+
+func get_run_gold() -> int:
+	return gold
+
+func get_active_decks_count() -> int:
+	return active_decks_count
+
+func can_add_deck() -> bool:
+	return active_decks_count < 3
+
+func add_deck() -> void:
+	if not can_add_deck():
+		return
+	active_decks_count += 1
+	active_decks_changed.emit(active_decks_count)
+
+func get_withdraw_preview() -> Dictionary:
+	var withdraw_amount: int = int(floor(float(gold) * 0.25))
+	var cost_amount: int = gold - withdraw_amount
+	return {
+		"withdraw": withdraw_amount,
+		"cost": cost_amount
+	}
+
+func apply_withdraw_25_cost_75() -> Dictionary:
+	var preview := get_withdraw_preview()
+	var withdraw_amount: int = int(preview.get("withdraw", 0))
+	var cost_amount: int = int(preview.get("cost", 0))
+	gold = 0
+	gold_changed.emit(gold)
+	if withdraw_amount > 0:
+		SaveSystem.add_persistent_gold(withdraw_amount)
+	return {
+		"withdraw": withdraw_amount,
+		"cost": cost_amount
+	}
+
 
 
 #############################
@@ -321,6 +430,7 @@ func _level_up() -> void:
 	hero_level += 1
 	xp_to_next_level = int(float(xp_to_next_level) * XP_GROWTH_FACTOR)
 	_sync_hero_card_level(true)
+	_clear_active_traits_on_level_up()
 	hero_level_up.emit(hero_level)
 
 
@@ -332,6 +442,23 @@ func _sync_hero_card_level(full_heal: bool) -> void:
 	hero["level"] = hero_level
 	if full_heal:
 		hero["current_hp"] = int(hero.get("max_hp", hero.get("current_hp", 0)))
+
+func _clear_active_traits_on_level_up() -> void:
+	if active_hero_traits.is_empty() and active_enemy_traits.is_empty():
+		return
+	active_hero_traits.clear()
+	active_enemy_traits.clear()
+	for card in cards.values():
+		if card.get("id", "") == "th":
+			recalc_card_stats(card, active_hero_traits)
+		else:
+			recalc_card_stats(card, active_enemy_traits)
+	for enemy in enemy_draw_queue:
+		if enemy.get("id", "") == "th":
+			continue
+		recalc_card_stats(enemy, active_enemy_traits)
+	recalculate_danger_level()
+	enemy_stats_changed.emit()
 
 
 #########################################################
@@ -410,6 +537,8 @@ func save_run():
 		"is_temporary_run": is_temporary_run,
 		"gold": gold,
 		"danger_level": danger_level,
+		"active_decks_count": active_decks_count,
+		"enemies_defeated_count": enemies_defeated_count,
 		"hero_level": hero_level,
 		"hero_xp": hero_xp,
 		"xp_to_next_level": xp_to_next_level,
@@ -417,7 +546,12 @@ func save_run():
 		"enemy_draw_order": enemy_draw_order,
 		"active_hero_traits": hero_trait_ids,
 		"active_enemy_traits": enemy_trait_ids,
-		"active_enemy_id": active_enemy_id
+		"active_enemy_id": active_enemy_id,
+		"selected_hero_def_id": selected_hero_def_id,
+		"selected_enemy_types": selected_enemy_types,
+		"run_deck_types": run_deck_types,
+		"run_seed": run_seed,
+		"enemy_spawn_counter": enemy_spawn_counter,
 	}
 
 	SaveSystem._ensure_save_dir()
@@ -425,7 +559,7 @@ func save_run():
 	if file == null:
 		push_error("[RunManager] No se pudo abrir save_run.json. user_dir=%s" % OS.get_user_data_dir())
 		return
-	file.store_string(JSON.stringify(data, "\t"))
+	file.store_string(JSON.stringify(data, "	"))
 	file.close()
 
 func load_run():
@@ -448,6 +582,8 @@ func load_run():
 	is_temporary_run = data.get("is_temporary_run", false)
 	gold = int(data.get("gold", 0))
 	danger_level = int(data.get("danger_level", 0))
+	active_decks_count = int(data.get("active_decks_count", 1))
+	enemies_defeated_count = int(data.get("enemies_defeated_count", 0))
 	hero_level = int(data.get("hero_level", 1))
 	hero_xp = int(data.get("hero_xp", 0))
 	xp_to_next_level = int(data.get("xp_to_next_level", 4))
@@ -470,11 +606,25 @@ func load_run():
 		prepare_progressive_deck()
 
 	active_enemy_id = String(data.get("active_enemy_id", ""))
+	selected_hero_def_id = String(data.get("selected_hero_def_id", ""))
+	selected_enemy_types = _to_string_array(data.get("selected_enemy_types", []))
+	run_deck_types = _to_string_array(data.get("run_deck_types", []))
+	run_seed = int(data.get("run_seed", 0))
+	enemy_spawn_counter = int(data.get("enemy_spawn_counter", 0))
 	if active_enemy_id != "" and not cards.has(active_enemy_id):
 		active_enemy_id = ""
 
 	run_loaded = true
 	_emit_run_state_signals()
+
+func _to_string_array(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if typeof(value) != TYPE_ARRAY:
+		return result
+	for entry in value:
+		if typeof(entry) == TYPE_STRING:
+			result.append(String(entry))
+	return result
 
 func has_saved_run() -> bool:
 	if not FileAccess.file_exists("user://save/save_run.json"):
@@ -509,26 +659,21 @@ func _resolve_traits(ids: Array, trait_map: Dictionary) -> Array[TraitResource]:
 func _emit_run_state_signals() -> void:
 	gold_changed.emit(gold)
 	danger_level_changed.emit(danger_level)
+	active_decks_changed.emit(active_decks_count)
 	hero_xp_changed.emit(hero_xp, xp_to_next_level)
 
 
 func _build_cards_from_run_deck() -> void:
-	var run_deck := SaveSystem.load_run_deck()
-	if run_deck.is_empty():
+	if selected_hero_def_id == "":
 		return
+	create_card_instance("th", selected_hero_def_id, false)
 
-	for entry in run_deck:
-		var run_id := String(entry.get("run_id", ""))
-		var def_id := String(entry.get("definition_id", ""))
-		var collection_id := String(entry.get("collection_id", ""))
-		if run_id == "" or def_id == "":
-			continue
-		var def: CardDefinition = CardDatabase.get_definition(def_id)
-		var is_tutorial := false
-		if def != null:
-			is_tutorial = def.is_tutorial
-		create_card_instance(run_id, def_id, is_tutorial, collection_id)
+	if run_deck_types.is_empty():
+		_build_run_deck_types()
 
+	for def_id in run_deck_types:
+		var run_id := _generate_enemy_id(def_id)
+		create_card_instance(run_id, def_id, false)
 
 func reset_run(new_mode: String = "normal") -> void:
 	run_mode = new_mode
@@ -539,11 +684,43 @@ func reset_run(new_mode: String = "normal") -> void:
 	active_enemy_traits.clear()
 	gold = 0
 	danger_level = 0
+	selected_hero_def_id = ""
+	selected_enemy_types.clear()
+	run_deck_types.clear()
+	run_seed = 0
+	enemy_spawn_counter = 0
+	active_decks_count = 1
+	enemies_defeated_count = 0
+	current_wave = 1
 	hero_level = 1
 	hero_xp = 0
 	xp_to_next_level = 4
 	run_loaded = false
 	active_enemy_id = ""
+
+func try_start_next_wave() -> bool:
+	if current_wave >= MAX_WAVES:
+		return false
+	current_wave += 1
+	_clear_enemy_cards()
+	run_deck_types.clear()
+	enemy_draw_queue.clear()
+	enemy_spawn_counter = 0
+	_build_run_deck_types()
+	for def_id in run_deck_types:
+		var run_id := _generate_enemy_id(def_id)
+		create_card_instance(run_id, def_id, false)
+	prepare_progressive_deck()
+	return true
+
+func _clear_enemy_cards() -> void:
+	var to_remove: Array[String] = []
+	for id in cards.keys():
+		if id == "th":
+			continue
+		to_remove.append(String(id))
+	for id in to_remove:
+		cards.erase(id)
 
 
 #####################################################################################################
@@ -641,7 +818,6 @@ func prepare_progressive_deck() -> void:
 	print("[DECK READY] Orden final:")
 	for i in range(enemy_draw_queue.size()):
 		var enemy := enemy_draw_queue[i]
-		print(" ", i, "â†’", enemy.get("id", "?"), "| def:", enemy.get("definition", "?"), "| collection:", enemy.get("collection_id", ""))
 
 	# =========================
 	# RECALCULAR RIESGO
@@ -650,7 +826,7 @@ func prepare_progressive_deck() -> void:
 
 	
 # =========================
-# APLICACIÃ“N DE TRAITS
+# APLICACIÃƒÆ’Ã¢â‚¬Å“N DE TRAITS
 # =========================
 func apply_hero_trait(trait_res: TraitResource) -> void:
 	if trait_res == null:

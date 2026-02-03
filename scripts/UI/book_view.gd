@@ -202,7 +202,9 @@ func _get_page_count() -> int:
 	var collection := SaveSystem.load_collection()
 	if collection == null:
 		collection = SaveSystem.ensure_collection()
-	var total := collection.get_all_cards().size()
+	var total := collection.get_all_types().size()
+	if not RunState.selection_pending:
+		total = CardDatabase.definitions.size()
 	return int(ceili(float(total) / float(slots_per_page)))
 
 func _apply_book_position_on_state_change() -> void:

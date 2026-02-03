@@ -1,0 +1,89 @@
+[gd_scene load_steps=2 format=3 uid="uid://d1c5w9p2x8p6r"]
+
+[ext_resource type="Script" uid="uid://ts6fi6kdk56p" path="res://scripts/UI/crossroads_popup.gd" id="1_8bx4s"]
+
+[node name="CrossroadsPopup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_8bx4s")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -240.0
+offset_right = 360.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(360, 240)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "CROSSROADS_TITLE"
+horizontal_alignment = 1
+
+[node name="DecksLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="GoldLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="WithdrawLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="CostLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="AddDeckButton" type="Button" parent="Panel/VBoxContainer/Buttons"]
+layout_mode = 2
+text = "CROSSROADS_OPTION_ADD_DECK"
+
+[node name="WithdrawButton" type="Button" parent="Panel/VBoxContainer/Buttons"]
+layout_mode = 2
+text = "CROSSROADS_OPTION_WITHDRAW"
+
+[node name="TraitButton" type="Button" parent="Panel/VBoxContainer/Buttons"]
+layout_mode = 2
+text = "CROSSROADS_OPTION_TRAIT"
+
