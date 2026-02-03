@@ -34,6 +34,9 @@ class_name CardDefinition
 @export_enum("hero", "enemy") var card_type: String
 # Tipo de carta
 
+@export_enum("none", "knight", "sorcerer", "ranger", "bard", "rogue") var hero_class: String = "none"
+# Clase del heroe (solo aplica si card_type == "hero")
+
 @export var is_persistent: bool = false
 # Si la carta es persistente en la colección base
 

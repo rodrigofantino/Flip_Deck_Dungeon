@@ -64,9 +64,12 @@ func _load_collection() -> void:
 	var is_play_mode := RunState.selection_pending
 	_card_types.clear()
 	_card_obtained.clear()
+	var order := _get_ordered_def_ids()
 	if is_play_mode:
-		var ids := collection.get_all_types()
-		ids.sort()
+		var ids: Array[String] = []
+		for def_id in collection.get_all_types():
+			ids.append(String(def_id))
+		ids = _sort_ids_by_order(ids, order)
 		for def_id in ids:
 			_card_types.append(String(def_id))
 			_card_obtained.append(true)
@@ -74,10 +77,57 @@ func _load_collection() -> void:
 		var all_ids: Array[String] = []
 		for def_id in CardDatabase.definitions.keys():
 			all_ids.append(String(def_id))
-		all_ids.sort()
+		all_ids = _sort_ids_by_order(all_ids, order)
 		for def_id in all_ids:
 			_card_types.append(def_id)
 			_card_obtained.append(obtained.has(def_id))
+
+func _get_ordered_def_ids() -> Array[String]:
+	var hero_ids: Array[String] = []
+	var forest_ids: Array[String] = []
+	var dark_forest_ids: Array[String] = []
+	var other_ids: Array[String] = []
+
+	for def_id in CardDatabase.definitions.keys():
+		var def: CardDefinition = CardDatabase.get_definition(String(def_id))
+		if def == null:
+			continue
+		if def.card_type == "hero":
+			hero_ids.append(def.definition_id)
+		elif def.biome_modifier == "Forest":
+			forest_ids.append(def.definition_id)
+		elif def.biome_modifier == "Dark Forest":
+			dark_forest_ids.append(def.definition_id)
+		else:
+			other_ids.append(def.definition_id)
+
+	hero_ids.sort()
+	forest_ids.sort()
+	dark_forest_ids.sort()
+	other_ids.sort()
+
+	var ordered: Array[String] = []
+	ordered.append_array(hero_ids)
+	ordered.append_array(forest_ids)
+	ordered.append_array(dark_forest_ids)
+	ordered.append_array(other_ids)
+	return ordered
+
+func _sort_ids_by_order(ids: Array[String], order: Array[String]) -> Array[String]:
+	if order.is_empty():
+		ids.sort()
+		return ids
+	var index_map: Dictionary = {}
+	for i in range(order.size()):
+		index_map[order[i]] = i
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		var ia := int(index_map.get(a, 999999))
+		var ib := int(index_map.get(b, 999999))
+		if ia == ib:
+			return a < b
+		return ia < ib
+	)
+	return ids
 
 func _refresh() -> void:
 	if _page_index < 0:

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_id = "afterparty_ribbon_blade"
+item_name = "Ribbon Blade"
+item_description = "Not decorative. The ribbon is just optimistic."
+item_type = "one_hand"
+damage_flat = 3
+life_flat = 1

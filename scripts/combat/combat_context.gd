@@ -156,7 +156,7 @@ func _resolve_hero_turn() -> void:
 	attack_started.emit(hero_id, enemy_id)
 	await attack_animation_finished
 
-	_apply_damage(enemy_id, int(hero.damage))
+	_apply_damage(hero_id, enemy_id, int(hero.damage))
 
 	if int(enemy.current_hp) <= 0:
 		_handle_death(enemy_id)
@@ -180,7 +180,7 @@ func _resolve_enemy_turn() -> void:
 	attack_started.emit(enemy_id, hero_id)
 	await attack_animation_finished
 
-	_apply_damage(hero_id, int(enemy.damage))
+	_apply_damage(enemy_id, hero_id, int(enemy.damage))
 
 	if int(hero.current_hp) <= 0:
 		_handle_death(hero_id)
@@ -204,7 +204,7 @@ func _resolve_enemy_first_turn() -> void:
 	attack_started.emit(enemy_id, hero_id)
 	await attack_animation_finished
 
-	_apply_damage(hero_id, int(enemy.damage))
+	_apply_damage(enemy_id, hero_id, int(enemy.damage))
 
 	if int(hero.current_hp) <= 0:
 		_handle_death(hero_id)
@@ -217,7 +217,7 @@ func _resolve_enemy_first_turn() -> void:
 	attack_started.emit(hero_id, enemy_id)
 	await attack_animation_finished
 
-	_apply_damage(enemy_id, int(hero.damage))
+	_apply_damage(hero_id, enemy_id, int(hero.damage))
 
 	if int(enemy.current_hp) <= 0:
 		_handle_death(enemy_id)
@@ -231,15 +231,34 @@ func _resolve_enemy_first_turn() -> void:
 # ==========================================
 # DAÑO Y MUERTE
 # ==========================================
-func _apply_damage(target_id: String, amount: int) -> void:
+func _apply_damage(attacker_id: String, target_id: String, amount: int) -> void:
 	var card: Dictionary = run_manager.get_card(target_id)
 	if card.is_empty():
 		return
 
-	card.current_hp -= amount
+	var armour: int = int(card.get("armour", 0))
+	var mitigated: int = max(amount - armour, 0)
+
+	card.current_hp -= mitigated
 	card.current_hp = max(card.current_hp, 0)
 
-	damage_applied.emit(target_id, amount)
+	damage_applied.emit(target_id, mitigated)
+
+	var lifesteal: int = 0
+	if attacker_id != "":
+		var attacker: Dictionary = run_manager.get_card(attacker_id)
+		if not attacker.is_empty():
+			lifesteal = int(attacker.get("lifesteal", 0))
+			if lifesteal > 0 and mitigated > 0:
+				var max_hp: int = int(attacker.get("max_hp", 0))
+				attacker["current_hp"] = min(int(attacker.get("current_hp", 0)) + lifesteal, max_hp)
+
+	var thorns: int = int(card.get("thorns", 0))
+	if thorns > 0 and attacker_id != "" and mitigated > 0:
+		var attacker2: Dictionary = run_manager.get_card(attacker_id)
+		if not attacker2.is_empty():
+			attacker2["current_hp"] = max(int(attacker2.get("current_hp", 0)) - thorns, 0)
+			damage_applied.emit(attacker_id, thorns)
 
 
 func _handle_death(card_id: String) -> void:

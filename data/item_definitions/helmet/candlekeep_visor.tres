@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://d2anfyybpsfsq" path="res://assets/cards/items/art/helmet/candlekeep_visor.png" id="2_art"]
+
+[resource]
+script = ExtResource("1_item")
+art = ExtResource("2_art")
+item_id = "candlekeep_visor"
+item_name = "Candlekeep Visor"
+item_description = "Keeps wax out of your eyes and judgment out of your head."
+item_type = "helmet"
+armour_flat = 2

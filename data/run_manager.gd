@@ -18,6 +18,22 @@ var cards := {}
 var enemy_draw_queue: Array[Dictionary] = [] # orden real de robo
 
 # =========================
+# ITEMS (HAND / EQUIP)
+# =========================
+const MAX_HAND_SIZE: int = 5
+const MAX_EQUIP_SLOTS: int = 8
+const ITEM_DROP_CHANCE: float = 0.25
+const ITEM_CATALOG_DEFAULT_PATH: String = "res://data/item_catalog_default.tres"
+const DEBUG_DROP_ONLY_HELMETS: bool = true
+
+@export var item_catalog: ItemCatalog
+
+var hand_items: Array[String] = []
+var equipped_items: Array[String] = ["", "", "", "", "", "", "", ""]
+
+var item_drop_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
+# =========================
 # SEÃƒÆ’Ã¢â‚¬ËœALES DE PROGRESIÃƒÆ’Ã¢â‚¬Å“N
 # =========================
 
@@ -26,6 +42,10 @@ signal danger_level_changed(new_danger: int)
 signal enemy_stats_changed()
 signal active_decks_changed(new_count: int)
 signal crossroads_requested()
+signal item_dropped(item_id: String)
+signal hand_changed(hand_items: Array[String])
+signal equip_changed(equipped_items: Array[String])
+signal hero_stats_changed()
 
 # =========================
 # ESTADO ECONOMÃƒÆ’Ã‚ÂA / RIESGO
@@ -55,9 +75,9 @@ var selected_enemy_types: Array[String] = []
 var run_deck_types: Array[String] = []
 var run_seed: int = 0
 var enemy_spawn_counter: int = 0
-const RUN_DECK_SIZE: int = 10
+const RUN_DECK_SIZE: int = 20
 var current_wave: int = 1
-const MAX_WAVES: int = 3
+const MAX_WAVES: int = 5
 
 # =========================
 # PROGRESIÃƒÆ’Ã¢â‚¬Å“N DEL JUGADOR
@@ -71,6 +91,8 @@ var hero_xp: int = 0
 var xp_to_next_level: int = 4
 
 const XP_GROWTH_FACTOR: float = 1.25
+const LEVEL_UP_STAT_MULT: float = 1.2
+var level_stat_multiplier: float = 1.0
 
 # =========================
 # BASE DE DATOS DE TRAITS
@@ -81,8 +103,12 @@ const TRAIT_DB_PATH := "res://data/traits/trait_database_default.tres"
 
 
 func _ready() -> void:
+	item_drop_rng.randomize()
 	if trait_database == null:
 		trait_database = load(TRAIT_DB_PATH)
+	if item_catalog == null:
+		item_catalog = load(ITEM_CATALOG_DEFAULT_PATH)
+	_apply_equipment_to_hero()
 
 	if trait_database == null:
 		push_error("[RunManager] TraitDatabase NO pudo cargarse")
@@ -178,23 +204,33 @@ func create_card_instance(
 		push_error("Definition no encontrada: " + definition_key)
 		return {}
 
+	var scaled_hp: int = _scale_stat(def.max_hp)
+	var scaled_damage: int = _scale_stat(def.damage)
+	var scaled_initiative: int = _scale_stat(def.initiative)
+
+	var card_level: int = def.level
+	if id == "th":
+		card_level = hero_level
+	else:
+		card_level = def.level + max(0, hero_level - 1)
+
 	var card := {
 		"id": id,
 		"definition": definition_key,
 		"is_tutorial": is_tutorial,
 
 		# BASE
-		"base_hp": def.max_hp,
-		"base_damage": def.damage,
-		"base_initiative": def.initiative,
+		"base_hp": scaled_hp,
+		"base_damage": scaled_damage,
+		"base_initiative": scaled_initiative,
 
 		# RUNTIME
-		"max_hp": def.max_hp,
-		"current_hp": def.max_hp,
-		"damage": def.damage,
-		"initiative": def.initiative,
+		"max_hp": scaled_hp,
+		"current_hp": scaled_hp,
+		"damage": scaled_damage,
+		"initiative": scaled_initiative,
 
-		"level": def.level
+		"level": card_level
 	}
 
 	cards[id] = card
@@ -359,10 +395,34 @@ func apply_enemy_rewards(enemy: Dictionary) -> void:
 	var power: int = calculate_enemy_power(enemy)
 
 	var gold_reward: int = int(power * 0.5)
-	var xp_reward: int = int(power * 0.75)
+	var enemy_level: int = int(enemy.get("level", 1))
+	var xp_reward: int = max(1, enemy_level)
 
 	_add_gold(gold_reward)
 	_add_hero_xp(xp_reward)
+
+func try_drop_item_from_enemy() -> void:
+	if item_catalog == null or item_catalog.items.is_empty():
+		return
+	if item_drop_rng.randf() > ITEM_DROP_CHANCE:
+		return
+	var pool: Array[ItemCardDefinition] = []
+	if DEBUG_DROP_ONLY_HELMETS:
+		for item_def in item_catalog.items:
+			if item_def != null and item_def.item_type == "helmet":
+				pool.append(item_def)
+	else:
+		for item_def in item_catalog.items:
+			if item_def != null:
+				pool.append(item_def)
+	if pool.is_empty():
+		return
+	var idx := item_drop_rng.randi_range(0, pool.size() - 1)
+	var def: ItemCardDefinition = pool[idx]
+	if def == null:
+		return
+	_add_item_to_hand(def.item_id)
+	item_dropped.emit(def.item_id)
 
 func register_enemy_defeated(has_remaining_enemies: bool) -> void:
 	enemies_defeated_count += 1
@@ -411,6 +471,101 @@ func apply_withdraw_25_cost_75() -> Dictionary:
 		"cost": cost_amount
 	}
 
+func get_hand_items() -> Array[String]:
+	return hand_items.duplicate()
+
+func get_equipped_items() -> Array[String]:
+	return equipped_items.duplicate()
+
+func _add_item_to_hand(item_id: String) -> void:
+	if item_id.is_empty():
+		return
+	if hand_items.size() >= MAX_HAND_SIZE:
+		hand_items.remove_at(0)
+	hand_items.append(item_id)
+	hand_changed.emit(hand_items)
+
+func equip_item_from_hand(item_id: String, slot_index: int) -> void:
+	if item_id.is_empty():
+		return
+	if not hand_items.has(item_id):
+		return
+
+	var idx := slot_index
+	if idx < 0 or idx >= MAX_EQUIP_SLOTS:
+		idx = _find_first_empty_slot()
+		if idx == -1:
+			idx = 0
+
+	equipped_items[idx] = item_id
+	hand_items.erase(item_id)
+	hand_changed.emit(hand_items)
+	equip_changed.emit(equipped_items)
+	_apply_equipment_to_hero()
+
+func _find_first_empty_slot() -> int:
+	for i in range(MAX_EQUIP_SLOTS):
+		if equipped_items[i].is_empty():
+			return i
+	return -1
+
+func _apply_equipment_to_hero() -> void:
+	var hero: Dictionary = cards.get("th", {})
+	if hero.is_empty():
+		return
+	var base_hp: int = int(hero.get("base_hp", 0))
+	var base_damage: int = int(hero.get("base_damage", 0))
+	var base_initiative: int = int(hero.get("base_initiative", 0))
+	var old_max_hp: int = int(hero.get("max_hp", base_hp))
+	var old_current_hp: int = int(hero.get("current_hp", base_hp))
+
+	var add_hp: int = 0
+	var add_damage: int = 0
+	var add_initiative: int = 0
+	var add_armour: int = 0
+	var add_lifesteal: int = 0
+	var add_thorns: int = 0
+	var add_regen: int = 0
+	var add_crit: int = 0
+
+	if item_catalog != null:
+		for item_id in equipped_items:
+			if item_id.is_empty():
+				continue
+			var def := item_catalog.get_item_by_id(item_id)
+			if def == null:
+				continue
+			add_hp += def.life_flat
+			add_damage += def.damage_flat
+			add_initiative += def.initiative_flat
+			add_armour += def.armour_flat
+			add_armour += def.shield_flat
+			add_lifesteal += def.lifesteal_flat
+			add_thorns += def.thorns_flat
+			add_regen += def.regen_flat
+			add_crit += def.crit_chance_flat
+
+	var new_max_hp := base_hp + add_hp
+	var new_damage := base_damage + add_damage
+	var new_initiative := base_initiative + add_initiative
+
+	hero["max_hp"] = new_max_hp
+	hero["damage"] = new_damage
+	hero["initiative"] = new_initiative
+	hero["armour"] = add_armour
+	hero["lifesteal"] = add_lifesteal
+	hero["thorns"] = add_thorns
+	hero["regen"] = add_regen
+	hero["crit_chance"] = add_crit
+
+	if old_max_hp > 0 and new_max_hp > 0:
+		var ratio := float(old_current_hp) / float(old_max_hp)
+		hero["current_hp"] = min(int(round(float(new_max_hp) * ratio)), new_max_hp)
+	else:
+		hero["current_hp"] = min(old_current_hp, new_max_hp)
+
+	hero_stats_changed.emit()
+
 
 
 #############################
@@ -429,8 +584,11 @@ func _add_hero_xp(amount: int) -> void:
 func _level_up() -> void:
 	hero_level += 1
 	xp_to_next_level = int(float(xp_to_next_level) * XP_GROWTH_FACTOR)
+	level_stat_multiplier *= LEVEL_UP_STAT_MULT
+	_rescale_all_cards_from_definitions()
 	_sync_hero_card_level(true)
 	_clear_active_traits_on_level_up()
+	_apply_equipment_to_hero()
 	hero_level_up.emit(hero_level)
 
 
@@ -442,6 +600,53 @@ func _sync_hero_card_level(full_heal: bool) -> void:
 	hero["level"] = hero_level
 	if full_heal:
 		hero["current_hp"] = int(hero.get("max_hp", hero.get("current_hp", 0)))
+
+func _scale_stat(value: int) -> int:
+	return int(round(float(value) * level_stat_multiplier))
+
+func _rescale_all_cards_from_definitions() -> void:
+	for card in cards.values():
+		_rescale_card_from_definition(card)
+		_update_card_level_from_definition(card)
+		var is_hero: bool = card.get("id", "") == "th"
+		if is_hero:
+			recalc_card_stats(card, active_hero_traits)
+		else:
+			recalc_card_stats(card, active_enemy_traits)
+	for enemy in enemy_draw_queue:
+		_rescale_card_from_definition(enemy)
+		_update_card_level_from_definition(enemy)
+
+func _rescale_card_from_definition(card: Dictionary) -> void:
+	if card.is_empty():
+		return
+	var def_id: String = String(card.get("definition", ""))
+	if def_id.is_empty():
+		return
+	var def: CardDefinition = CardDatabase.get_definition(def_id)
+	if def == null:
+		return
+	var scaled_hp: int = _scale_stat(def.max_hp)
+	var scaled_damage: int = _scale_stat(def.damage)
+	var scaled_initiative: int = _scale_stat(def.initiative)
+
+	card["base_hp"] = scaled_hp
+	card["base_damage"] = scaled_damage
+	card["base_initiative"] = scaled_initiative
+
+func _update_card_level_from_definition(card: Dictionary) -> void:
+	if card.is_empty():
+		return
+	var def_id: String = String(card.get("definition", ""))
+	if def_id.is_empty():
+		return
+	var def: CardDefinition = CardDatabase.get_definition(def_id)
+	if def == null:
+		return
+	if card.get("id", "") == "th":
+		card["level"] = hero_level
+	else:
+		card["level"] = def.level + max(0, hero_level - 1)
 
 func _clear_active_traits_on_level_up() -> void:
 	if active_hero_traits.is_empty() and active_enemy_traits.is_empty():
@@ -552,6 +757,9 @@ func save_run():
 		"run_deck_types": run_deck_types,
 		"run_seed": run_seed,
 		"enemy_spawn_counter": enemy_spawn_counter,
+		"level_stat_multiplier": level_stat_multiplier,
+		"hand_items": hand_items,
+		"equipped_items": equipped_items,
 	}
 
 	SaveSystem._ensure_save_dir()
@@ -589,6 +797,9 @@ func load_run():
 	xp_to_next_level = int(data.get("xp_to_next_level", 4))
 	cards = data.get("cards", {})
 	_sync_hero_card_level(false)
+	hand_items = _to_string_array(data.get("hand_items", []))
+	equipped_items = _to_string_array(data.get("equipped_items", []))
+	_ensure_equipped_size()
 
 	if trait_database != null:
 		trait_database.load_all()
@@ -611,11 +822,13 @@ func load_run():
 	run_deck_types = _to_string_array(data.get("run_deck_types", []))
 	run_seed = int(data.get("run_seed", 0))
 	enemy_spawn_counter = int(data.get("enemy_spawn_counter", 0))
+	level_stat_multiplier = float(data.get("level_stat_multiplier", 1.0))
 	if active_enemy_id != "" and not cards.has(active_enemy_id):
 		active_enemy_id = ""
 
 	run_loaded = true
 	_emit_run_state_signals()
+	_apply_equipment_to_hero()
 
 func _to_string_array(value: Variant) -> Array[String]:
 	var result: Array[String] = []
@@ -625,6 +838,12 @@ func _to_string_array(value: Variant) -> Array[String]:
 		if typeof(entry) == TYPE_STRING:
 			result.append(String(entry))
 	return result
+
+func _ensure_equipped_size() -> void:
+	while equipped_items.size() < MAX_EQUIP_SLOTS:
+		equipped_items.append("")
+	if equipped_items.size() > MAX_EQUIP_SLOTS:
+		equipped_items = equipped_items.slice(0, MAX_EQUIP_SLOTS)
 
 func has_saved_run() -> bool:
 	if not FileAccess.file_exists("user://save/save_run.json"):
@@ -661,6 +880,8 @@ func _emit_run_state_signals() -> void:
 	danger_level_changed.emit(danger_level)
 	active_decks_changed.emit(active_decks_count)
 	hero_xp_changed.emit(hero_xp, xp_to_next_level)
+	hand_changed.emit(hand_items)
+	equip_changed.emit(equipped_items)
 
 
 func _build_cards_from_run_deck() -> void:
@@ -695,8 +916,12 @@ func reset_run(new_mode: String = "normal") -> void:
 	hero_level = 1
 	hero_xp = 0
 	xp_to_next_level = 4
+	level_stat_multiplier = 1.0
 	run_loaded = false
 	active_enemy_id = ""
+	hand_items.clear()
+	equipped_items = ["", "", "", "", "", "", "", ""]
+	_apply_equipment_to_hero()
 
 func try_start_next_wave() -> bool:
 	if current_wave >= MAX_WAVES:

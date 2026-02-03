@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_id = "etiquette_duel_gloves"
+item_name = "Duel Gloves"
+item_description = "For striking with honor and pointing at mistakes."
+item_type = "gloves"
+damage_flat = 2

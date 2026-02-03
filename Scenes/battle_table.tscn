@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://c6u72gt7nh3p4"]
+[gd_scene load_steps=14 format=3 uid="uid://c6u72gt7nh3p4"]
 
 [ext_resource type="Script" uid="uid://266r1e7fm203" path="res://scripts/game/battle_table.gd" id="1_f743b"]
 [ext_resource type="PackedScene" uid="uid://dtt1b34yncqy2" path="res://Scenes/cards/card_view.tscn" id="2_udct1"]
@@ -10,6 +10,9 @@
 [ext_resource type="PackedScene" uid="uid://dbv8f10a2jvwh" path="res://Scenes/ui/level_up_popup.tscn" id="7_x57qr"]
 [ext_resource type="PackedScene" uid="uid://b7r1m5m8f0k2a" path="res://Scenes/ui/crossroads_popup_fixed.tscn" id="9_cxrs"]
 [ext_resource type="PackedScene" uid="uid://c2p2m7p4y3w1q" path="res://Scenes/ui/pause_popup.tscn" id="8_p9p7r"]
+[ext_resource type="PackedScene" uid="uid://c5bbf25qofvfd" path="res://Scenes/cards/item_card.tscn" id="10_item_card"]
+[ext_resource type="Script" path="res://scripts/UI/hand_ui.gd" id="11_hand_ui_script"]
+[ext_resource type="Script" path="res://scripts/UI/hero_equip_zone.gd" id="12_equip_script"]
 
 [node name="BattleTable" type="Control"]
 layout_mode = 3
@@ -119,12 +122,85 @@ grow_horizontal = 2
 grow_vertical = 2
 pivot_offset = Vector2(77.5, 107.5)
 
+[node name="HeroEquipZone" type="Control" parent="UI/HeroArea"]
+custom_minimum_size = Vector2(520, 220)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = 10.0
+offset_right = 260.0
+offset_bottom = 230.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("12_equip_script")
+item_card_scene = ExtResource("10_item_card")
+
+[node name="Slots" type="HBoxContainer" parent="UI/HeroArea/HeroEquipZone"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Slot0" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
+custom_minimum_size = Vector2(60, 90)
+layout_mode = 2
+
+[node name="Slot1" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
+custom_minimum_size = Vector2(60, 90)
+layout_mode = 2
+
+[node name="Slot2" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
+custom_minimum_size = Vector2(60, 90)
+layout_mode = 2
+
+[node name="Slot3" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
+custom_minimum_size = Vector2(60, 90)
+layout_mode = 2
+
+[node name="Slot4" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
+custom_minimum_size = Vector2(60, 90)
+layout_mode = 2
+
+[node name="Slot5" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
+custom_minimum_size = Vector2(60, 90)
+layout_mode = 2
+
+[node name="Slot6" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
+custom_minimum_size = Vector2(60, 90)
+layout_mode = 2
+
+[node name="Slot7" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
+custom_minimum_size = Vector2(60, 90)
+layout_mode = 2
+
 [node name="BattleHUD" parent="UI" instance=ExtResource("4_udct1")]
 layout_mode = 1
 anchors_preset = 10
 anchor_bottom = 0.0
 offset_bottom = 100.0
 grow_vertical = 1
+
+[node name="HandUI" type="Control" parent="UI"]
+custom_minimum_size = Vector2(0, 260)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -260.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("11_hand_ui_script")
+item_card_scene = ExtResource("10_item_card")
+equip_zone_path = NodePath("../HeroArea/HeroEquipZone")
 
 [node name="DefeatPopup" parent="UI" instance=ExtResource("5_tmutd")]
 layout_mode = 1
@@ -139,4 +215,3 @@ grow_vertical = 0
 
 [node name="LevelUpPopup" parent="UI" instance=ExtResource("7_x57qr")]
 layout_mode = 1
-

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_id = "mistwarden_dampcloak_mail"
+item_name = "Dampcloak Mail"
+item_description = "Its not wet. Its atmospheric."
+item_type = "armour"
+armour_flat = 1
+initiative_flat = 1
+life_flat = 1

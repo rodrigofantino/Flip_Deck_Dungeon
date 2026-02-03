@@ -13,6 +13,7 @@
 @onready var enemy_slot: Control = $UI/EnemyArea/EnemySlots
 
 @onready var battle_hud: Control = $UI/BattleHUD
+@onready var ui_root: Control = $UI
 
 @export var defeat_popup_scene: PackedScene
 var defeat_popup: DefeatPopup = null
@@ -74,7 +75,7 @@ var combat_manager: CombatManager
 @export var card_view_scene: PackedScene
 @export var card_margin_factor: float = 1.0
 @export var card_base_size: Vector2 = Vector2(620, 860)
-@export var card_display_size: Vector2 = Vector2(155, 215)
+@export var card_display_size: Vector2 = Vector2(124, 172)
 @export var debug_card_positions: bool = true
 
 const DECK_OFFSET_Y := -2.0
@@ -149,6 +150,7 @@ func _ready() -> void:
 	RunState.hero_level_up.connect(_on_hero_level_up)
 	RunState.crossroads_requested.connect(_on_crossroads_requested)
 	RunState.enemy_stats_changed.connect(_on_enemy_stats_changed)
+	RunState.hero_stats_changed.connect(_on_enemy_stats_changed)
 	
 	
 # ==========================================
@@ -324,6 +326,7 @@ func _handle_enemy_defeated() -> void:
 	# 1ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Recompensas
 	if enemy_data != null:
 		RunState.apply_enemy_rewards(enemy_data)
+		RunState.try_drop_item_from_enemy()
 	suppress_level_up_popup = false
 
 	var has_remaining_enemies: bool = not victory_after_defeat

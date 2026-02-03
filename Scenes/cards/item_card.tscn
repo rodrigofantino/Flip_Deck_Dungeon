@@ -1,0 +1,65 @@
+[gd_scene load_steps=3 format=3 uid="uid://c5bbf25qofvfd"]
+
+[ext_resource type="Script" uid="uid://cm4p40u2jlsd5" path="res://scripts/game/item_card.gd" id="1_item_script"]
+[ext_resource type="Texture2D" uid="uid://xmg3eg1qtghw" path="res://assets/cards/items/item_card_background.png" id="2_bg"]
+
+[node name="item_card" type="Control"]
+custom_minimum_size = Vector2(260, 380)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 260.0
+offset_bottom = 380.0
+script = ExtResource("1_item_script")
+
+[node name="item_card_background" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 260.0
+offset_bottom = 380.0
+texture = ExtResource("2_bg")
+stretch_mode = 5
+
+[node name="item_art" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(260, 260)
+layout_mode = 0
+offset_left = 22.0
+offset_top = 121.0
+offset_right = 282.0
+offset_bottom = 381.0
+expand_mode = 2
+
+[node name="item_name" type="Label" parent="."]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 28.0
+offset_right = 278.0
+offset_bottom = 94.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="item_description" type="Label" parent="."]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 320.0
+offset_right = 289.0
+offset_bottom = 489.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+autowrap_mode = 2
+
+[node name="item_stats" type="Label" parent="."]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 114.0
+offset_right = 291.0
+offset_bottom = 186.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+autowrap_mode = 2

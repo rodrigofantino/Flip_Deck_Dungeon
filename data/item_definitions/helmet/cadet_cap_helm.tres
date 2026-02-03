@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://1w2v4cthg77b" path="res://assets/cards/items/art/helmet/cadet_cap_helm.png" id="2_art"]
+
+[resource]
+script = ExtResource("1_item")
+art = ExtResource("2_art")
+item_id = "cadet_cap_helm"
+item_name = "Cadet Cap Helm"
+item_description = "A helmet with parade confidence and please dont bonk me protection."
+item_type = "helmet"
+armour_flat = 1

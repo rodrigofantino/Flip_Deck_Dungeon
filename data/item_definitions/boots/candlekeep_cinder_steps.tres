@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_id = "candlekeep_cinder_steps"
+item_name = "Cinder Steps"
+item_description = "Warm soles, cooler exits."
+item_type = "boots"
+initiative_flat = 1
+life_flat = 1

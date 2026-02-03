@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_id = "cadet_grip_gloves"
+item_name = "Cadet Grip Gloves"
+item_description = "For holding the line. And occasionally, your dignity."
+item_type = "gloves"
+damage_flat = 1
