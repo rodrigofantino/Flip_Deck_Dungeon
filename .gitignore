@@ -1,6 +1,15 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+# Design docs / agent instructions
+/AGENTS.md
+/GDD.txt
+/IDD.txt
+/TDD.txt
+# Local helper scripts
+/run_codex.bat
+# Export output folder
+/exports/
 # Build/export artifacts
 /Flip_Deck_Dungeon_0.1.exe
 /Flip_Deck_Dungeon_0.1.console.exe
