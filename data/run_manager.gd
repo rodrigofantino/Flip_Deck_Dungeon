@@ -90,8 +90,10 @@ var hero_xp: int = 0
 var xp_to_next_level: int = 4
 
 const XP_GROWTH_FACTOR: float = 2.0
-const LEVEL_UP_STAT_MULT: float = 1.2
-var level_stat_multiplier: float = 1.0
+const HERO_LEVEL_UP_STAT_MULT: float = 1.2
+const ENEMY_LEVEL_UP_STAT_MULT: float = 1.25
+var hero_level_multiplier: float = 1.0
+var enemy_level_multiplier: float = 1.0
 
 # =========================
 # BASE DE DATOS DE TRAITS
@@ -203,9 +205,10 @@ func create_card_instance(
 		push_error("Definition no encontrada: " + definition_key)
 		return {}
 
-	var scaled_hp: int = _scale_stat(def.max_hp)
-	var scaled_damage: int = _scale_stat(def.damage)
-	var scaled_initiative: int = _scale_stat(def.initiative)
+	var is_hero_card: bool = id == "th"
+	var scaled_hp: int = _scale_stat(def.max_hp, is_hero_card)
+	var scaled_damage: int = _scale_stat(def.damage, is_hero_card)
+	var scaled_initiative: int = _scale_stat(def.initiative, is_hero_card)
 
 	var card_level: int = def.level
 	if id == "th":
@@ -576,7 +579,8 @@ func _add_hero_xp(amount: int) -> void:
 func _level_up() -> void:
 	hero_level += 1
 	xp_to_next_level = int(float(xp_to_next_level) * XP_GROWTH_FACTOR)
-	level_stat_multiplier *= LEVEL_UP_STAT_MULT
+	hero_level_multiplier *= HERO_LEVEL_UP_STAT_MULT
+	enemy_level_multiplier *= ENEMY_LEVEL_UP_STAT_MULT
 	_rescale_all_cards_from_definitions()
 	_sync_hero_card_level(true)
 	_clear_active_traits_on_level_up()
@@ -593,8 +597,9 @@ func _sync_hero_card_level(full_heal: bool) -> void:
 	if full_heal:
 		hero["current_hp"] = int(hero.get("max_hp", hero.get("current_hp", 0)))
 
-func _scale_stat(value: int) -> int:
-	return int(round(float(value) * level_stat_multiplier))
+func _scale_stat(value: int, is_hero: bool) -> int:
+	var mult := hero_level_multiplier if is_hero else enemy_level_multiplier
+	return int(round(float(value) * mult))
 
 func _rescale_all_cards_from_definitions() -> void:
 	for card in cards.values():
@@ -618,9 +623,10 @@ func _rescale_card_from_definition(card: Dictionary) -> void:
 	var def: CardDefinition = CardDatabase.get_definition(def_id)
 	if def == null:
 		return
-	var scaled_hp: int = _scale_stat(def.max_hp)
-	var scaled_damage: int = _scale_stat(def.damage)
-	var scaled_initiative: int = _scale_stat(def.initiative)
+	var is_hero: bool = card.get("id", "") == "th"
+	var scaled_hp: int = _scale_stat(def.max_hp, is_hero)
+	var scaled_damage: int = _scale_stat(def.damage, is_hero)
+	var scaled_initiative: int = _scale_stat(def.initiative, is_hero)
 
 	card["base_hp"] = scaled_hp
 	card["base_damage"] = scaled_damage
@@ -749,7 +755,8 @@ func save_run():
 		"run_deck_types": run_deck_types,
 		"run_seed": run_seed,
 		"enemy_spawn_counter": enemy_spawn_counter,
-		"level_stat_multiplier": level_stat_multiplier,
+		"hero_level_multiplier": hero_level_multiplier,
+		"enemy_level_multiplier": enemy_level_multiplier,
 		"hand_items": hand_items,
 		"equipped_items": equipped_items,
 	}
@@ -814,7 +821,8 @@ func load_run():
 	run_deck_types = _to_string_array(data.get("run_deck_types", []))
 	run_seed = int(data.get("run_seed", 0))
 	enemy_spawn_counter = int(data.get("enemy_spawn_counter", 0))
-	level_stat_multiplier = float(data.get("level_stat_multiplier", 1.0))
+	hero_level_multiplier = float(data.get("hero_level_multiplier", 1.0))
+	enemy_level_multiplier = float(data.get("enemy_level_multiplier", 1.0))
 	if active_enemy_id != "" and not cards.has(active_enemy_id):
 		active_enemy_id = ""
 
@@ -908,7 +916,8 @@ func reset_run(new_mode: String = "normal") -> void:
 	hero_level = 1
 	hero_xp = 0
 	xp_to_next_level = 4
-	level_stat_multiplier = 1.0
+	hero_level_multiplier = 1.0
+	enemy_level_multiplier = 1.0
 	run_loaded = false
 	active_enemy_id = ""
 	hand_items.clear()
