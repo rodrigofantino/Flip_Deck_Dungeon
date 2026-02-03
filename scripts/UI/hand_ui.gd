@@ -19,6 +19,7 @@ var _cards: Array[Control] = []
 var _base_pose: Dictionary = {}
 var _dragging_card: Control = null
 var _equip_zone: HeroEquipZone = null
+var _current_items: Array[String] = []
 
 func _ready() -> void:
 	if equip_zone_path != NodePath():
@@ -33,6 +34,24 @@ func _notification(what: int) -> void:
 		_layout_cards()
 
 func _on_hand_changed(items: Array[String]) -> void:
+	_sync_hand(items)
+
+func _sync_hand(items: Array[String]) -> void:
+	if _cards.is_empty():
+		_rebuild_cards(items)
+		return
+
+	if _is_append_only(items):
+		_add_card(items[items.size() - 1], items.size())
+		_current_items = items.duplicate()
+		return
+
+	if _is_fifo_replace(items):
+		_remove_first_card()
+		_add_card(items[items.size() - 1], items.size())
+		_current_items = items.duplicate()
+		return
+
 	_rebuild_cards(items)
 
 func _rebuild_cards(items: Array[String]) -> void:
@@ -42,6 +61,7 @@ func _rebuild_cards(items: Array[String]) -> void:
 	_cards.clear()
 	_base_pose.clear()
 	_dragging_card = null
+	_current_items = items.duplicate()
 
 	if item_card_scene == null:
 		return
@@ -49,32 +69,9 @@ func _rebuild_cards(items: Array[String]) -> void:
 	var catalog := _get_item_catalog()
 
 	for item_id in items:
-		var card := item_card_scene.instantiate() as Control
-		if card == null:
-			continue
-		add_child(card)
-		card.size = card.custom_minimum_size
-
-		if card.has_method("set_state"):
-			card.call("set_state", STATE_IN_HAND)
-		card.set("item_id", item_id)
-
-		var def: ItemCardDefinition = null
-		if catalog != null:
-			def = catalog.get_item_by_id(item_id)
-		if def != null and card.has_method("setup"):
-			card.call("setup", def)
-
-		if card.has_signal("hover_entered"):
-			card.connect("hover_entered", Callable(self, "_on_card_hover_entered"))
-		if card.has_signal("hover_exited"):
-			card.connect("hover_exited", Callable(self, "_on_card_hover_exited"))
-		if card.has_signal("drag_started"):
-			card.connect("drag_started", Callable(self, "_on_card_drag_started"))
-		if card.has_signal("drag_released"):
-			card.connect("drag_released", Callable(self, "_on_card_drag_released"))
-
-		_cards.append(card)
+		var card := _create_card_for_item(item_id, catalog)
+		if card != null:
+			_cards.append(card)
 
 	_layout_cards()
 
@@ -92,23 +89,89 @@ func _layout_cards() -> void:
 		if card == _dragging_card:
 			continue
 
-		var t := 0.5
-		if n > 1:
-			t = float(i) / float(n - 1)
+		var pose := _get_pose_for_index(i, n, center, card.size)
+		_base_pose[card] = pose
+		_tween_card_to(card, pose["pos"], pose["rot"], Vector2.ONE * HAND_SCALE)
 
-		var angle_deg := -FAN_SPREAD_DEG * 0.5 + FAN_SPREAD_DEG * t
-		var angle := deg_to_rad(angle_deg)
-		var x := center.x + sin(angle) * FAN_RADIUS
-		var y := center.y - cos(angle) * FAN_RADIUS * 0.35
-		var pos := Vector2(x, y) - (card.size * 0.5)
-		var rot := deg_to_rad(angle_deg) * 0.6
+func _get_pose_for_index(index: int, count: int, center: Vector2, card_size: Vector2) -> Dictionary:
+	var t := 0.5
+	if count > 1:
+		t = float(index) / float(count - 1)
+	var angle_deg := -FAN_SPREAD_DEG * 0.5 + FAN_SPREAD_DEG * t
+	var angle := deg_to_rad(angle_deg)
+	var x := center.x + sin(angle) * FAN_RADIUS
+	var y := center.y - cos(angle) * FAN_RADIUS * 0.35
+	var pos := Vector2(x, y) - (card_size * 0.5)
+	var rot := deg_to_rad(angle_deg) * 0.6
+	return {"pos": pos, "rot": rot}
 
-		_base_pose[card] = {
-			"pos": pos,
-			"rot": rot
-		}
+func _create_card_for_item(item_id: String, catalog: ItemCatalog) -> Control:
+	if item_card_scene == null:
+		return null
+	var card := item_card_scene.instantiate() as Control
+	if card == null:
+		return null
+	add_child(card)
+	card.size = card.custom_minimum_size
 
-		_tween_card_to(card, pos, rot, Vector2.ONE * HAND_SCALE)
+	if card.has_method("set_state"):
+		card.call("set_state", STATE_IN_HAND)
+	card.set("item_id", item_id)
+
+	var def: ItemCardDefinition = null
+	if catalog != null:
+		def = catalog.get_item_by_id(item_id)
+	if def != null and card.has_method("setup"):
+		card.call("setup", def)
+
+	if card.has_signal("hover_entered"):
+		card.connect("hover_entered", Callable(self, "_on_card_hover_entered"))
+	if card.has_signal("hover_exited"):
+		card.connect("hover_exited", Callable(self, "_on_card_hover_exited"))
+	if card.has_signal("drag_started"):
+		card.connect("drag_started", Callable(self, "_on_card_drag_started"))
+	if card.has_signal("drag_released"):
+		card.connect("drag_released", Callable(self, "_on_card_drag_released"))
+
+	return card
+
+func _add_card(item_id: String, total_count: int) -> void:
+	var catalog := _get_item_catalog()
+	var card := _create_card_for_item(item_id, catalog)
+	if card == null:
+		return
+	_cards.append(card)
+	var center := Vector2(size.x * 0.5, size.y)
+	var pose := _get_pose_for_index(total_count - 1, total_count, center, card.size)
+	_base_pose[card] = pose
+	_tween_card_to(card, pose["pos"], pose["rot"], Vector2.ONE * HAND_SCALE)
+
+func _remove_first_card() -> void:
+	if _cards.is_empty():
+		return
+	var first := _cards[0]
+	_cards.remove_at(0)
+	if first != null:
+		_base_pose.erase(first)
+		first.queue_free()
+
+func _is_append_only(items: Array[String]) -> bool:
+	if items.size() != _current_items.size() + 1:
+		return false
+	for i in range(_current_items.size()):
+		if items[i] != _current_items[i]:
+			return false
+	return true
+
+func _is_fifo_replace(items: Array[String]) -> bool:
+	if items.size() != _current_items.size():
+		return false
+	if _current_items.size() == 0:
+		return false
+	for i in range(items.size() - 1):
+		if items[i] != _current_items[i + 1]:
+			return false
+	return true
 
 func _tween_card_to(card: Control, pos: Vector2, rot: float, scale: Vector2) -> void:
 	var tween := create_tween()

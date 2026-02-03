@@ -89,7 +89,7 @@ var hero_level: int = 1
 var hero_xp: int = 0
 var xp_to_next_level: int = 4
 
-const XP_GROWTH_FACTOR: float = 1.25
+const XP_GROWTH_FACTOR: float = 2.0
 const LEVEL_UP_STAT_MULT: float = 1.2
 var level_stat_multiplier: float = 1.0
 
@@ -391,10 +391,8 @@ func recalculate_danger_level() -> void:
 # RECOMPENSAS
 #############################
 func apply_enemy_rewards(enemy: Dictionary) -> void:
-	var power: int = calculate_enemy_power(enemy)
-
-	var gold_reward: int = int(power * 0.5)
 	var enemy_level: int = int(enemy.get("level", 1))
+	var gold_reward: int = max(1, enemy_level)
 	var xp_reward: int = max(1, enemy_level)
 
 	_add_gold(gold_reward)
