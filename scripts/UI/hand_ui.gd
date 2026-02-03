@@ -1,8 +1,8 @@
 extends Control
 
 const MAX_HAND_SIZE: int = 5
-const FAN_RADIUS: float = 260.0
-const FAN_SPREAD_DEG: float = 40.0
+const FAN_RADIUS: float = 220.0
+const FAN_SPREAD_DEG: float = 20.0
 const HOVER_RAISE_Y: float = 36.0
 const HAND_SCALE: float = 0.3185
 const HOVER_SCALE: float = 1.08
@@ -48,6 +48,7 @@ func _sync_hand(items: Array[String]) -> void:
 
 	if _is_fifo_replace(items):
 		_remove_first_card()
+		_reflow_existing_cards()
 		_add_card(items[items.size() - 1], items.size())
 		_current_items = items.duplicate()
 		return
@@ -98,11 +99,14 @@ func _get_pose_for_index(index: int, count: int, center: Vector2, card_size: Vec
 	if count > 1:
 		t = float(index) / float(count - 1)
 	var angle_deg := -FAN_SPREAD_DEG * 0.5 + FAN_SPREAD_DEG * t
-	var angle := deg_to_rad(angle_deg)
-	var x := center.x + sin(angle) * FAN_RADIUS
-	var y := center.y - cos(angle) * FAN_RADIUS * 0.35
-	var pos := Vector2(x, y) - (card_size * 0.5)
-	var rot := deg_to_rad(angle_deg) * 0.6
+	var x: float = lerp(
+		center.x - (FAN_RADIUS * 0.4),
+		center.x + (FAN_RADIUS * 0.4),
+		t
+	)
+	var y: float = center.y - 12.0
+	var pos: Vector2 = Vector2(x, y) - (card_size * 0.5)
+	var rot: float = 0.0
 	return {"pos": pos, "rot": rot}
 
 func _create_card_for_item(item_id: String, catalog: ItemCatalog) -> Control:
@@ -141,10 +145,20 @@ func _add_card(item_id: String, total_count: int) -> void:
 	if card == null:
 		return
 	_cards.append(card)
+	_reflow_existing_cards()
+
+func _reflow_existing_cards() -> void:
+	var n := _cards.size()
+	if n == 0:
+		return
 	var center := Vector2(size.x * 0.5, size.y)
-	var pose := _get_pose_for_index(total_count - 1, total_count, center, card.size)
-	_base_pose[card] = pose
-	_tween_card_to(card, pose["pos"], pose["rot"], Vector2.ONE * HAND_SCALE)
+	for i in range(n):
+		var card := _cards[i]
+		if card == null or card == _dragging_card:
+			continue
+		var pose := _get_pose_for_index(i, n, center, card.size)
+		_base_pose[card] = pose
+		_tween_card_to(card, pose["pos"], pose["rot"], Vector2.ONE * HAND_SCALE)
 
 func _remove_first_card() -> void:
 	if _cards.is_empty():
@@ -154,6 +168,7 @@ func _remove_first_card() -> void:
 	if first != null:
 		_base_pose.erase(first)
 		first.queue_free()
+	_reflow_existing_cards()
 
 func _is_append_only(items: Array[String]) -> bool:
 	if items.size() != _current_items.size() + 1:
@@ -184,6 +199,7 @@ func _tween_card_to(card: Control, pos: Vector2, rot: float, scale: Vector2) -> 
 func _on_card_hover_entered(card: Control) -> void:
 	if card == null or card == _dragging_card:
 		return
+	_reflow_existing_cards()
 	if not _base_pose.has(card):
 		return
 	var pose: Dictionary = _base_pose[card] as Dictionary
@@ -196,6 +212,7 @@ func _on_card_hover_exited(card: Control) -> void:
 	if card == null or card == _dragging_card:
 		return
 	_return_card_to_hand(card)
+	_reflow_existing_cards()
 
 func _on_card_drag_started(card: Control) -> void:
 	if card == null:

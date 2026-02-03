@@ -16,6 +16,5 @@ damage = 3
 initiative = 5
 card_type = "hero"
 hero_class = "knight"
-is_persistent = true
 is_tutorial = true
 biome_modifier = "Base Set"

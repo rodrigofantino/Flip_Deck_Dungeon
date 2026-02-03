@@ -16,6 +16,5 @@ damage = 2
 initiative = 4
 card_type = "enemy"
 boss = false
-is_persistent = true
 is_tutorial = true
 biome_modifier = "Base Set"

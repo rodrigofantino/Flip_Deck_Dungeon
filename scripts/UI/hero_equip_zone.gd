@@ -18,6 +18,7 @@ const SLOT_ORDER: Array[String] = [
 
 @export var item_card_scene: PackedScene
 @export var item_catalog: ItemCatalog
+@onready var slots_container: VBoxContainer = $Slots
 
 func _ready() -> void:
 	if RunState:
@@ -40,11 +41,10 @@ func is_point_in_zone(global_pos: Vector2) -> bool:
 	return get_global_rect().has_point(global_pos)
 
 func _on_equip_changed(equipped: Array[String]) -> void:
-	var slots := _get_slots()
-	if slots.is_empty():
+	if slots_container == null:
 		return
 
-	for slot in slots:
+	for slot in slots_container.get_children():
 		for child in slot.get_children():
 			child.queue_free()
 
@@ -56,9 +56,9 @@ func _on_equip_changed(equipped: Array[String]) -> void:
 			continue
 		if item_card_scene == null:
 			continue
-		if i >= slots.size():
+		if i >= slots_container.get_child_count():
 			break
-		var slot := slots[i]
+		var slot := slots_container.get_child(i) as Control
 		if slot == null:
 			continue
 		var card := item_card_scene.instantiate() as Control
@@ -89,16 +89,6 @@ func _get_item_catalog() -> ItemCatalog:
 		return item_catalog
 	item_catalog = load(ITEM_CATALOG_DEFAULT_PATH) as ItemCatalog
 	return item_catalog
-
-func _get_slots() -> Array[Control]:
-	var result: Array[Control] = []
-	for child in get_children():
-		if child is Control and String(child.name).begins_with("Slot"):
-			result.append(child)
-	result.sort_custom(func(a: Control, b: Control) -> bool:
-		return a.name < b.name
-	)
-	return result
 
 func _get_item_type(item_id: String) -> String:
 	var catalog := _get_item_catalog()

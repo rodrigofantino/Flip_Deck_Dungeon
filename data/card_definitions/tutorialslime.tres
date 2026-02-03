@@ -15,6 +15,5 @@ max_hp = 2
 damage = 1
 card_type = "enemy"
 boss = false
-is_persistent = true
 is_tutorial = true
 biome_modifier = "Base Set"
