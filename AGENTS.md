@@ -73,10 +73,12 @@ For LOCAL git operations (no remote interaction), proceed without asking questio
 ### Hard stops (must ask before proceeding)
 Codex MUST ask before:
 
-**A) Any Git operation that touches a remote**
-- `git push`, `git pull`, `git fetch`, `git clone`
-- creating/updating remotes, changing branches with remote tracking, rebasing with remote, force pushes
-- using PAT tokens, SSH keys, credentials, or GitHub CLI auth
+**A) Git remote operations**
+- If the user explicitly requests a remote action (e.g., "git push", "push to origin development"), perform it without additional confirmation.
+- If the user did NOT explicitly request it, ask before doing any remote operation.
+
+If a remote operation fails (timeout/auth), retry up to 2 times automatically using safe adjustments (e.g., increased timeout / verbose), then stop and report full error output and suggested next steps.
+
 
 **B) Destructive operations**
 - Deleting or removing any files (including `.tscn`, `.tres`, `.gd`, assets, data, localization), or large directory cleanups.
