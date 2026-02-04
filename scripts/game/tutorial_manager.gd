@@ -1,8 +1,8 @@
 ﻿extends Node
 class_name TutorialManager
 
-const TUTORIAL_HERO_DEF_ID: String = "hero_knight"
-const TUTORIAL_ENEMY_TYPES: Array[String] = ["slime", "wolf", "spider", "forest_spirit"]
+const TUTORIAL_HERO_DEF_ID: String = "knight_aprentice"
+const TUTORIAL_ENEMY_TYPES: Array[String] = ["forest_slime", "forest_wolf", "forest_spider", "forest_spirit"]
 
 func start_tutorial():
 	# Punto de entrada del tutorial: borra tutorial previo y crea uno nuevo

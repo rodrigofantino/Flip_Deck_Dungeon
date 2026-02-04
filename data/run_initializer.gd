@@ -8,13 +8,11 @@ static func build_default_collection() -> PlayerCollection:
 	return collection
 
 static func _add_hero(collection: PlayerCollection) -> void:
-	collection.add_type("hero_knight", 1)
+	collection.add_type("knight_aprentice", 1)
 
 static func _add_enemies(collection: PlayerCollection) -> void:
-	_add_multiple(collection, "res://data/card_definitions/tutorialslime.tres", 2)
-	_add_multiple(collection, "res://data/card_definitions/tutorialspider.tres", 2)
-	_add_multiple(collection, "res://data/card_definitions/tutorialwolf.tres", 2)
-	_add_multiple(collection, "res://data/card_definitions/tutorialforest_spirit.tres", 1)
+	_add_multiple(collection, "res://data/card_definitions/forest/forest_slime.tres", 1)
+	_add_multiple(collection, "res://data/card_definitions/forest/forest_spider.tres", 1)
 
 static func _add_multiple(collection: PlayerCollection, definition_path: String, amount: int) -> void:
 	var def: CardDefinition = load(definition_path)

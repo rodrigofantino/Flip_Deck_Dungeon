@@ -7,8 +7,8 @@
 script = ExtResource("1_item")
 art = ExtResource("2_art")
 item_id = "mistwarden_owl_helm"
-item_name = "Mistwarden Owl Helm"
-item_description = "Looks wise. Feels damp. Works anyway."
+item_name = "ITEM_MISTWARDEN_OWL_HELM_NAME"
+item_description = "ITEM_MISTWARDEN_OWL_HELM_DESC"
 item_type = "helmet"
 armour_flat = 1
 initiative_flat = 1

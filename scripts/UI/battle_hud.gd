@@ -19,10 +19,10 @@ signal pause_pressed
 @onready var gold_label: Label = $TopBar/GoldLabel
 @onready var initiative_label: Label = $TopBar/InitiativeLabel
 
-@onready var draw_button: Button = $Controls/DrawButton
-@onready var combat_button: Button = $Controls/CombatButton
-@onready var auto_draw_check: CheckButton = $Controls/AutoDrawCheck
-@onready var auto_combat_check: CheckButton = $Controls/AutoCombatCheck
+@onready var draw_button: Button = $Controls/VBoxButtons/HBoxDraw/DrawButton
+@onready var combat_button: Button = $Controls/VBoxButtons/HboxCombat/CombatButton
+@onready var auto_draw_check: CheckButton = $Controls/VBoxButtons/HBoxDraw/AutoDrawCheck
+@onready var auto_combat_check: CheckButton = $Controls/VBoxButtons/HboxCombat/AutoCombatCheck
 @onready var pause_button: Button = $PauseButton
 
 

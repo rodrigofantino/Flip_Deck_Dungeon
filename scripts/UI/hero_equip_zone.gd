@@ -66,12 +66,13 @@ func _on_equip_changed(equipped: Array[String]) -> void:
 			continue
 		slot.add_child(card)
 		card.size = card.custom_minimum_size
-		card.set_anchors_preset(Control.PRESET_CENTER)
-		card.offset_left = -card.size.x * 0.5
-		card.offset_top = -card.size.y * 0.5
-		card.offset_right = card.size.x * 0.5
-		card.offset_bottom = card.size.y * 0.5
-		card.scale = Vector2(0.2776, 0.2776)
+		card.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		card.scale = Vector2(0.15, 0.15)
+		var slot_size := slot.size
+		if slot_size == Vector2.ZERO:
+			slot_size = slot.get_combined_minimum_size()
+		var scaled_size := card.size * card.scale
+		card.position = (slot_size * 0.5) - (scaled_size * 0.5)
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 		card.set("item_id", item_id)

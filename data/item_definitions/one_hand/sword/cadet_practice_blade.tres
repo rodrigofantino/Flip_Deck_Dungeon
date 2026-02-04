@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://bjvcrh82jolk0"]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://bilggbl7hcgfe" path="res://assets/cards/items/art/one_hand/sword/cadet_practice_blade.png" id="2_art"]
+
+[resource]
+script = ExtResource("1_item")
+art = ExtResource("2_art")
+item_id = "cadet_practice_blade"
+item_name = "ITEM_CADET_PRACTICE_BLADE_NAME"
+item_description = "ITEM_CADET_PRACTICE_BLADE_DESC"
+item_type = "one_hand"
+item_type_tags = Array[String](["sword"])
+damage_flat = 2

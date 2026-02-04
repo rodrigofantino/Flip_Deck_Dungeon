@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://de53vh66h4c6s"]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://dx7pt6ki5tp13" path="res://assets/cards/items/art/one_hand/sword/candlekeep_spark_sabre.png" id="2_art"]
+
+[resource]
+script = ExtResource("1_item")
+art = ExtResource("2_art")
+item_id = "candlekeep_spark_sabre"
+item_name = "ITEM_CANDLEKEEP_SPARK_SABRE_NAME"
+item_description = "ITEM_CANDLEKEEP_SPARK_SABRE_DESC"
+item_type = "one_hand"
+item_type_tags = Array[String](["sword"])
+damage_flat = 3

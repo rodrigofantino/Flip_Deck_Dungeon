@@ -25,6 +25,7 @@ extends Control
 @export var permitir_flip: bool = false
 
 @onready var book: PageFlip2D = $Book
+@onready var click_catcher: Control = $ClickCatcher
 var _resize_version: int = 0
 var _center_tween: Tween = null
 var _pending_open: bool = false
@@ -54,8 +55,10 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	_configure_book()
 	_ensure_input_enabled()
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_process_unhandled_input(true)
+	set_process_input(true)
+	_setup_click_catcher()
 	_hide_visuals_until_ready()
 	call_deferred("_initial_layout")
 	if book.anim_player:
@@ -194,6 +197,7 @@ func _apply_book_position(ignore_anim: bool = false) -> void:
 	else:
 		# Closed (front): keep the cover centered horizontally and resting near bottom.
 		book.position = _get_closed_center_target()
+	_update_click_catcher()
 	_dbg("apply_pos")
 
 func _get_page_count() -> int:
@@ -217,6 +221,7 @@ func _apply_book_position_on_state_change() -> void:
 	else:
 		_animate_to_closed(close_center_duration)
 	_enable_page_inputs()
+	_update_click_catcher()
 
 func _hide_visuals_until_ready() -> void:
 	if book.visuals_container:
@@ -248,14 +253,19 @@ func _recenter_book_internal() -> void:
 	if book and book.is_animating:
 		return
 	_apply_book_position(true)
+	_update_click_catcher()
 	_dbg("recenter_internal")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if book == null:
 		return
-	if not permitir_flip:
-		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if not book.is_book_open and _is_point_over_book(event.global_position):
+			_animate_to_open(open_center_duration)
+			get_viewport().set_input_as_handled()
+			return
+		if not permitir_flip:
+			return
 		var vc := book.visuals_container
 		if vc == null:
 			return
@@ -321,6 +331,50 @@ func _unhandled_input(event: InputEvent) -> void:
 					_dbg("click_next")
 				else:
 					_dbg("click_closed_front_center")
+
+func _input(event: InputEvent) -> void:
+	if book == null:
+		return
+	if book.is_book_open:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if try_open_from_click(event.global_position):
+			get_viewport().set_input_as_handled()
+
+func _gui_input(event: InputEvent) -> void:
+	if book == null:
+		return
+	if book.is_book_open:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if try_open_from_click(event.global_position):
+			accept_event()
+
+func try_open_from_click(global_pos: Vector2) -> bool:
+	if book == null or book.is_book_open:
+		return false
+	if _is_point_over_book(global_pos) or _is_point_over_closed_cover(global_pos):
+		_animate_to_open(open_center_duration)
+		return true
+	return false
+
+func _is_point_over_closed_cover(global_pos: Vector2) -> bool:
+	if book == null:
+		return false
+	var local := book.to_local(global_pos)
+	var size := _get_closed_page_size()
+	var half_h := size.y * 0.5
+	var is_back := _is_back_closed()
+	if is_back:
+		return local.x >= -size.x and local.x <= 0.0 and local.y >= -half_h and local.y <= half_h
+	return local.x >= 0.0 and local.x <= size.x and local.y >= -half_h and local.y <= half_h
+
+func _get_closed_page_size() -> Vector2:
+	var scale := _base_scale
+	if scale == Vector2.ZERO:
+		scale = Vector2.ONE
+	var effective := scale * closed_scale_multiplier
+	return book.target_page_size * effective
 
 func _get_open_center(view: Vector2) -> Vector2:
 	return Vector2(view.x * 0.5, view.y * 0.5)
@@ -730,6 +784,7 @@ func _set_open_center_offset(value: Vector2) -> void:
 	if book and book.is_animating:
 		return
 	_apply_book_position()
+	_update_click_catcher()
 
 func _set_closed_front_offset(value: Vector2) -> void:
 	closed_front_offset = value
@@ -738,6 +793,7 @@ func _set_closed_front_offset(value: Vector2) -> void:
 	if book and book.is_animating:
 		return
 	_apply_book_position()
+	_update_click_catcher()
 
 func _set_closed_back_offset(value: Vector2) -> void:
 	closed_back_offset = value
@@ -746,6 +802,7 @@ func _set_closed_back_offset(value: Vector2) -> void:
 	if book and book.is_animating:
 		return
 	_apply_book_position()
+	_update_click_catcher()
 
 func _initial_layout() -> void:
 	# Wait until the Control has a valid size to avoid a 1-frame giant book.
@@ -759,7 +816,48 @@ func _initial_layout() -> void:
 	_apply_book_position(true)
 	_force_visibility()
 	_apply_saved_offsets()
+	_update_click_catcher()
 	_dbg("initial_layout")
+
+func _setup_click_catcher() -> void:
+	if click_catcher == null:
+		return
+	click_catcher.top_level = true
+	click_catcher.mouse_filter = Control.MOUSE_FILTER_STOP
+	click_catcher.gui_input.connect(_on_click_catcher_gui_input)
+	_update_click_catcher()
+
+func _on_click_catcher_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if book == null or book.is_book_open:
+			return
+		print("[BookView] click catcher pressed")
+		_animate_to_open(open_center_duration)
+		accept_event()
+
+func _update_click_catcher() -> void:
+	if click_catcher == null or book == null:
+		return
+	var enable := not book.is_book_open
+	click_catcher.visible = enable
+	click_catcher.mouse_filter = Control.MOUSE_FILTER_STOP if enable else Control.MOUSE_FILTER_IGNORE
+	if not enable:
+		return
+	var rect := _get_closed_cover_global_rect()
+	click_catcher.global_position = rect.position
+	click_catcher.size = rect.size
+
+func _get_closed_cover_global_rect() -> Rect2:
+	var size := _get_closed_page_size()
+	var half_h := size.y * 0.5
+	var is_back := _is_back_closed()
+	var min_x := -size.x if is_back else 0.0
+	var max_x := 0.0 if is_back else size.x
+	var top_left := book.to_global(Vector2(min_x, -half_h))
+	var bottom_right := book.to_global(Vector2(max_x, half_h))
+	var min_pos := Vector2(min(top_left.x, bottom_right.x), min(top_left.y, bottom_right.y))
+	var max_pos := Vector2(max(top_left.x, bottom_right.x), max(top_left.y, bottom_right.y))
+	return Rect2(min_pos, max_pos - min_pos)
 
 func _apply_saved_offsets() -> void:
 	_set_open_center_offset(open_center_offset)

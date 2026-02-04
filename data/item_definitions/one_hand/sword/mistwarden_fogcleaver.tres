@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://b6soy3a2ku12t"]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://cm7735c50je8p" path="res://assets/cards/items/art/one_hand/sword/mistwarden_fogcleaver.png" id="2_art"]
+
+[resource]
+script = ExtResource("1_item")
+art = ExtResource("2_art")
+item_id = "mistwarden_fogcleaver"
+item_name = "ITEM_MISTWARDEN_FOGCLEAVER_NAME"
+item_description = "ITEM_MISTWARDEN_FOGCLEAVER_DESC"
+item_type = "one_hand"
+item_type_tags = Array[String](["sword"])
+damage_flat = 2
+initiative_flat = 1

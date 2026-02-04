@@ -4,8 +4,8 @@ const MAX_HAND_SIZE: int = 5
 const FAN_RADIUS: float = 220.0
 const FAN_SPREAD_DEG: float = 20.0
 const HOVER_RAISE_Y: float = 36.0
-const HAND_SCALE: float = 0.3185
-const HOVER_SCALE: float = 1.08
+const HAND_SCALE: float = 0.2548
+const HOVER_SCALE: float = 1.2
 const LAYOUT_TWEEN_TIME: float = 0.2
 const ITEM_CATALOG_DEFAULT_PATH: String = "res://data/item_catalog_default.tres"
 const STATE_IN_HAND: int = 0
@@ -92,18 +92,16 @@ func _layout_cards() -> void:
 
 		var pose := _get_pose_for_index(i, n, center, card.size)
 		_base_pose[card] = pose
-		_tween_card_to(card, pose["pos"], pose["rot"], Vector2.ONE * HAND_SCALE)
+		_apply_card_pose(card, pose["pos"], pose["rot"], Vector2.ONE * HAND_SCALE)
 
 func _get_pose_for_index(index: int, count: int, center: Vector2, card_size: Vector2) -> Dictionary:
 	var t := 0.5
 	if count > 1:
 		t = float(index) / float(count - 1)
 	var angle_deg := -FAN_SPREAD_DEG * 0.5 + FAN_SPREAD_DEG * t
-	var x: float = lerp(
-		center.x - (FAN_RADIUS * 0.4),
-		center.x + (FAN_RADIUS * 0.4),
-		t
-	)
+	var spacing: float = max(110.0, card_size.x * HAND_SCALE * 0.9)
+	var total_width: float = spacing * float(max(0, count - 1))
+	var x: float = center.x - (total_width * 0.5) + (float(index) * spacing)
 	var y: float = center.y - 12.0
 	var pos: Vector2 = Vector2(x, y) - (card_size * 0.5)
 	var rot: float = 0.0
@@ -117,6 +115,7 @@ func _create_card_for_item(item_id: String, catalog: ItemCatalog) -> Control:
 		return null
 	add_child(card)
 	card.size = card.custom_minimum_size
+	card.scale = Vector2.ONE * HAND_SCALE
 
 	if card.has_method("set_state"):
 		card.call("set_state", STATE_IN_HAND)
@@ -158,7 +157,7 @@ func _reflow_existing_cards() -> void:
 			continue
 		var pose := _get_pose_for_index(i, n, center, card.size)
 		_base_pose[card] = pose
-		_tween_card_to(card, pose["pos"], pose["rot"], Vector2.ONE * HAND_SCALE)
+		_apply_card_pose(card, pose["pos"], pose["rot"], Vector2.ONE * HAND_SCALE)
 
 func _remove_first_card() -> void:
 	if _cards.is_empty():
@@ -195,6 +194,11 @@ func _tween_card_to(card: Control, pos: Vector2, rot: float, scale: Vector2) -> 
 	tween.tween_property(card, "position", pos, LAYOUT_TWEEN_TIME)
 	tween.tween_property(card, "rotation", rot, LAYOUT_TWEEN_TIME)
 	tween.tween_property(card, "scale", scale, LAYOUT_TWEEN_TIME)
+
+func _apply_card_pose(card: Control, pos: Vector2, rot: float, scale: Vector2) -> void:
+	card.position = pos
+	card.rotation = rot
+	card.scale = scale
 
 func _on_card_hover_entered(card: Control) -> void:
 	if card == null or card == _dragging_card:
@@ -234,6 +238,11 @@ func _on_card_drag_released(card: Control, global_pos: Vector2) -> void:
 			var slot_index := _equip_zone.accept(item_id)
 			RunState.equip_item_from_hand(item_id, slot_index)
 			accepted = true
+	if not accepted and _equip_zone != null and _is_point_over_hero(global_pos):
+		if _equip_zone.can_accept(item_id):
+			var slot_index := _equip_zone.accept(item_id)
+			RunState.equip_item_from_hand(item_id, slot_index)
+			accepted = true
 
 	if not accepted:
 		_return_card_to_hand(card)
@@ -252,6 +261,17 @@ func _return_card_to_hand(card: Control) -> void:
 	var base_rot: float = float(pose.get("rot", 0.0))
 	card.z_index = 0
 	_tween_card_to(card, base_pos, base_rot, Vector2.ONE * HAND_SCALE)
+
+func _is_point_over_hero(global_pos: Vector2) -> bool:
+	for node in get_tree().get_nodes_in_group("card_view"):
+		if not (node is CardView):
+			continue
+		var card := node as CardView
+		if card.card_id != "th":
+			continue
+		if card.get_global_rect().has_point(global_pos):
+			return true
+	return false
 
 func _get_item_catalog() -> ItemCatalog:
 	if item_catalog != null:

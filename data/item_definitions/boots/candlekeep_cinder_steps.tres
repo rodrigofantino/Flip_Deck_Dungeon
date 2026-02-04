@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://dfybt2rolcsv"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://jwwkj8dmp7uj" path="res://assets/cards/items/art/boots/candlekeep_cinder_steps.png" id="2_art"]
 
 [resource]
 script = ExtResource("1_item")
+art = ExtResource("2_art")
 item_id = "candlekeep_cinder_steps"
-item_name = "Cinder Steps"
-item_description = "Warm soles, cooler exits."
+item_name = "ITEM_CANDLEKEEP_CINDER_STEPS_NAME"
+item_description = "ITEM_CANDLEKEEP_CINDER_STEPS_DESC"
 item_type = "boots"
-initiative_flat = 1
 life_flat = 1
+initiative_flat = 1

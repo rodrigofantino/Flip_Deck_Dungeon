@@ -1,11 +1,13 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://4oejoq35cq7u" path="res://assets/cards/items/art/gloves/mistwarden_knot_gauntlets.png" id="2_art"]
 
 [resource]
 script = ExtResource("1_item")
+art = ExtResource("2_art")
 item_id = "mistwarden_knot_gauntlets"
-item_name = "Knot Gauntlets"
-item_description = "For when your sword needs a firmer opinion."
+item_name = "ITEM_MISTWARDEN_KNOT_GAUNTLETS_NAME"
+item_description = "ITEM_MISTWARDEN_KNOT_GAUNTLETS_DESC"
 item_type = "gloves"
 damage_flat = 2

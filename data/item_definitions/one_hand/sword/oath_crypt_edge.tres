@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://c3q62d1xlfbmj"]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://08k02afl3w03" path="res://assets/cards/items/art/one_hand/sword/oath_crypt_edge.png" id="2_art"]
+
+[resource]
+script = ExtResource("1_item")
+art = ExtResource("2_art")
+item_id = "oath_crypt_edge"
+item_name = "ITEM_OATH_CRYPT_EDGE_NAME"
+item_description = "ITEM_OATH_CRYPT_EDGE_DESC"
+item_type = "one_hand"
+item_type_tags = Array[String](["sword"])
+damage_flat = 4

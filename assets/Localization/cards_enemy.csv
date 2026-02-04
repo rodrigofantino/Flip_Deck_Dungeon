@@ -1,27 +1,19 @@
-id,en,es
-TUTORIAL_FOREST_SPIRIT_NAME,Forest Spirit,Espíritu del Bosque
-TUTORIAL_FOREST_SPIRIT_DESCRIPTION,An enraged spirit,Un espíritu del bosuqe enojado por tu presencia
-TUTORIAL_SLIME_NAME,Slime,Slime
-TUTORIAL_SLIME_DESCRIPTION,A disgusting goo,Una baba asquerosa
-TUTORIAL_SPIDER_NAME,Forest Spider,Araña del Bosque
-TUTORIAL_SPIDER_DESCRIPTION,A giant spider,Una araña gigante
-TUTORIAL_WOLf_NAME,Lone Wolf,Lobo Solitario
-TUTORIAL_WOLF_DESCRIPTION,A big lone wolf with sharp teeth,Un gran lobo solitario con dientes filosos
+﻿id,en,es
 FOREST_SLIME_NAME,Slime,Slime
 FOREST_SLIME_DESCRIPTION,A disgusting goo,Una baba asquerosa
-FOREST_SPIDER_NAME,Forest Spider,Araña del Bosque
-FOREST_SPIDER_DESCRIPTION,A giant spider,Una araña gigante
+FOREST_SPIDER_NAME,Forest Spider,AraÃ±a del Bosque
+FOREST_SPIDER_DESCRIPTION,A giant spider,Una araÃ±a gigante
 FOREST_WOLF_NAME,Lone Wolf,Lobo Solitario
 FOREST_WOLF_DESCRIPTION,A big lone wolf with sharp teeth,Un gran lobo solitario con dientes filosos
-FOREST_SPIRIT_NAME,Forest Spirit,Espíritu del Bosque
-FOREST_SPIRIT_DESCRIPTION,An enraged spirit,Un espíritu del bosque enojado por tu presencia
+FOREST_SPIRIT_NAME,Forest Spirit,EspÃ­ritu del Bosque
+FOREST_SPIRIT_DESCRIPTION,An enraged spirit,Un espÃ­ritu del bosque enojado por tu presencia
 DARK_FOREST_SLIME_NAME,Slime,Slime
 DARK_FOREST_SLIME_DESCRIPTION,,
-DARK_FOREST_SPIDER_NAME,Spider,Araña
+DARK_FOREST_SPIDER_NAME,Spider,AraÃ±a
 DARK_FOREST_SPIDER_DESCRIPTION,,
 DARK_FOREST_WOLF_NAME,Wolf,Lobo
 DARK_FOREST_WOLF_DESCRIPTION,,
-DARK_FOREST_CORRUPTED_BAT_NAME,Corrupted Bat,Murciélago Corrupto
+DARK_FOREST_CORRUPTED_BAT_NAME,Corrupted Bat,MurciÃ©lago Corrupto
 DARK_FOREST_CORRUPTED_BAT_DESCRIPTION,,
 DARK_FOREST_ROOTLING_NAME,Rootling,Raicillo
 DARK_FOREST_ROOTLING_DESCRIPTION,,
@@ -31,7 +23,7 @@ DARK_FOREST_THORN_BEAST_NAME,Thorn Beast,Bestia Espinosa
 DARK_FOREST_THORN_BEAST_DESCRIPTION,,
 DARK_FOREST_SPORELING_NAME,Sporeling,Esporilla
 DARK_FOREST_SPORELING_DESCRIPTION,,
-DARK_FOREST_FALLEN_STAG_NAME,Fallen Stag,Ciervo Caído
+DARK_FOREST_FALLEN_STAG_NAME,Fallen Stag,Ciervo CaÃ­do
 DARK_FOREST_FALLEN_STAG_DESCRIPTION,,
-DARK_FOREST_CORRUPTED_SPIRIT_NAME,Corrupted Spirit,Espíritu Corrupto
+DARK_FOREST_CORRUPTED_SPIRIT_NAME,Corrupted Spirit,EspÃ­ritu Corrupto
 DARK_FOREST_CORRUPTED_SPIRIT_DESCRIPTION,,

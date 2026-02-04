@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://bo270f55f0yag" path="res://assets/cards/items/art/one_hand/shield/oath_crypt_shield.png" id="2_art"]
+
+[resource]
+script = ExtResource("1_item")
+art = ExtResource("2_art")
+item_id = "oath_crypt_shield"
+item_name = "ITEM_OATH_CRYPT_SHIELD_NAME"
+item_description = "ITEM_OATH_CRYPT_SHIELD_DESC"
+item_type = "one_hand"
+item_type_tags = ["shield"]
+armour_flat = 3

@@ -12,11 +12,9 @@ const COLLECTION_SAVE_PATH := "user://save/card_collection.json"
 const RUN_DECK_SAVE_PATH := "user://save/run_deck.json"
 # Ruta del archivo de guardado del deck de la run actual
 const DEFAULT_TUTORIAL_COUNTS := {
-	"hero_knight": 1,
-	"slime": 3,
-	"wolf": 3,
-	"spider": 3,
-	"forest_spirit": 1
+	"knight_aprentice": 1,
+	"forest_slime": 1,
+	"forest_spider": 1
 }
 
 
@@ -175,8 +173,6 @@ static func _build_default_collection() -> PlayerCollection:
 		if def == null:
 			push_warning("[SaveSystem] Falta definicion tutorial: " + def_id)
 			continue
-		if not def.is_tutorial:
-			push_warning("[SaveSystem] La definicion no es tutorial: " + def_id)
 		var count := int(DEFAULT_TUTORIAL_COUNTS[def_id])
 		collection.add_type(def_id, count)
 
@@ -213,7 +209,7 @@ static func _is_valid_tutorial_collection(collection: PlayerCollection) -> bool:
 # RUN DECK
 # =========================
 
-static func save_run_deck(run_deck: Array[String]) -> void:
+static func save_run_deck(run_deck: Array) -> void:
 	_ensure_save_dir()
 	var file := FileAccess.open(RUN_DECK_SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -223,7 +219,7 @@ static func save_run_deck(run_deck: Array[String]) -> void:
 	file.close()
 
 
-static func load_run_deck() -> Array[String]:
+static func load_run_deck() -> Array:
 	if not FileAccess.file_exists(RUN_DECK_SAVE_PATH):
 		return []
 
@@ -240,7 +236,7 @@ static func load_run_deck() -> Array[String]:
 		push_error("Error parseando JSON de run deck")
 		return []
 
-	var result: Array[String] = []
+	var result: Array = []
 	for entry in data:
 		if typeof(entry) == TYPE_STRING:
 			result.append(String(entry))
@@ -248,6 +244,16 @@ static func load_run_deck() -> Array[String]:
 			var def_id := String(entry.get("definition_id", ""))
 			if def_id != "":
 				result.append(def_id)
+		elif typeof(entry) == TYPE_ARRAY:
+			var deck_list: Array = []
+			for inner in entry:
+				if typeof(inner) == TYPE_STRING:
+					deck_list.append(String(inner))
+				elif typeof(inner) == TYPE_DICTIONARY:
+					var inner_id := String(inner.get("definition_id", ""))
+					if inner_id != "":
+						deck_list.append(inner_id)
+			result.append(deck_list)
 	return result
 
 
@@ -268,10 +274,20 @@ static func remove_from_run_deck(definition_id: String) -> void:
 	var deck := load_run_deck()
 	if deck.is_empty():
 		return
-	for i in range(deck.size() - 1, -1, -1):
-		if deck[i] == definition_id:
-			deck.remove_at(i)
-			break
+	if deck.size() > 0 and deck[0] is Array:
+		for deck_index in range(deck.size()):
+			var sub_deck: Array = deck[deck_index]
+			for i in range(sub_deck.size() - 1, -1, -1):
+				if sub_deck[i] == definition_id:
+					sub_deck.remove_at(i)
+					deck[deck_index] = sub_deck
+					save_run_deck(deck)
+					return
+	else:
+		for i in range(deck.size() - 1, -1, -1):
+			if deck[i] == definition_id:
+				deck.remove_at(i)
+				break
 	save_run_deck(deck)
 
 

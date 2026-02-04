@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://budn4tx63j4xf"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://boe2jknpjdvtj" path="res://assets/cards/items/art/helmet/etiquette_crest_helm.png" id="2_art"]
@@ -7,8 +7,8 @@
 script = ExtResource("1_item")
 art = ExtResource("2_art")
 item_id = "etiquette_crest_helm"
-item_name = "Crested Etiquette Helm"
-item_description = "Polished to reflect light and questionable choices."
+item_name = "ITEM_ETIQUETTE_CREST_HELM_NAME"
+item_description = "ITEM_ETIQUETTE_CREST_HELM_DESC"
 item_type = "helmet"
 armour_flat = 2
 life_flat = 1

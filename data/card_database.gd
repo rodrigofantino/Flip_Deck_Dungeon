@@ -4,11 +4,7 @@ class_name CardDatabases
 
 # Preloads garantizan que las definiciones de tutorial estén en la build final
 const TUTORIAL_DEFINITION_PRELOADS := {
-	"hero_knight": preload("res://data/card_definitions/tutorialhero_knight.tres"),
-	"slime": preload("res://data/card_definitions/tutorialslime.tres"),
-	"wolf": preload("res://data/card_definitions/tutorialwolf.tres"),
-	"spider": preload("res://data/card_definitions/tutorialspider.tres"),
-	"forest_spirit": preload("res://data/card_definitions/tutorialforest_spirit.tres")
+	"knight_aprentice": preload("res://data/card_definitions/hero/knight_aprentice.tres")
 }
 
 var definitions: Dictionary = {}
@@ -25,8 +21,8 @@ func load_definitions() -> void:
 	_register_preloaded_tutorial_definitions()
 
 	# Alias legacy para no romper referencias viejas
-	if definitions.has("hero_knight"):
-		definitions["hero"] = definitions["hero_knight"]
+	if definitions.has("knight_aprentice"):
+		definitions["hero"] = definitions["knight_aprentice"]
 
 func get_definition(key: String):
 	# Devuelve una definicion de carta por su clave

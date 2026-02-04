@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://dw3okt7j1rb7i"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://drts28q24rhg" path="res://assets/cards/items/art/armour/oath_gravewarden_plate.png" id="2_art"]
 
 [resource]
 script = ExtResource("1_item")
+art = ExtResource("2_art")
 item_id = "oath_gravewarden_plate"
-item_name = "Gravewarden Plate"
-item_description = "Heavy as a vow. Reliable as one, too."
+item_name = "ITEM_OATH_GRAVEWARDEN_PLATE_NAME"
+item_description = "ITEM_OATH_GRAVEWARDEN_PLATE_DESC"
 item_type = "armour"
 armour_flat = 3
 life_flat = 2

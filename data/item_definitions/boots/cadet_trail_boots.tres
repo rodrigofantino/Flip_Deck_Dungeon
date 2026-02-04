@@ -1,11 +1,13 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://d0n6kpmdfjvbo"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://b1f2x3207tj7y" path="res://assets/cards/items/art/boots/cadet_trail_boots.png" id="2_art"]
 
 [resource]
 script = ExtResource("1_item")
+art = ExtResource("2_art")
 item_id = "cadet_trail_boots"
-item_name = "Cadet Trail Boots"
-item_description = "They squeak heroically. The dungeon pretends not to notice."
+item_name = "ITEM_CADET_TRAIL_BOOTS_NAME"
+item_description = "ITEM_CADET_TRAIL_BOOTS_DESC"
 item_type = "boots"
 initiative_flat = 1

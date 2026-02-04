@@ -1,6 +1,6 @@
 extends Node
 class_name CombatManager
-# Orquestador lógico del combate.
+# Orquestador logico del combate.
 # NO maneja UI ni animaciones.
 
 # ==========================================
@@ -23,11 +23,11 @@ var current_phase: CombatPhase = CombatPhase.IDLE
 # ==========================================
 var run_manager: RunManager
 var hero_id: String = "th"
-var enemy_id: String = ""
+var enemy_ids: Array[String] = []
 @export var initiative_debug: bool = false
 
 # ==========================================
-# SEÑALES
+# SENALES
 # ==========================================
 signal phase_changed(phase: CombatPhase)
 
@@ -44,7 +44,7 @@ signal ready_for_next_round
 
 static func calc_hero_first_chance(hero_init: int, enemy_init: int) -> float:
 	# P(hero_first) = clamp(0.15, 0.85, 0.5 + (hero_init - enemy_init) * 0.05)
-	# hero_init: iniciativa del héroe
+	# hero_init: iniciativa del heroe
 	# enemy_init: iniciativa del enemigo
 	var diff: int = hero_init - enemy_init
 	var p: float = 0.5 + float(diff) * 0.05
@@ -88,16 +88,19 @@ func setup(run: RunManager) -> void:
 	run_manager = run
 
 # ==========================================
-# API PÚBLICA
+# API PUBLICA
 # ==========================================
 
 
-func start_combat(enemy_card_id: String) -> void:
+func start_combat(enemy_card_ids: Array[String]) -> void:
 	if run_manager == null:
 		push_error("[CombatManager] RunManager no asignado")
 		return
 
-	enemy_id = enemy_card_id
+	enemy_ids = _filter_alive_enemy_ids(enemy_card_ids)
+	if enemy_ids.is_empty():
+		_finish_combat(true)
+		return
 	current_phase = CombatPhase.START_COMBAT
 	phase_changed.emit(current_phase)
 
@@ -108,128 +111,134 @@ func start_combat(enemy_card_id: String) -> void:
 # ==========================================
 func _resolve_initiative_turn() -> void:
 	var hero: Dictionary = run_manager.get_card(hero_id)
-	var enemy: Dictionary = run_manager.get_card(enemy_id)
-
-	if hero.is_empty() or enemy.is_empty():
+	if hero.is_empty():
 		_finish_combat(true)
 		return
 
+	enemy_ids = _filter_alive_enemy_ids(enemy_ids)
+	if enemy_ids.is_empty():
+		_finish_combat(true)
+		return
+
+	var order := _build_turn_order(hero, enemy_ids)
+	_resolve_turn_order(order)
+
+func _resolve_turn_order(order: Array[String]) -> void:
+	var hero: Dictionary = run_manager.get_card(hero_id)
+	if hero.is_empty():
+		_finish_combat(false)
+		return
+
+	for attacker_id in order:
+		if attacker_id == hero_id:
+			current_phase = CombatPhase.HERO_TURN
+			phase_changed.emit(current_phase)
+			hero = run_manager.get_card(hero_id)
+			if hero.is_empty():
+				_finish_combat(false)
+				return
+			var target_id := _pick_hero_target(enemy_ids)
+			if target_id == "":
+				_finish_combat(true)
+				return
+			attack_started.emit(hero_id, target_id)
+			await attack_animation_finished
+			_apply_damage(hero_id, target_id, int(hero.damage))
+			var target: Dictionary = run_manager.get_card(target_id)
+			if not target.is_empty() and int(target.current_hp) <= 0:
+				_handle_death(target_id)
+		else:
+			var enemy: Dictionary = run_manager.get_card(attacker_id)
+			if enemy.is_empty() or int(enemy.get("current_hp", 0)) <= 0:
+				continue
+			current_phase = CombatPhase.ENEMY_TURN
+			phase_changed.emit(current_phase)
+			attack_started.emit(attacker_id, hero_id)
+			await attack_animation_finished
+			_apply_damage(attacker_id, hero_id, int(enemy.damage))
+			hero = run_manager.get_card(hero_id)
+			if hero.is_empty() or int(hero.get("current_hp", 0)) <= 0:
+				_handle_death(hero_id)
+				_finish_combat(false)
+				return
+
+	enemy_ids = _filter_alive_enemy_ids(enemy_ids)
+	if enemy_ids.is_empty():
+		_finish_combat(true)
+		return
+
+	_finish_combat(false)
+
+func _build_turn_order(hero: Dictionary, enemies: Array[String]) -> Array[String]:
 	var hero_init: int = int(hero.get("initiative", 0))
-	var enemy_init: int = int(enemy.get("initiative", 0))
-	var p: float = calc_hero_first_chance(hero_init, enemy_init)
-	var roll: float = randf()
-	var hero_first: bool = roll < p
+	var before: Array[String] = []
+	var after: Array[String] = []
+	for enemy_id in enemies:
+		var enemy: Dictionary = run_manager.get_card(enemy_id)
+		if enemy.is_empty():
+			continue
+		var enemy_init: int = int(enemy.get("initiative", 0))
+		var rng := RandomNumberGenerator.new()
+		rng.randomize()
+		var hero_first := resolve_hero_first(hero_init, enemy_init, rng)
+		if initiative_debug:
+			var diff: int = hero_init - enemy_init
+			print(
+				"[Initiative] hero:",
+				hero_init,
+				"enemy:",
+				enemy_init,
+				"diff:",
+				diff,
+				"hero_first:",
+				hero_first
+			)
+		if hero_first:
+			after.append(enemy_id)
+		else:
+			before.append(enemy_id)
+	_sort_enemies_by_initiative(before)
+	_sort_enemies_by_initiative(after)
+	var order: Array[String] = []
+	order.append_array(before)
+	order.append(hero_id)
+	order.append_array(after)
+	return order
 
-	if initiative_debug:
-		var diff: int = hero_init - enemy_init
-		print(
-			"[Initiative] hero:",
-			hero_init,
-			"enemy:",
-			enemy_init,
-			"diff:",
-			diff,
-			"p:",
-			p,
-			"roll:",
-			roll,
-			"hero_first:",
-			hero_first
-		)
+func _sort_enemies_by_initiative(ids: Array[String]) -> void:
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		var ea: Dictionary = run_manager.get_card(a)
+		var eb: Dictionary = run_manager.get_card(b)
+		var ia: int = int(ea.get("initiative", 0))
+		var ib: int = int(eb.get("initiative", 0))
+		if ia == ib:
+			return a < b
+		return ia > ib
+	)
 
-	if hero_first:
-		_resolve_hero_turn()
-	else:
-		_resolve_enemy_first_turn()
+func _pick_hero_target(enemies: Array[String]) -> String:
+	for enemy_id in enemies:
+		var enemy: Dictionary = run_manager.get_card(enemy_id)
+		if enemy.is_empty():
+			continue
+		if int(enemy.get("current_hp", 0)) > 0:
+			return enemy_id
+	return ""
 
-func _resolve_hero_turn() -> void:
-	current_phase = CombatPhase.HERO_TURN
-	phase_changed.emit(current_phase)
-
-	var hero: Dictionary = run_manager.get_card(hero_id)
-	var enemy: Dictionary = run_manager.get_card(enemy_id)
-
-	if hero.is_empty() or enemy.is_empty():
-		_finish_combat(true)
-		return
-
-	attack_started.emit(hero_id, enemy_id)
-	await attack_animation_finished
-
-	_apply_damage(hero_id, enemy_id, int(hero.damage))
-
-	if int(enemy.current_hp) <= 0:
-		_handle_death(enemy_id)
-		_finish_combat(true)
-		return
-
-	_resolve_enemy_turn()
-
-
-func _resolve_enemy_turn() -> void:
-	current_phase = CombatPhase.ENEMY_TURN
-	phase_changed.emit(current_phase)
-
-	var hero: Dictionary = run_manager.get_card(hero_id)
-	var enemy: Dictionary = run_manager.get_card(enemy_id)
-
-	if hero.is_empty() or enemy.is_empty():
-		_finish_combat(false)
-		return
-
-	attack_started.emit(enemy_id, hero_id)
-	await attack_animation_finished
-
-	_apply_damage(enemy_id, hero_id, int(enemy.damage))
-
-	if int(hero.current_hp) <= 0:
-		_handle_death(hero_id)
-		_finish_combat(false)
-		return
-
-	# 🔑 NADIE MURIÓ → FIN DE RONDA
-	_finish_combat(false)
-
-func _resolve_enemy_first_turn() -> void:
-	current_phase = CombatPhase.ENEMY_TURN
-	phase_changed.emit(current_phase)
-
-	var hero: Dictionary = run_manager.get_card(hero_id)
-	var enemy: Dictionary = run_manager.get_card(enemy_id)
-
-	if hero.is_empty() or enemy.is_empty():
-		_finish_combat(false)
-		return
-
-	attack_started.emit(enemy_id, hero_id)
-	await attack_animation_finished
-
-	_apply_damage(enemy_id, hero_id, int(enemy.damage))
-
-	if int(hero.current_hp) <= 0:
-		_handle_death(hero_id)
-		_finish_combat(false)
-		return
-
-	current_phase = CombatPhase.HERO_TURN
-	phase_changed.emit(current_phase)
-
-	attack_started.emit(hero_id, enemy_id)
-	await attack_animation_finished
-
-	_apply_damage(hero_id, enemy_id, int(hero.damage))
-
-	if int(enemy.current_hp) <= 0:
-		_handle_death(enemy_id)
-		_finish_combat(true)
-		return
-
-	_finish_combat(false)
-
+func _filter_alive_enemy_ids(ids: Array[String]) -> Array[String]:
+	var result: Array[String] = []
+	for enemy_id in ids:
+		var enemy: Dictionary = run_manager.get_card(enemy_id)
+		if enemy.is_empty():
+			continue
+		if int(enemy.get("current_hp", 0)) <= 0:
+			continue
+		result.append(enemy_id)
+	return result
 
 
 # ==========================================
-# DAÑO Y MUERTE
+# DANO Y MUERTE
 # ==========================================
 func _apply_damage(attacker_id: String, target_id: String, amount: int) -> void:
 	var card: Dictionary = run_manager.get_card(target_id)
@@ -271,7 +280,7 @@ func _finish_combat(victory: bool) -> void:
 
 	combat_finished.emit(victory)
 
-	# 🔑 RESET LIMPIO PARA PRÓXIMO COMBATE
+	# RESET limpio para proximo combate
 	await get_tree().process_frame
 	current_phase = CombatPhase.IDLE
 	phase_changed.emit(current_phase)

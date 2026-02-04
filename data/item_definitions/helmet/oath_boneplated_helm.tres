@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 art = ExtResource("2_art")
 item_id = "oath_boneplated_helm"
-item_name = "Boneplated Helm"
-item_description = "Not bone. Definitely not bone. Dont ask."
+item_name = "ITEM_OATH_BONEPLATED_HELM_NAME"
+item_description = "ITEM_OATH_BONEPLATED_HELM_DESC"
 item_type = "helmet"
 armour_flat = 3

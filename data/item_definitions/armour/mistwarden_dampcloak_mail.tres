@@ -1,13 +1,15 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://b2qt0xseeibbd"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://da0n0id3q5u4k" path="res://assets/cards/items/art/armour/mistwarden_dampcloak_mail.png" id="2_art"]
 
 [resource]
 script = ExtResource("1_item")
+art = ExtResource("2_art")
 item_id = "mistwarden_dampcloak_mail"
-item_name = "Dampcloak Mail"
-item_description = "Its not wet. Its atmospheric."
+item_name = "ITEM_MISTWARDEN_DAMPCLOAK_MAIL_NAME"
+item_description = "ITEM_MISTWARDEN_DAMPCLOAK_MAIL_DESC"
 item_type = "armour"
 armour_flat = 1
-initiative_flat = 1
 life_flat = 1
+initiative_flat = 1

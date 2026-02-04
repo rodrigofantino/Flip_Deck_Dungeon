@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://b4uhy8bn06qo7"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://bry3y3ie3pell" path="res://assets/cards/items/art/armour/candlekeep_ashcoat.png" id="2_art"]
 
 [resource]
 script = ExtResource("1_item")
+art = ExtResource("2_art")
 item_id = "candlekeep_ashcoat"
-item_name = "Ashcoat Armour"
-item_description = "Smells faintly of campfire and professional responsibility."
+item_name = "ITEM_CANDLEKEEP_ASHCOAT_NAME"
+item_description = "ITEM_CANDLEKEEP_ASHCOAT_DESC"
 item_type = "armour"
 armour_flat = 2
 life_flat = 1

@@ -24,16 +24,11 @@ var _dragging: bool = false
 var _drag_offset: Vector2 = Vector2.ZERO
 var _sizing_dirty: bool = false
 
-const NAME_BASE_SIZE: int = 32
-const DESC_BASE_SIZE: int = 28
-const STATS_BASE_SIZE: int = 28
-const MIN_FONT_SIZE: int = 12
-
 func _ready() -> void:
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	set_process_input(true)
-	_request_text_fit()
+	# Font sizes are configured in the scene/inspector.
 
 func set_state(new_state: CardState) -> void:
 	state = new_state
@@ -47,55 +42,28 @@ func setup(def: ItemCardDefinition) -> void:
 	if item_art != null:
 		item_art.texture = definition.art
 	if item_name_label != null:
-		item_name_label.text = definition.item_name
+		item_name_label.text = tr(definition.item_name)
 	if item_description_label != null:
-		item_description_label.text = definition.item_description
+		item_description_label.text = tr(definition.item_description)
 	if item_stats_label != null:
 		item_stats_label.text = _build_stats_text(definition)
-	_request_text_fit()
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED:
-		_request_text_fit()
+	pass
 
 func _request_text_fit() -> void:
-	if _sizing_dirty:
-		return
-	_sizing_dirty = true
-	call_deferred("_fit_text_to_labels")
-
-func _fit_text_to_labels() -> void:
-	_sizing_dirty = false
-	_fit_label(item_name_label, NAME_BASE_SIZE)
-	_fit_label(item_description_label, DESC_BASE_SIZE)
-	_fit_label(item_stats_label, STATS_BASE_SIZE)
-
-func _fit_label(label: Label, base_size: int) -> void:
-	if label == null:
-		return
-	var size := base_size
-	label.add_theme_font_size_override("font_size", size)
-	await get_tree().process_frame
-	var max_width := label.size.x
-	var max_height := label.size.y
-	while size > MIN_FONT_SIZE:
-		var min := label.get_minimum_size()
-		if min.x <= max_width and min.y <= max_height:
-			break
-		size -= 1
-		label.add_theme_font_size_override("font_size", size)
-		await get_tree().process_frame
+	pass
 
 func _build_stats_text(def: ItemCardDefinition) -> String:
 	var parts: Array[String] = []
-	_append_stat(parts, "Armour", def.armour_flat)
-	_append_stat(parts, "Damage", def.damage_flat)
-	_append_stat(parts, "Life", def.life_flat)
-	_append_stat(parts, "Initiative", def.initiative_flat)
-	_append_stat(parts, "Lifesteal", def.lifesteal_flat)
-	_append_stat(parts, "Thorns", def.thorns_flat)
-	_append_stat(parts, "Regen", def.regen_flat)
-	_append_stat(parts, "Crit", def.crit_chance_flat)
+	_append_stat(parts, tr("ITEM_STAT_ARMOUR"), def.armour_flat)
+	_append_stat(parts, tr("ITEM_STAT_DAMAGE"), def.damage_flat)
+	_append_stat(parts, tr("ITEM_STAT_LIFE"), def.life_flat)
+	_append_stat(parts, tr("ITEM_STAT_INITIATIVE"), def.initiative_flat)
+	_append_stat(parts, tr("ITEM_STAT_LIFESTEAL"), def.lifesteal_flat)
+	_append_stat(parts, tr("ITEM_STAT_THORNS"), def.thorns_flat)
+	_append_stat(parts, tr("ITEM_STAT_REGEN"), def.regen_flat)
+	_append_stat(parts, tr("ITEM_STAT_CRIT"), def.crit_chance_flat)
 	return ", ".join(parts)
 
 func _append_stat(parts: Array[String], label: String, value: int) -> void:

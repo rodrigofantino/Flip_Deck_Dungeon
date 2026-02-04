@@ -98,33 +98,19 @@ func _get_ordered_def_ids(is_play_mode: bool) -> Array[String]:
 	var forest_ids: Array[String] = []
 	var dark_forest_ids: Array[String] = []
 	var other_ids: Array[String] = []
-	var all_ids: Array[String] = []
 
 	for def_id in CardDatabase.definitions.keys():
 		var def: CardDefinition = CardDatabase.get_definition(String(def_id))
 		if def == null:
 			continue
-		if is_play_mode:
-			all_ids.append(def.definition_id)
+		if def.card_type == "hero":
+			hero_ids.append(def.definition_id)
+		elif def.biome_modifier == "Forest":
+			forest_ids.append(def.definition_id)
+		elif def.biome_modifier == "Dark Forest":
+			dark_forest_ids.append(def.definition_id)
 		else:
-			if def.card_type == "hero":
-				hero_ids.append(def.definition_id)
-			elif def.biome_modifier == "Forest":
-				forest_ids.append(def.definition_id)
-			elif def.biome_modifier == "Dark Forest":
-				dark_forest_ids.append(def.definition_id)
-			else:
-				other_ids.append(def.definition_id)
-
-	if is_play_mode:
-		all_ids.sort_custom(func(a: String, b: String) -> bool:
-			var pa := _get_definition_power(a)
-			var pb := _get_definition_power(b)
-			if pa == pb:
-				return a < b
-			return pa < pb
-		)
-		return all_ids
+			other_ids.append(def.definition_id)
 
 	hero_ids.sort_custom(func(a: String, b: String) -> bool:
 		return _compare_by_power_then_id(a, b)

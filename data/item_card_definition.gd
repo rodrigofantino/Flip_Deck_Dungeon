@@ -19,6 +19,9 @@ class_name ItemCardDefinition
 @export_enum("none", "one_hand", "two_hands", "helmet", "gloves", "boots", "armour", "amulet", "ring") var item_type: String = "none"
 # Tipo de item/equipamiento.
 
+@export var item_type_tags: Array[String] = []
+# Tags de tipo (ej: ["sword"]). Lista para compatibilidad futura.
+
 # =========================
 # FLAT STATS (V1)
 # Valores planos que se suman. Pueden ser negativos para debuffs.

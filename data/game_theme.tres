@@ -1,0 +1,15 @@
+[gd_resource type="Theme" load_steps=2 format=3]
+
+[ext_resource type="FontFile" uid="uid://dgot56nsookbl" path="res://assets/fonts/gamefont1.ttf" id="1_font"]
+
+[resource]
+default_font = ExtResource("1_font")
+default_font_size = 40
+Label/font_sizes/font_size = 40
+RichTextLabel/font_sizes/font_size = 40
+Button/font_sizes/font_size = 40
+CheckButton/font_sizes/font_size = 40
+OptionButton/font_sizes/font_size = 40
+Label/colors/font_shadow_color = Color(0, 0, 0, 0.6)
+Label/constants/shadow_offset_x = 2
+Label/constants/shadow_offset_y = 2

@@ -13,3 +13,7 @@ grow_vertical = 2
 script = ExtResource("2_ctrl")
 
 [node name="Book" parent="." instance=ExtResource("1_book")]
+
+[node name="ClickCatcher" type="Control" parent="."]
+visible = false
+mouse_filter = 2

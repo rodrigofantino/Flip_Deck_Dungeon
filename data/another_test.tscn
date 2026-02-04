@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://bj3si2ndy6wr1"]
 
 [ext_resource type="Script" uid="uid://cuw0t57m2dwd2" path="res://data/factory_test.gd" id="1_j4xym"]
-[ext_resource type="Resource" uid="uid://cjhhd2kiydms7" path="res://data/card_definitions/tutorialslime.tres" id="2_058gs"]
+[ext_resource type="Resource" uid="uid://cmevs5qudpn56" path="res://data/card_definitions/forest/forest_slime.tres" id="2_058gs"]
 
 [node name="Node" type="Node"]
 script = ExtResource("1_j4xym")

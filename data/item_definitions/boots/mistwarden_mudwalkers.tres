@@ -1,11 +1,13 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://dm2sq506rwqvn" path="res://assets/cards/items/art/boots/mistwarden_mudwalkers.png" id="2_art"]
 
 [resource]
 script = ExtResource("1_item")
+art = ExtResource("2_art")
 item_id = "mistwarden_mudwalkers"
-item_name = "Mudwalkers"
-item_description = "Built to outrun regret on wet stone."
+item_name = "ITEM_MISTWARDEN_MUDWALKERS_NAME"
+item_description = "ITEM_MISTWARDEN_MUDWALKERS_DESC"
 item_type = "boots"
 initiative_flat = 2

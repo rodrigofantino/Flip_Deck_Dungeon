@@ -46,6 +46,8 @@ const OPEN_CARD_OFFSET: Vector2 = Vector2(2.0, 2.0)
 const OPEN_CARD_BASE: Vector2 = Vector2(620, 860)
 const OPEN_CARD_DISPLAY: Vector2 = Vector2(155, 215)
 const OPEN_CARDS_PER_PACK: int = 5
+const OPEN_CARD_FLY_DURATION: float = 0.45
+const OPEN_CARD_FLY_MAX_WAIT: float = 1.2
 const BIOME_FOREST: String = "Forest"
 const BIOME_DARK_FOREST: String = "Dark Forest"
 const CARD_VIEW_SCENE: PackedScene = preload("res://Scenes/cards/card_view.tscn")
@@ -68,6 +70,7 @@ var _popup_def: CardDefinition = null
 func _ready() -> void:
 	_configure_design_layout()
 	add_to_group("collection_root")
+	set_process_input(true)
 	_wire_ui()
 	_setup_book_view()
 	_refresh_boosters()
@@ -142,6 +145,32 @@ func _wire_ui() -> void:
 		card_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
 	if card_popup:
 		card_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+
+func _input(event: InputEvent) -> void:
+	if book_view == null:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if _is_click_blocked_by_ui(event.global_position):
+			return
+		if book_view.has_method("try_open_from_click"):
+			var opened := bool(book_view.call("try_open_from_click", event.global_position))
+			if opened:
+				accept_event()
+
+func _is_click_blocked_by_ui(global_pos: Vector2) -> bool:
+	var blockers: Array[Control] = []
+	if selection_panel and selection_panel.visible:
+		blockers.append(selection_panel)
+	if booster_popup and booster_popup.visible:
+		blockers.append(booster_popup)
+	if open_popup and open_popup.visible:
+		blockers.append(open_popup)
+	if card_popup and card_popup.visible:
+		blockers.append(card_popup)
+	for ctrl in blockers:
+		if ctrl and ctrl.is_visible_in_tree() and ctrl.get_global_rect().has_point(global_pos):
+			return true
+	return false
 
 func _setup_book_view() -> void:
 	if book_view == null:
@@ -512,6 +541,7 @@ func _add_open_cards_visual(defs: Array[CardDefinition]) -> void:
 		open_cards.append(card)
 		card.gui_input.connect(func(event: InputEvent) -> void:
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+				card.accept_event()
 				_on_open_card_clicked(card)
 		)
 
@@ -522,10 +552,13 @@ func _on_open_card_clicked(card: CardView) -> void:
 	if open_cards.size() > 0 and card != open_cards[open_cards.size() - 1]:
 		return
 	var card_def := open_defs[index]
+	var start_global := card.global_position
+	var start_scale := card.scale
 	_add_card_to_collection(card_def)
 	open_cards.remove_at(index)
 	open_defs.remove_at(index)
 	card.queue_free()
+	_fly_open_card_to_book(card_def, start_global, start_scale)
 	if open_cards.is_empty():
 		_close_open_popup()
 
@@ -540,6 +573,99 @@ func _add_card_to_collection(def: CardDefinition) -> String:
 	_refresh_book_content()
 	_go_to_card_page(def.definition_id)
 	return def.definition_id
+
+func _fly_open_card_to_book(def: CardDefinition, start_global: Vector2, start_scale: Vector2) -> void:
+	if def == null:
+		return
+	call_deferred("_fly_open_card_to_book_deferred", def, start_global, start_scale)
+
+func _fly_open_card_to_book_deferred(def: CardDefinition, start_global: Vector2, start_scale: Vector2) -> void:
+	var book := _get_book()
+	if book and book.is_animating:
+		await _wait_for_book_idle()
+	var slot := await _wait_for_visible_slot(def.definition_id)
+	if slot == null:
+		return
+	var target := _get_slot_target(slot)
+	if target.is_empty():
+		return
+	var fly := CARD_VIEW_SCENE.instantiate() as CardView
+	if fly == null:
+		return
+	add_child(fly)
+	fly.top_level = true
+	fly.z_index = 500
+	fly.custom_minimum_size = OPEN_CARD_BASE
+	fly.size = OPEN_CARD_BASE
+	fly.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	fly.offset_left = 0.0
+	fly.offset_top = 0.0
+	fly.offset_right = OPEN_CARD_BASE.x
+	fly.offset_bottom = OPEN_CARD_BASE.y
+	var upgrade_level := 0
+	if open_collection != null:
+		upgrade_level = int(open_collection.upgrade_level.get(def.definition_id, 0))
+	fly.setup_from_definition(def, upgrade_level)
+	fly.show_front()
+	fly.scale = start_scale
+	fly.global_position = start_global
+	_set_mouse_filter_recursive(fly, Control.MOUSE_FILTER_IGNORE)
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_CUBIC)
+	tween.set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(fly, "global_position", target["global_pos"], OPEN_CARD_FLY_DURATION)
+	tween.parallel().tween_property(fly, "scale", target["scale"], OPEN_CARD_FLY_DURATION)
+	tween.finished.connect(func() -> void:
+		if is_instance_valid(fly):
+			fly.queue_free()
+	)
+
+func _wait_for_book_idle() -> void:
+	var book := _get_book()
+	if book == null:
+		return
+	var start := Time.get_ticks_msec()
+	while book.is_animating and (Time.get_ticks_msec() - start) < int(OPEN_CARD_FLY_MAX_WAIT * 1000.0):
+		await get_tree().process_frame
+
+func _wait_for_visible_slot(def_id: String) -> CollectionSlot:
+	var start := Time.get_ticks_msec()
+	while (Time.get_ticks_msec() - start) < int(OPEN_CARD_FLY_MAX_WAIT * 1000.0):
+		var slot := _find_visible_slot_for_def(def_id)
+		if slot != null:
+			return slot
+		await get_tree().process_frame
+	return null
+
+func _find_visible_slot_for_def(def_id: String) -> CollectionSlot:
+	for node in get_tree().get_nodes_in_group("collection_slots"):
+		if not (node is CollectionSlot):
+			continue
+		var slot := node as CollectionSlot
+		if slot.current_def_id != def_id:
+			continue
+		if not slot.is_visible_in_tree():
+			continue
+		return slot
+	return null
+
+func _get_slot_target(slot: CollectionSlot) -> Dictionary:
+	if slot == null:
+		return {}
+	if slot.card_view != null and slot.card_view.is_visible_in_tree():
+		return {
+			"global_pos": slot.card_view.global_position,
+			"scale": slot.card_view.scale,
+		}
+	var scale_w := slot.size.x / OPEN_CARD_BASE.x
+	var scale_h := slot.size.y / OPEN_CARD_BASE.y
+	var final_scale := minf(scale_w, scale_h)
+	var size_scaled := OPEN_CARD_BASE * final_scale
+	var target_pos := slot.global_position + (slot.size * 0.5) - (size_scaled * 0.5)
+	return {
+		"global_pos": target_pos,
+		"scale": Vector2(final_scale, final_scale),
+	}
 
 func _open_card_popup(slot: CollectionSlot) -> void:
 	if slot == null:
@@ -611,7 +737,7 @@ func _on_card_upgrade_pressed() -> void:
 	SaveSystem.save_collection(open_collection)
 	if RunState:
 		RunState.refresh_upgrades_for_definition(_popup_def.definition_id)
-	_update_card_popup_count()
+	_build_card_popup(_popup_def)
 	_refresh_book_content()
 
 func _close_card_popup() -> void:

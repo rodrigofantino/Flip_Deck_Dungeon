@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://csqtoneojc12w" path="res://assets/cards/items/art/gloves/candlekeep_wickwraps.png" id="2_art"]
 
 [resource]
 script = ExtResource("1_item")
+art = ExtResource("2_art")
 item_id = "candlekeep_wickwraps"
-item_name = "Wickwrap Gauntlets"
-item_description = "If you cant hold the torch, become the torch."
+item_name = "ITEM_CANDLEKEEP_WICKWRAPS_NAME"
+item_description = "ITEM_CANDLEKEEP_WICKWRAPS_DESC"
 item_type = "gloves"
 armour_flat = 1
 damage_flat = 1

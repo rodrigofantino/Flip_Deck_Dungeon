@@ -9,8 +9,8 @@
 # CardsLayer es una capa neutra Node2D donde se instancian TODAS las cartas
 
 @onready var hero_anchor: Control = $UI/HeroArea/HeroAnchor
-@onready var enemy_deck: Control = $UI/EnemyArea/EnemyDeck
-@onready var enemy_slot: Control = $UI/EnemyArea/EnemySlots
+@onready var enemy_decks_container: Control = $UI/EnemyArea/EnemyDeck
+@onready var enemy_slots_container: Control = $UI/EnemyArea/EnemySlots
 
 @onready var battle_hud: Control = $UI/BattleHUD
 @onready var ui_root: Control = $UI
@@ -61,7 +61,11 @@ var phase_before_pause: BattlePhase = BattlePhase.IDLE
 # ESTADO DEL HEROE Y ENEMIGOS
 # ==========================================
 var hero_card_view: CardView = null
-var enemy_card_view: CardView = null
+var enemy_card_views: Array[CardView] = []
+var enemy_card_views_by_deck: Dictionary = {}
+var enemy_deck_slots: Array[Control] = []
+var enemy_slots: Array[Control] = []
+var pending_enemy_moves: int = 0
 
 # ==========================================
 # COMBAT MANAGER
@@ -73,7 +77,7 @@ var combat_manager: CombatManager
 # ==========================================
 
 @export var card_view_scene: PackedScene
-@export var card_margin_factor: float = 1.0
+@export var card_margin_factor: float = 0.75
 @export var card_base_size: Vector2 = Vector2(620, 860)
 @export var card_display_size: Vector2 = Vector2(124, 172)
 @export var debug_card_positions: bool = true
@@ -164,8 +168,9 @@ func setup_battle() -> void:
 		victory_gold_awarded = false
 
 	spawn_hero()
+	_cache_enemy_slots()
 	setup_enemy_deck()
-	_restore_active_enemy_if_needed()
+	_restore_active_enemies_if_needed()
 
 # ==========================================
 # CONNECT BATTLE HUD
@@ -211,28 +216,30 @@ func spawn_hero() -> void:
 # ==========================================
 
 func setup_enemy_deck() -> void:
-	if enemy_deck == null:
+	if enemy_decks_container == null:
 		return
+	_cache_enemy_slots()
+	_apply_enemy_deck_visibility()
+	enemy_card_views_by_deck.clear()
+	enemy_card_views.clear()
 
-	for child in enemy_deck.get_children():
-		child.queue_free()
-
-	if RunState.enemy_draw_queue.is_empty():
+	if RunState.are_enemy_draw_queues_empty():
 		RunState.prepare_progressive_deck()
 
-	var current_y_offset := 0.0
-
-	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ DIBUJAMOS DE ABAJO HACIA ARRIBA
-	for i in range(RunState.enemy_draw_queue.size() - 1, -1, -1):
-		var enemy_data := RunState.enemy_draw_queue[i]
-
-		var card := _create_and_fit_card(enemy_deck, enemy_data)
-		if not card:
-			continue
-
-		card.global_position.y += current_y_offset
-		card.show_back()
-		current_y_offset += DECK_OFFSET_Y
+	for deck_index in range(min(enemy_deck_slots.size(), RunState.get_active_decks_count())):
+		var deck_slot := enemy_deck_slots[deck_index]
+		for child in deck_slot.get_children():
+			child.queue_free()
+		var queue: Array[Dictionary] = RunState.get_enemy_draw_queue(deck_index)
+		var current_y_offset := 0.0
+		for i in range(queue.size() - 1, -1, -1):
+			var enemy_data: Dictionary = queue[i]
+			var card := _create_and_fit_card(deck_slot, enemy_data)
+			if not card:
+				continue
+			card.global_position.y += current_y_offset
+			card.show_back()
+			current_y_offset += DECK_OFFSET_Y
 
 
 # ==========================================
@@ -240,47 +247,53 @@ func setup_enemy_deck() -> void:
 # ==========================================
 
 func check_enemy_slot() -> void:
-	if enemy_slot.get_child_count() == 0:
-		spawn_enemy_from_deck()
+	if _are_all_enemy_slots_empty():
+		spawn_enemies_from_decks()
 
-func spawn_enemy_from_deck() -> void:
-	if enemy_deck == null or enemy_slot == null:
+func spawn_enemies_from_decks() -> void:
+	if enemy_decks_container == null or enemy_slots_container == null:
 		return
+	_cache_enemy_slots()
+	_apply_enemy_deck_visibility()
 
-	# 1ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ ROBAR DEL MAZO LÃƒÆ’Ã¢â‚¬Å“GICO
-	var enemy_data: Dictionary = RunState.draw_enemy_card()
-	if enemy_data.is_empty():
-		return
-
-	# 2ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ BUSCAR LA CARD VIEW EXISTENTE
-	var card: CardView = card_views.get(enemy_data.id, null)
-	if card == null:
-		push_error("No CardView found for enemy: " + enemy_data.id)
-		return
-
-	# 3ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ REPARENT (deck ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ slot) manteniendo posiciÃƒÆ’Ã‚Â³n global
-	card.reparent(enemy_slot, true)
-	card.show_back()
-
-	# 4ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ ANIMACIÃƒÆ’Ã¢â‚¬Å“N
-	var slot_rect := enemy_slot.get_global_rect()
-	var scaled_size := card_base_size * card.scale
-	var end_pos := slot_rect.get_center() - (scaled_size * 0.5)
-
-	var tween := create_tween()
-	tween.tween_property(card, "global_position", end_pos, 0.5)
-	tween.finished.connect(_on_enemy_move_finished.bind(card))
+	pending_enemy_moves = 0
+	var deck_count: int = min(enemy_slots.size(), RunState.get_active_decks_count())
+	for deck_index in range(deck_count):
+		var slot := enemy_slots[deck_index]
+		if slot.get_child_count() > 0:
+			continue
+		var enemy_data: Dictionary = RunState.draw_enemy_card_from_deck(deck_index)
+		if enemy_data.is_empty():
+			continue
+		var card: CardView = card_views.get(enemy_data.id, null)
+		if card == null:
+			push_error("No CardView found for enemy: " + enemy_data.id)
+			continue
+		card.reparent(slot, true)
+		card.show_back()
+		var slot_rect := slot.get_global_rect()
+		var scaled_size := card_base_size * card.scale
+		var end_pos := slot_rect.get_center() - (scaled_size * 0.5)
+		pending_enemy_moves += 1
+		var tween := create_tween()
+		tween.tween_property(card, "global_position", end_pos, 0.5)
+		tween.finished.connect(_on_enemy_move_finished.bind(card, deck_index))
+	if pending_enemy_moves == 0:
+		current_phase = BattlePhase.IDLE
+		_update_hud_state()
+		if not RunState.has_remaining_enemies():
+			_open_end_of_wave_crossroads()
 
 
 # ==========================================
 # ESTADO: ENEMIGO ACTIVO
 # ==========================================
 
-func _set_enemy_active(card: CardView) -> void:
-	enemy_card_view = card
-	RunState.active_enemy_id = card.card_id
+func _register_enemy_active(card: CardView, deck_index: int) -> void:
+	enemy_card_views_by_deck[deck_index] = card
+	_rebuild_enemy_card_views()
+	RunState.active_enemy_ids = _get_active_enemy_ids()
 
-	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ Setear HP real del enemigo activo
 	var enemy_data: Variant = RunState.get_card(card.card_id)
 	if enemy_data != null:
 		card.refresh(enemy_data)
@@ -289,41 +302,37 @@ func _set_enemy_active(card: CardView) -> void:
 	_update_hud_state()
 	_update_initiative_chance_for_active_enemy()
 
-	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ AUTO-COMBAT: primer ataque automÃƒÆ’Ã‚Â¡tico
-	if auto_combat_enabled:
-		# Esperamos 1 frame para que:
-		# - termine el flip
-		# - la UI se actualice
-		# - no choquemos con tweens
+	if auto_combat_enabled and pending_enemy_moves == 0:
 		await get_tree().process_frame
 		_start_combat()
 
-
-func _on_enemy_move_finished(card: CardView) -> void:
+func _on_enemy_move_finished(card: CardView, deck_index: int) -> void:
 	card.update_pivot_to_center()
 	card.flip_to_front()
-	_set_enemy_active(card)
+	pending_enemy_moves = max(0, pending_enemy_moves - 1)
+	_register_enemy_active(card, deck_index)
 
 # ==========================================
 # MUERTE DE ENEMIGO
 # ==========================================
 
 func on_enemy_defeated() -> void:
-	if enemy_slot.get_child_count() == 0:
+	if enemy_slots.is_empty():
 		return
+	for slot in enemy_slots:
+		if slot.get_child_count() > 0:
+			slot.get_child(0).queue_free()
+			return
 
-	enemy_slot.get_child(0).queue_free()
-
-func _handle_enemy_defeated() -> void:
-	if enemy_card_view == null:
+func _handle_enemy_defeated(card_id: String) -> void:
+	if card_id == "":
 		return
-
-	var enemy_data: Dictionary = RunState.get_card(enemy_card_view.card_id)
-	RunState.active_enemy_id = ""
-	var victory_after_defeat := not _has_remaining_enemies_after_defeat(enemy_card_view.card_id)
+	var enemy_data: Dictionary = RunState.get_card(card_id)
+	RunState.active_enemy_ids = _get_active_enemy_ids()
+	var victory_after_defeat: bool = not RunState.has_remaining_enemies(card_id)
 	suppress_level_up_popup = victory_after_defeat
 
-	# 1ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Recompensas
+	# 1 Recompensas
 	if enemy_data != null:
 		RunState.apply_enemy_rewards(enemy_data)
 		RunState.try_drop_item_from_enemy()
@@ -332,25 +341,27 @@ func _handle_enemy_defeated() -> void:
 	var has_remaining_enemies: bool = not victory_after_defeat
 	RunState.register_enemy_defeated(has_remaining_enemies)
 
+	# 2 Eliminar del estado
+	RunState.cards.erase(card_id)
 
-	# 2ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Eliminar del estado
-	RunState.cards.erase(enemy_card_view.card_id)
-
-	# ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Ëœ 3ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Recalcular danger level (RunManager manda)
+	# 3 Recalcular danger level
 	RunState.recalculate_danger_level()
 
-	# 4ÃƒÂ¯Ã‚Â¸Ã‚ÂÃƒÂ¢Ã†â€™Ã‚Â£ Visual
-	enemy_card_view.queue_free()
-	card_views.erase(enemy_card_view.card_id)
-	enemy_card_view = null
-	if _has_remaining_enemies():
+	# 4 Visual
+	_remove_enemy_view(card_id)
+	if _get_active_enemy_ids().size() > 0:
+		current_phase = BattlePhase.ENEMY_ACTIVE
+		_update_hud_state()
+		_update_initiative_chance_for_active_enemy()
+		return
+	if RunState.has_remaining_enemies():
 		if crossroads_open:
 			current_phase = BattlePhase.UI_LOCKED
 		else:
 			current_phase = BattlePhase.IDLE
 		_update_hud_state()
-	else:
-		_open_end_of_wave_crossroads()
+		return
+	_open_end_of_wave_crossroads()
 
 func _open_end_of_wave_crossroads() -> void:
 	if crossroads_open:
@@ -417,9 +428,11 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# =========================
 	var def_id: String = String(card_data["definition"])
 	var definition: CardDefinition = CardDatabase.get_definition(def_id)
+	var card_type: String = ""
 	if definition != null:
 		var upgrade_level := int(card_data.get("upgrade_level", 0))
 		card.setup_from_definition(definition, upgrade_level)
+		card_type = definition.card_type
 
 	# =========================
 	# POSICIÃƒÆ’Ã¢â‚¬Å“N BASE
@@ -429,11 +442,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# =========================
 	# ESCALADO VISUAL
 	# =========================
-	if card_base_size.x > 0.0 and card_base_size.y > 0.0:
-		var scale_w: float = card_display_size.x / card_base_size.x
-		var scale_h: float = card_display_size.y / card_base_size.y
-		var final_scale: float = min(scale_w, scale_h) * card_margin_factor
-		card.scale = Vector2(final_scale, final_scale)
+	card.scale = Vector2(0.2, 0.2)
 
 	# =========================
 	# POSICIÃƒÆ’Ã¢â‚¬Å“N CENTRADA (GLOBAL)
@@ -494,8 +503,8 @@ func _show_level_up_popup(new_level: int) -> void:
 		level_up_popup.traits_confirmed.connect(_on_traits_confirmed)
 
 	# Pedir traits al RunManager
-	var hero_traits := RunState.get_random_hero_traits(3)
-	var enemy_traits := RunState.get_random_enemy_traits(3)
+	var hero_traits: Array[TraitResource] = RunState.get_random_hero_traits(3)
+	var enemy_traits: Array[TraitResource] = RunState.get_random_enemy_traits(3)
 
 	level_up_popup.show_popup(
 		new_level,
@@ -558,7 +567,7 @@ func _on_crossroads_requested() -> void:
 	crossroads_open = true
 	current_phase = BattlePhase.UI_LOCKED
 	_update_hud_state()
-	var preview := RunState.get_withdraw_preview()
+	var preview: Dictionary = RunState.get_withdraw_preview()
 	popup.show_popup(
 		RunState.get_run_gold(),
 		RunState.get_active_decks_count(),
@@ -643,7 +652,7 @@ func _on_ready_for_next_round() -> void:
 		return
 
 	# Si hay enemigo vivo, seguimos combatiendo
-	if enemy_card_view != null:
+	if _get_active_enemy_ids().size() > 0:
 		_start_combat()
 # ==========================================
 # UTILIDADES
@@ -674,6 +683,126 @@ func _refresh_all_card_views() -> void:
 	for card_id in card_views.keys():
 		refresh_card_view(String(card_id))
 
+func _cache_enemy_slots() -> void:
+	enemy_deck_slots.clear()
+	enemy_slots.clear()
+	if enemy_decks_container:
+		_reorder_group_children(enemy_decks_container, "DeckSlot")
+		for child in enemy_decks_container.get_children():
+			if child is Control:
+				for slot in child.get_children():
+					if slot is Control:
+						enemy_deck_slots.append(slot)
+	if enemy_slots_container:
+		_reorder_group_children(enemy_slots_container, "Slot")
+		for child in enemy_slots_container.get_children():
+			if child is Control:
+				for slot in child.get_children():
+					if slot is Control:
+						enemy_slots.append(slot)
+	_sort_slots_by_name(enemy_deck_slots)
+	_sort_slots_by_name(enemy_slots)
+	call_deferred("_align_enemy_slots_to_decks")
+
+func _reorder_group_children(container: Control, slot_prefix: String) -> void:
+	for group in container.get_children():
+		if group is Control:
+			var children: Array = group.get_children()
+			children.sort_custom(func(a: Node, b: Node) -> bool:
+				return _slot_index_from_name(String(a.name), slot_prefix) < _slot_index_from_name(String(b.name), slot_prefix)
+			)
+			for i in range(children.size()):
+				group.move_child(children[i], i)
+			group.queue_sort()
+
+func _sort_slots_by_name(list: Array[Control]) -> void:
+	list.sort_custom(func(a: Control, b: Control) -> bool:
+		return _slot_index_from_name(a.name) < _slot_index_from_name(b.name)
+	)
+
+func _slot_index_from_name(name: String, prefix: String = "") -> int:
+	if prefix != "" and not name.begins_with(prefix):
+		return 0
+	for i in range(name.length() - 1, -1, -1):
+		if not name[i].is_valid_int():
+			var suffix := name.substr(i + 1)
+			if suffix == "":
+				return 0
+			return int(suffix)
+	return 0
+
+func _apply_enemy_deck_visibility() -> void:
+	var active: int = RunState.get_active_decks_count()
+	for i in range(enemy_deck_slots.size()):
+		enemy_deck_slots[i].visible = i < active
+	for i in range(enemy_slots.size()):
+		enemy_slots[i].visible = i < active
+
+func _align_enemy_slots_to_decks() -> void:
+	if enemy_deck_slots.is_empty() or enemy_slots.is_empty():
+		return
+	var base_rect: Rect2 = enemy_slots_container.get_global_rect()
+	var column_x: float = base_rect.position.x + (base_rect.size.x * 0.5)
+	var count: int = min(enemy_deck_slots.size(), enemy_slots.size())
+	for i in range(count):
+		var deck_slot: Control = enemy_deck_slots[i]
+		var enemy_slot: Control = enemy_slots[i]
+		var deck_rect: Rect2 = deck_slot.get_global_rect()
+		var slot_size: Vector2 = enemy_slot.size
+		if slot_size == Vector2.ZERO:
+			slot_size = enemy_slot.get_combined_minimum_size()
+		var target_x: float = column_x - (slot_size.x * 0.5)
+		var target_y: float = deck_rect.get_center().y - (slot_size.y * 0.5)
+		enemy_slot.global_position = Vector2(target_x, target_y)
+
+func _rebuild_enemy_card_views() -> void:
+	enemy_card_views.clear()
+	var keys: Array = enemy_card_views_by_deck.keys()
+	keys.sort()
+	for key in keys:
+		var card: CardView = enemy_card_views_by_deck[key]
+		if card != null and is_instance_valid(card):
+			enemy_card_views.append(card)
+
+func _get_active_enemy_ids() -> Array[String]:
+	var ids: Array[String] = []
+	var keys: Array = enemy_card_views_by_deck.keys()
+	keys.sort()
+	for key in keys:
+		var card: CardView = enemy_card_views_by_deck[key]
+		if card != null and is_instance_valid(card):
+			ids.append(card.card_id)
+	return ids
+
+func _get_first_active_enemy_id() -> String:
+	var ids := _get_active_enemy_ids()
+	if ids.is_empty():
+		return ""
+	return ids[0]
+
+func _remove_enemy_view(card_id: String) -> void:
+	var remove_key := -1
+	for key in enemy_card_views_by_deck.keys():
+		var card: CardView = enemy_card_views_by_deck[key]
+		if card != null and is_instance_valid(card) and card.card_id == card_id:
+			remove_key = int(key)
+			break
+	if remove_key != -1:
+		var card: CardView = enemy_card_views_by_deck[remove_key]
+		if card != null and is_instance_valid(card):
+			card.queue_free()
+		enemy_card_views_by_deck.erase(remove_key)
+	card_views.erase(card_id)
+	_rebuild_enemy_card_views()
+	RunState.active_enemy_ids = _get_active_enemy_ids()
+
+func _are_all_enemy_slots_empty() -> bool:
+	var active: int = RunState.get_active_decks_count()
+	for i in range(min(enemy_slots.size(), active)):
+		if enemy_slots[i].get_child_count() > 0:
+			return false
+	return true
+
 
 # ==========================================
 # DRAW ENEMIGO (REAL)
@@ -689,14 +818,15 @@ func _draw_enemy() -> void:
 	# Cambiamos a RESOLVING inmediatamente para bloquear otros robos
 	current_phase = BattlePhase.UI_LOCKED
 	_update_hud_state()
-	spawn_enemy_from_deck()
+	spawn_enemies_from_decks()
 
 # ==========================================
 # COMBATE
 # ==========================================
 
 func _start_combat() -> void:
-	if enemy_card_view == null:
+	var enemy_ids := _get_active_enemy_ids()
+	if enemy_ids.is_empty():
 		return
 
 	if current_phase == BattlePhase.UI_LOCKED:
@@ -706,7 +836,7 @@ func _start_combat() -> void:
 	_update_hud_state()
 
 	_update_initiative_chance_for_active_enemy()
-	combat_manager.start_combat(enemy_card_view.card_id)
+	combat_manager.start_combat(enemy_ids)
 
 
 func _show_defeat() -> void:
@@ -891,10 +1021,11 @@ func _on_card_died(card_id: String) -> void:
 
 	var enemy_data: Dictionary = RunState.get_card(card_id)
 	var def_id: String = String(enemy_data.get("definition", ""))
-	RunState.active_enemy_id = ""
-	_handle_enemy_defeated()
+	var deck_index: int = int(enemy_data.get("deck_index", 0))
+	RunState.active_enemy_ids = _get_active_enemy_ids()
+	_handle_enemy_defeated(card_id)
 	if def_id != "":
-		RunState.remove_run_deck_type(def_id)
+		RunState.remove_run_deck_type(def_id, deck_index)
 	RunState.save_run()
 
 func _on_combat_finished(victory: bool) -> void:
@@ -905,7 +1036,7 @@ func _on_combat_finished(victory: bool) -> void:
 		if not hero.is_empty() and int(hero.get("current_hp", 0)) <= 0:
 			current_phase = BattlePhase.UI_LOCKED
 		else:
-			current_phase = BattlePhase.ENEMY_ACTIVE
+			current_phase = BattlePhase.ENEMY_ACTIVE if _get_active_enemy_ids().size() > 0 else BattlePhase.IDLE
 
 	_update_hud_state()
 
@@ -915,30 +1046,38 @@ func _on_combat_finished(victory: bool) -> void:
 func _get_card_view(card_id: String) -> CardView:
 	if hero_card_view and hero_card_view.card_id == card_id:
 		return hero_card_view
-	if enemy_card_view and enemy_card_view.card_id == card_id:
-		return enemy_card_view
+	if card_views.has(card_id):
+		return card_views[card_id]
 	return null
 
-func _restore_active_enemy_if_needed() -> void:
-	if RunState.active_enemy_id == "":
+func _restore_active_enemies_if_needed() -> void:
+	if RunState.active_enemy_ids.is_empty():
 		return
-	if enemy_slot == null:
+	if enemy_slots_container == null:
 		return
-	var enemy_data: Dictionary = RunState.get_card(RunState.active_enemy_id)
-	if enemy_data.is_empty():
-		RunState.active_enemy_id = ""
-		return
-	var existing: CardView = card_views.get(RunState.active_enemy_id, null)
-	var card: CardView = existing
-	if card == null:
-		card = _create_and_fit_card(enemy_slot, enemy_data)
-	if card == null:
-		RunState.active_enemy_id = ""
-		return
-	card.reparent(enemy_slot, true)
-	card.show_front()
-	enemy_card_view = card
-	current_phase = BattlePhase.ENEMY_ACTIVE
+	_cache_enemy_slots()
+	_apply_enemy_deck_visibility()
+	enemy_card_views_by_deck.clear()
+	for enemy_id in RunState.active_enemy_ids:
+		var enemy_data: Dictionary = RunState.get_card(enemy_id)
+		if enemy_data.is_empty():
+			continue
+		var deck_index := int(enemy_data.get("deck_index", 0))
+		if deck_index < 0 or deck_index >= enemy_slots.size():
+			continue
+		var slot := enemy_slots[deck_index]
+		var existing: CardView = card_views.get(enemy_id, null)
+		var card: CardView = existing
+		if card == null:
+			card = _create_and_fit_card(slot, enemy_data)
+		if card == null:
+			continue
+		card.reparent(slot, true)
+		card.show_front()
+		enemy_card_views_by_deck[deck_index] = card
+	_rebuild_enemy_card_views()
+	RunState.active_enemy_ids = _get_active_enemy_ids()
+	current_phase = BattlePhase.ENEMY_ACTIVE if enemy_card_views.size() > 0 else BattlePhase.IDLE
 	_update_hud_state()
 	_update_initiative_chance_for_active_enemy()
 
@@ -946,10 +1085,14 @@ func _update_initiative_chance_for_active_enemy() -> void:
 	if battle_hud == null:
 		return
 	var hero: Dictionary = RunState.get_card("th")
-	if hero.is_empty() or enemy_card_view == null:
+	if hero.is_empty():
 		battle_hud.update_initiative_chance(0.0)
 		return
-	var enemy: Dictionary = RunState.get_card(enemy_card_view.card_id)
+	var enemy_id := _get_first_active_enemy_id()
+	if enemy_id == "":
+		battle_hud.update_initiative_chance(0.0)
+		return
+	var enemy: Dictionary = RunState.get_card(enemy_id)
 	if enemy.is_empty():
 		battle_hud.update_initiative_chance(0.0)
 		return
@@ -959,20 +1102,10 @@ func _update_initiative_chance_for_active_enemy() -> void:
 	battle_hud.update_initiative_chance(p)
 
 func _has_remaining_enemies() -> bool:
-	if not RunState.enemy_draw_queue.is_empty():
-		return true
-	for card in RunState.cards.values():
-		if card.get("id", "") != "th":
-			return true
-	return false
+	return RunState.has_remaining_enemies()
 
 func _has_remaining_enemies_after_defeat(defeated_id: String) -> bool:
-	if not RunState.enemy_draw_queue.is_empty():
-		return true
-	for card in RunState.cards.values():
-		if card.get("id", "") != "th" and card.get("id", "") != defeated_id:
-			return true
-	return false
+	return RunState.has_remaining_enemies(defeated_id)
 
 # ==========================================
 # PAUSE

@@ -37,6 +37,10 @@ func _ready() -> void:
 		dev_add_gold_button.pressed.connect(_on_dev_add_gold_pressed)
 
 	continue_button.disabled = not RunState.has_saved_run()
+	if tutorial_button:
+		tutorial_button.disabled = true
+	if endless_button:
+		endless_button.disabled = true
 	_update_gold_label()
 
 func _notification(what: int) -> void:

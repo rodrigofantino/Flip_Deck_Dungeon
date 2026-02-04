@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://dayfaj21vmq4r" path="res://assets/cards/items/art/boots/oath_silent_sabatons.png" id="2_art"]
 
 [resource]
 script = ExtResource("1_item")
+art = ExtResource("2_art")
 item_id = "oath_silent_sabatons"
-item_name = "Silent Sabatons"
-item_description = "Quiet steps for loud vows."
+item_name = "ITEM_OATH_SILENT_SABATONS_NAME"
+item_description = "ITEM_OATH_SILENT_SABATONS_DESC"
 item_type = "boots"
 initiative_flat = 2
 armour_flat = 1

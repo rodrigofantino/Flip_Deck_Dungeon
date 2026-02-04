@@ -77,3 +77,11 @@ CROSSROADS_COST_LABEL,Cost: -{value},Costo: -{value}
 CROSSROADS_OPTION_ADD_DECK,Add deck,Agregar mazo
 CROSSROADS_OPTION_WITHDRAW,Withdraw,Retirar
 CROSSROADS_OPTION_TRAIT,Trait,Rasgo
+ITEM_STAT_ARMOUR,Armour,Armadura
+ITEM_STAT_DAMAGE,Damage,DaÃ±o
+ITEM_STAT_LIFE,Life,Vida
+ITEM_STAT_INITIATIVE,Initiative,Iniciativa
+ITEM_STAT_LIFESTEAL,Lifesteal,Robo de vida
+ITEM_STAT_THORNS,Thorns,Espinas
+ITEM_STAT_REGEN,Regen,RegeneraciÃ³n
+ITEM_STAT_CRIT,Crit,CrÃ­tico
