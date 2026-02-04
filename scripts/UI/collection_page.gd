@@ -11,6 +11,10 @@ signal manage_pageflip(give_control_to_book: bool)
 var _page_index: int = 0
 var _card_types: Array[String] = []
 var _card_obtained: Array[bool] = []
+var _owned_count_map: Dictionary = {}
+var _upgrade_level_map: Dictionary = {}
+var _show_counts: bool = false
+var _is_play_mode: bool = false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -61,11 +65,18 @@ func _load_collection() -> void:
 	var obtained := {}
 	for def_id in collection.get_all_types():
 		obtained[String(def_id)] = true
-	var is_play_mode := RunState.selection_pending
+	_owned_count_map.clear()
+	for def_id in collection.get_all_types():
+		_owned_count_map[String(def_id)] = collection.get_owned_count(String(def_id))
+	_upgrade_level_map.clear()
+	for def_id in collection.upgrade_level.keys():
+		_upgrade_level_map[String(def_id)] = int(collection.upgrade_level.get(def_id, 0))
+	_is_play_mode = RunState.selection_pending
 	_card_types.clear()
 	_card_obtained.clear()
-	var order := _get_ordered_def_ids(is_play_mode)
-	if is_play_mode:
+	_show_counts = not _is_play_mode
+	var order := _get_ordered_def_ids(_is_play_mode)
+	if _is_play_mode:
 		var ids: Array[String] = []
 		for def_id in collection.get_all_types():
 			ids.append(String(def_id))
@@ -184,7 +195,10 @@ func _refresh() -> void:
 				var def: CardDefinition = CardDatabase.get_definition(def_id)
 				if def != null:
 					var obtained := _card_obtained[global_index] if global_index < _card_obtained.size() else true
-					slot.set_occupied(def, obtained)
+					var upgrade_level := int(_upgrade_level_map.get(def_id, 0))
+					slot.set_occupied(def, obtained, upgrade_level)
+					var count := int(_owned_count_map.get(def_id, 0))
+					slot.set_owned_count(count, _show_counts)
 				else:
 					slot.set_empty()
 			else:

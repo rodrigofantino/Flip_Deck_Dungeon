@@ -7,15 +7,20 @@ class_name CollectionSlot
 @onready var background: ColorRect = $Background
 @onready var card_container: Control = $CardContainer
 @onready var selection_outline: Panel = $SelectionOutline
+@onready var count_overlay: ColorRect = $CountOverlay
+@onready var count_label: Label = $CountOverlay/CountLabel
 
 var card_view: CardView = null
 var current_def_id: String = ""
 var current_card_type: String = ""
 var is_obtained: bool = false
+var owned_count: int = 0
+var show_count_on_hover: bool = false
+var _base_modulate: Color = Color(1, 1, 1, 1)
 
 signal slot_clicked(slot: CollectionSlot)
 
-func set_occupied(definition: CardDefinition, obtained: bool = true) -> void:
+func set_occupied(definition: CardDefinition, obtained: bool = true, upgrade_level: int = 0) -> void:
 	_clear_card()
 	is_obtained = obtained
 	background.color = Color(0.2, 0.2, 0.2, 0.85) if obtained else Color(0.1, 0.1, 0.1, 0.7)
@@ -33,9 +38,10 @@ func set_occupied(definition: CardDefinition, obtained: bool = true) -> void:
 	card_view.offset_top = 0.0
 	card_view.offset_right = card_base_size.x
 	card_view.offset_bottom = card_base_size.y
-	card_view.setup_from_definition(definition)
+	card_view.setup_from_definition(definition, upgrade_level)
 	card_view.show_front()
 	card_view.modulate = Color(1, 1, 1, 1) if obtained else Color(0.35, 0.35, 0.35, 0.65)
+	_base_modulate = card_view.modulate
 	_set_mouse_filter_recursive(card_view, Control.MOUSE_FILTER_IGNORE)
 	card_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	call_deferred("_fit_card")
@@ -47,6 +53,12 @@ func set_empty() -> void:
 	current_def_id = ""
 	current_card_type = ""
 	is_obtained = false
+	owned_count = 0
+	_hide_count_overlay()
+
+func set_owned_count(count: int, enable_hover: bool) -> void:
+	owned_count = max(0, count)
+	show_count_on_hover = enable_hover
 
 func _clear_card() -> void:
 	if card_view != null:
@@ -65,6 +77,12 @@ func _ready() -> void:
 	add_to_group("collection_slots")
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if count_overlay:
+		count_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if count_label:
+		count_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
 	if selection_outline:
 		var style := StyleBoxFlat.new()
 		style.border_color = Color(0.2, 0.9, 0.2, 1.0)
@@ -96,3 +114,30 @@ func _fit_card() -> void:
 	var final_scale: float = min(scale_w, scale_h)
 	card_view.scale = Vector2(final_scale, final_scale)
 	card_view.position = (target_size * 0.5) - (card_base_size * final_scale * 0.5)
+
+func _on_mouse_entered() -> void:
+	if not show_count_on_hover:
+		return
+	if card_view == null:
+		return
+	_show_count_overlay()
+	card_view.modulate = _base_modulate * Color(0.8, 0.8, 0.8, 1.0)
+
+func _on_mouse_exited() -> void:
+	if not show_count_on_hover:
+		return
+	if card_view == null:
+		return
+	_hide_count_overlay()
+	card_view.modulate = _base_modulate
+
+func _show_count_overlay() -> void:
+	if count_overlay == null or count_label == null:
+		return
+	count_label.text = "%d" % owned_count
+	count_overlay.visible = true
+
+func _hide_count_overlay() -> void:
+	if count_overlay == null:
+		return
+	count_overlay.visible = false

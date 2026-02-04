@@ -27,6 +27,12 @@ extends Control
 @onready var open_popup_cards: Control = $OpenPackPopup/Panel/Content/CardsContainer
 @onready var open_popup_add_all: Button = $OpenPackPopup/Panel/Content/Buttons/AddAllButton
 @onready var open_popup_back: Button = $OpenPackPopup/Panel/Content/Buttons/BackButton
+@onready var card_popup: Control = $CardPopup
+@onready var card_popup_dimmer: ColorRect = $CardPopup/Dimmer
+@onready var card_popup_container: Control = $CardPopup/Panel/Content/CardContainer
+@onready var card_popup_count: Label = $CardPopup/Panel/Content/CountLabel
+@onready var card_popup_upgrade: Button = $CardPopup/Panel/Content/Buttons/UpgradeButton
+@onready var card_popup_back: Button = $CardPopup/Panel/Content/Buttons/BackButton
 
 const PACK_STACK_OFFSET_X: float = 2.0
 const PACK_STACK_OFFSET_Y: float = 2.0
@@ -57,6 +63,7 @@ var open_defs: Array[CardDefinition] = []
 var open_cards: Array[CardView] = []
 var open_collection: PlayerCollection = null
 var _pending_book_refresh: bool = false
+var _popup_def: CardDefinition = null
 
 func _ready() -> void:
 	_configure_design_layout()
@@ -118,6 +125,11 @@ func _wire_ui() -> void:
 	if open_popup_back:
 		open_popup_back.text = tr("COLLECTION_BOOSTER_BACK")
 		open_popup_back.pressed.connect(_close_open_popup)
+	if card_popup_back:
+		card_popup_back.text = tr("COLLECTION_BOOSTER_BACK")
+		card_popup_back.pressed.connect(_close_card_popup)
+	if card_popup_upgrade:
+		card_popup_upgrade.pressed.connect(_on_card_upgrade_pressed)
 	if open_popup != null and open_popup_cards != null:
 		open_popup_cards.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if booster_popup != null:
@@ -126,6 +138,10 @@ func _wire_ui() -> void:
 		booster_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
 	if open_popup_dimmer:
 		open_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+	if card_popup_dimmer:
+		card_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+	if card_popup:
+		card_popup.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _setup_book_view() -> void:
 	if book_view == null:
@@ -228,6 +244,7 @@ func _on_page_slot_clicked(slot: CollectionSlot) -> void:
 		if RunState.selection_pending:
 			selection_mode = true
 		else:
+			_open_card_popup(slot)
 			return
 	if not slot.is_obtained:
 		return
@@ -480,7 +497,7 @@ func _add_open_cards_visual(defs: Array[CardDefinition]) -> void:
 		card.offset_top = 0.0
 		card.offset_right = OPEN_CARD_BASE.x
 		card.offset_bottom = OPEN_CARD_BASE.y
-		card.setup_from_definition(card_def)
+		card.setup_from_definition(card_def, 0)
 		card.show_front()
 		_set_mouse_filter_recursive(card, Control.MOUSE_FILTER_IGNORE)
 		card.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -523,6 +540,89 @@ func _add_card_to_collection(def: CardDefinition) -> String:
 	_refresh_book_content()
 	_go_to_card_page(def.definition_id)
 	return def.definition_id
+
+func _open_card_popup(slot: CollectionSlot) -> void:
+	if slot == null:
+		return
+	if slot.current_def_id == "":
+		return
+	if not slot.is_obtained:
+		return
+	var def: CardDefinition = CardDatabase.get_definition(slot.current_def_id)
+	if def == null:
+		return
+	_popup_def = def
+	open_collection = SaveSystem.load_collection()
+	if open_collection == null:
+		open_collection = SaveSystem.ensure_collection()
+	_build_card_popup(def)
+	card_popup.visible = true
+	card_popup.z_index = 220
+
+func _build_card_popup(def: CardDefinition) -> void:
+	if card_popup_container == null:
+		return
+	for child in card_popup_container.get_children():
+		child.queue_free()
+	var card := CARD_VIEW_SCENE.instantiate() as CardView
+	if card == null:
+		return
+	card_popup_container.add_child(card)
+	card.custom_minimum_size = OPEN_CARD_BASE
+	card.size = OPEN_CARD_BASE
+	card.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	card.offset_left = 0.0
+	card.offset_top = 0.0
+	card.offset_right = OPEN_CARD_BASE.x
+	card.offset_bottom = OPEN_CARD_BASE.y
+	var upgrade_level := 0
+	if open_collection != null:
+		upgrade_level = int(open_collection.upgrade_level.get(def.definition_id, 0))
+	card.setup_from_definition(def, upgrade_level)
+	card.show_front()
+	_set_mouse_filter_recursive(card, Control.MOUSE_FILTER_IGNORE)
+	var scale_w := 220.0 / OPEN_CARD_BASE.x
+	var scale_h := 300.0 / OPEN_CARD_BASE.y
+	var final_scale := minf(scale_w, scale_h)
+	card.scale = Vector2(final_scale, final_scale)
+	var scaled_size := OPEN_CARD_BASE * final_scale
+	card.position = (card_popup_container.size * 0.5) - (scaled_size * 0.5)
+	_update_card_popup_count()
+
+func _update_card_popup_count() -> void:
+	if _popup_def == null or card_popup_count == null or open_collection == null:
+		return
+	var count := open_collection.get_owned_count(_popup_def.definition_id)
+	card_popup_count.text = "x%d" % count
+	if card_popup_upgrade:
+		card_popup_upgrade.disabled = count < 5
+
+func _on_card_upgrade_pressed() -> void:
+	if _popup_def == null:
+		return
+	if open_collection == null:
+		open_collection = SaveSystem.ensure_collection()
+	var count := open_collection.get_owned_count(_popup_def.definition_id)
+	if count < 5:
+		return
+	open_collection.owned_count[_popup_def.definition_id] = max(0, count - 5)
+	var current := int(open_collection.upgrade_level.get(_popup_def.definition_id, 0))
+	open_collection.upgrade_level[_popup_def.definition_id] = current + 1
+	SaveSystem.save_collection(open_collection)
+	if RunState:
+		RunState.refresh_upgrades_for_definition(_popup_def.definition_id)
+	_update_card_popup_count()
+	_refresh_book_content()
+
+func _close_card_popup() -> void:
+	if card_popup == null:
+		return
+	var tween := create_tween()
+	tween.tween_property(card_popup, "modulate:a", 0.0, 0.15)
+	tween.tween_callback(func():
+		card_popup.visible = false
+		card_popup.modulate.a = 1.0
+	)
 
 func _on_add_all_pressed() -> void:
 	for def_item in open_defs.duplicate():

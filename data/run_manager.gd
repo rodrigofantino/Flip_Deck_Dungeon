@@ -94,6 +94,7 @@ const HERO_LEVEL_UP_STAT_MULT: float = 1.2
 const ENEMY_LEVEL_UP_STAT_MULT: float = 1.25
 var hero_level_multiplier: float = 1.0
 var enemy_level_multiplier: float = 1.0
+var _upgrade_level_map: Dictionary = {}
 
 # =========================
 # BASE DE DATOS DE TRAITS
@@ -109,6 +110,7 @@ func _ready() -> void:
 		trait_database = load(TRAIT_DB_PATH)
 	if item_catalog == null:
 		item_catalog = load(ITEM_CATALOG_DEFAULT_PATH)
+	_load_upgrade_levels()
 	_apply_equipment_to_hero()
 
 	if trait_database == null:
@@ -133,6 +135,7 @@ func init_run() -> void:
 	if selected_hero_def_id == "":
 		return
 
+	_load_upgrade_levels()
 
 	if cards.is_empty() or not cards.has("th"):
 		cards.clear()
@@ -206,20 +209,22 @@ func create_card_instance(
 		return {}
 
 	var is_hero_card: bool = id == "th"
-	var scaled_hp: int = _scale_stat(def.max_hp, is_hero_card)
-	var scaled_damage: int = _scale_stat(def.damage, is_hero_card)
-	var scaled_initiative: int = _scale_stat(def.initiative, is_hero_card)
+	var upgrade_level: int = _get_upgrade_level(definition_key)
+	var scaled_hp: int = _scale_stat(def.max_hp, is_hero_card, upgrade_level)
+	var scaled_damage: int = _scale_stat(def.damage, is_hero_card, upgrade_level)
+	var scaled_initiative: int = _scale_stat(def.initiative, is_hero_card, upgrade_level)
 
 	var card_level: int = def.level
 	if id == "th":
-		card_level = hero_level
+		card_level = hero_level + upgrade_level
 	else:
-		card_level = def.level + max(0, hero_level - 1)
+		card_level = def.level + max(0, hero_level - 1) + upgrade_level
 
 	var card := {
 		"id": id,
 		"definition": definition_key,
 		"is_tutorial": is_tutorial,
+		"upgrade_level": upgrade_level,
 
 		# BASE
 		"base_hp": scaled_hp,
@@ -593,13 +598,19 @@ func _sync_hero_card_level(full_heal: bool) -> void:
 	if hero.is_empty():
 		return
 
-	hero["level"] = hero_level
+	var upgrade_level: int = int(hero.get("upgrade_level", 0))
+	hero["level"] = hero_level + upgrade_level
 	if full_heal:
 		hero["current_hp"] = int(hero.get("max_hp", hero.get("current_hp", 0)))
 
-func _scale_stat(value: int, is_hero: bool) -> int:
+func _scale_stat(value: int, is_hero: bool, upgrade_level: int) -> int:
 	var mult := hero_level_multiplier if is_hero else enemy_level_multiplier
+	if upgrade_level > 0:
+		mult *= pow(_get_upgrade_multiplier(is_hero), upgrade_level)
 	return int(round(float(value) * mult))
+
+func _get_upgrade_multiplier(is_hero: bool) -> float:
+	return HERO_LEVEL_UP_STAT_MULT if is_hero else ENEMY_LEVEL_UP_STAT_MULT
 
 func _rescale_all_cards_from_definitions() -> void:
 	for card in cards.values():
@@ -624,9 +635,11 @@ func _rescale_card_from_definition(card: Dictionary) -> void:
 	if def == null:
 		return
 	var is_hero: bool = card.get("id", "") == "th"
-	var scaled_hp: int = _scale_stat(def.max_hp, is_hero)
-	var scaled_damage: int = _scale_stat(def.damage, is_hero)
-	var scaled_initiative: int = _scale_stat(def.initiative, is_hero)
+	var upgrade_level: int = int(card.get("upgrade_level", _get_upgrade_level(def_id)))
+	card["upgrade_level"] = upgrade_level
+	var scaled_hp: int = _scale_stat(def.max_hp, is_hero, upgrade_level)
+	var scaled_damage: int = _scale_stat(def.damage, is_hero, upgrade_level)
+	var scaled_initiative: int = _scale_stat(def.initiative, is_hero, upgrade_level)
 
 	card["base_hp"] = scaled_hp
 	card["base_damage"] = scaled_damage
@@ -641,10 +654,11 @@ func _update_card_level_from_definition(card: Dictionary) -> void:
 	var def: CardDefinition = CardDatabase.get_definition(def_id)
 	if def == null:
 		return
+	var upgrade_level: int = int(card.get("upgrade_level", _get_upgrade_level(def_id)))
 	if card.get("id", "") == "th":
-		card["level"] = hero_level
+		card["level"] = hero_level + upgrade_level
 	else:
-		card["level"] = def.level + max(0, hero_level - 1)
+		card["level"] = def.level + max(0, hero_level - 1) + upgrade_level
 
 func _clear_active_traits_on_level_up() -> void:
 	if active_hero_traits.is_empty() and active_enemy_traits.is_empty():
@@ -795,6 +809,7 @@ func load_run():
 	hero_xp = int(data.get("hero_xp", 0))
 	xp_to_next_level = int(data.get("xp_to_next_level", 4))
 	cards = data.get("cards", {})
+	_load_upgrade_levels()
 	_sync_hero_card_level(false)
 	hand_items = _to_string_array(data.get("hand_items", []))
 	equipped_items = _to_string_array(data.get("equipped_items", []))
@@ -918,11 +933,55 @@ func reset_run(new_mode: String = "normal") -> void:
 	xp_to_next_level = 4
 	hero_level_multiplier = 1.0
 	enemy_level_multiplier = 1.0
+	_upgrade_level_map.clear()
 	run_loaded = false
 	active_enemy_id = ""
 	hand_items.clear()
 	equipped_items = ["", "", "", "", "", "", "", ""]
 	_apply_equipment_to_hero()
+
+func refresh_upgrades_for_definition(def_id: String = "") -> void:
+	_load_upgrade_levels()
+	if cards.is_empty():
+		return
+	for card in cards.values():
+		if not def_id.is_empty() and String(card.get("definition", "")) != def_id:
+			continue
+		_rescale_card_from_definition(card)
+		_update_card_level_from_definition(card)
+		var is_hero: bool = card.get("id", "") == "th"
+		if is_hero:
+			recalc_card_stats(card, active_hero_traits)
+		else:
+			recalc_card_stats(card, active_enemy_traits)
+	for enemy in enemy_draw_queue:
+		if not def_id.is_empty() and String(enemy.get("definition", "")) != def_id:
+			continue
+		_rescale_card_from_definition(enemy)
+		_update_card_level_from_definition(enemy)
+		recalc_card_stats(enemy, active_enemy_traits)
+	_apply_equipment_to_hero()
+	recalculate_danger_level()
+	hero_stats_changed.emit()
+	enemy_stats_changed.emit()
+
+func _load_upgrade_levels() -> void:
+	_upgrade_level_map.clear()
+	var collection := SaveSystem.load_collection()
+	if collection == null:
+		collection = SaveSystem.ensure_collection()
+	if collection == null:
+		return
+	for def_id in collection.upgrade_level.keys():
+		var key := String(def_id)
+		_upgrade_level_map[key] = int(collection.upgrade_level.get(def_id, 0))
+
+func _get_upgrade_level(def_id: String) -> int:
+	if def_id.is_empty():
+		return 0
+	if _upgrade_level_map.is_empty():
+		_load_upgrade_levels()
+	return int(_upgrade_level_map.get(def_id, 0))
 
 func try_start_next_wave() -> bool:
 	if current_wave >= MAX_WAVES:

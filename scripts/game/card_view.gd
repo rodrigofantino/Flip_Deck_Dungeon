@@ -55,12 +55,12 @@ func _setup_flip_sfx() -> void:
 # SETUP (ESTÃTICO)
 # =========================
 
-func setup_from_definition(definition: CardDefinition) -> void:
+func setup_from_definition(definition: CardDefinition, upgrade_level: int = 0) -> void:
 	if definition == null:
 		return
 
 	_fit_art(Vector2(200, 120))
-	_refresh_all_labels(definition)
+	_refresh_all_labels(definition, upgrade_level)
 
 	if definition.art:
 		art.texture = definition.art
@@ -254,7 +254,13 @@ func _fit_label_text(
 		if text_size.y <= available_size.y:
 			return
 
-func _refresh_all_labels(definition: CardDefinition) -> void:
+func _refresh_all_labels(definition: CardDefinition, upgrade_level: int) -> void:
+	var upgrade_mult: float = _get_upgrade_multiplier(definition, upgrade_level)
+	var display_level: int = definition.level + max(0, upgrade_level)
+	var display_hp: int = int(round(float(definition.max_hp) * upgrade_mult))
+	var display_damage: int = int(round(float(definition.damage) * upgrade_mult))
+	var display_initiative: int = int(round(float(definition.initiative) * upgrade_mult))
+
 	_fit_label_text(
 		name_label,
 		tr(definition.display_name),
@@ -269,24 +275,34 @@ func _refresh_all_labels(definition: CardDefinition) -> void:
 
 	_fit_label_text(
 		level_label,
-		"%d" % definition.level,
+		"%d" % display_level,
 		10
 	)
 
 	_fit_label_text(
 		initiative_label,
-		"%s %d" % [tr("CARD_VIEW_STATS_POWER"), definition.initiative],
+		"%s %d" % [tr("CARD_VIEW_STATS_POWER"), display_initiative],
 		10
 	)
 
 	_fit_label_text(
 		hp_label,
-		"%s %d" % [tr("CARD_VIEW_STATS_HP"), definition.max_hp],
+		"%s %d" % [tr("CARD_VIEW_STATS_HP"), display_hp],
 		10
 	)
 
 	_fit_label_text(
 		damage_label,
-		"%s %d" % [tr("CARD_VIEW_STATS_DAMAGE"), definition.damage],
+		"%s %d" % [tr("CARD_VIEW_STATS_DAMAGE"), display_damage],
 		10
 	)
+
+func _get_upgrade_multiplier(definition: CardDefinition, upgrade_level: int) -> float:
+	if definition == null or upgrade_level <= 0:
+		return 1.0
+	var base_mult: float = 1.0
+	if definition.card_type == "hero":
+		base_mult = RunState.HERO_LEVEL_UP_STAT_MULT
+	elif definition.card_type == "enemy":
+		base_mult = RunState.ENEMY_LEVEL_UP_STAT_MULT
+	return pow(base_mult, upgrade_level)

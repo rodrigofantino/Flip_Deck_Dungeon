@@ -418,7 +418,8 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	var def_id: String = String(card_data["definition"])
 	var definition: CardDefinition = CardDatabase.get_definition(def_id)
 	if definition != null:
-		card.setup_from_definition(definition)
+		var upgrade_level := int(card_data.get("upgrade_level", 0))
+		card.setup_from_definition(definition, upgrade_level)
 
 	# =========================
 	# POSICIÃƒÆ’Ã¢â‚¬Å“N BASE

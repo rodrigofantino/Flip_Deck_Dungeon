@@ -300,3 +300,73 @@ text = "Add all"
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Back"
+
+[node name="CardPopup" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="CardPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="Panel" type="Panel" parent="CardPopup"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -260.0
+offset_right = 260.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Content" type="VBoxContainer" parent="CardPopup/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="CardContainer" type="Control" parent="CardPopup/Panel/Content"]
+custom_minimum_size = Vector2(240, 260)
+layout_mode = 2
+
+[node name="CountLabel" type="Label" parent="CardPopup/Panel/Content"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+text = "x0"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+
+[node name="Buttons" type="HBoxContainer" parent="CardPopup/Panel/Content"]
+layout_mode = 2
+alignment = 1
+
+[node name="UpgradeButton" type="Button" parent="CardPopup/Panel/Content/Buttons"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Upgrade (5)"
+
+[node name="BackButton" type="Button" parent="CardPopup/Panel/Content/Buttons"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Back"

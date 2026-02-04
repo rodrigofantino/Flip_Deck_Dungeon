@@ -11,7 +11,7 @@ Este documento lista lo que YA esta implementado en el proyecto.
 - Recompensas al derrotar enemigos (oro y XP por nivel del enemigo)
 - Al subir de nivel, el heroe se cura al maximo y su carta refleja el nivel de la run (no persistente)
 - Al subir de nivel, TODOS los enemigos de la run suben tambien su nivel visible
-- Al subir de nivel, hero y enemigos escalan stats base (+20%) y futuras spawns heredan ese nivel
+- Al subir de nivel, hero escala stats base (+20%) y enemigos (+25%); futuras spawns heredan ese nivel
 
 ========================
 2. NUEVA RUN Y SELECCION DE CARTAS
@@ -109,10 +109,11 @@ Este documento lista lo que YA esta implementado en el proyecto.
 14. LOOT ITEMS Y EQUIPAMIENTO (V1)
 ========================
 - ItemCardDefinition resource con stats flat y tipos de item
-- Drop de items al morir enemigo (debug: solo cascos)
+- Drop de items al morir enemigo
 - Mano de items (max 5) con FIFO y visual en abanico
 - Drag & drop a equipamiento por slots de tipo (helmet, armour, gloves, boots, one_hand, two_hands, amulet, ring)
 - Reemplazo por tipo y aplicacion de stats en hero (armour, damage, life, initiative, lifesteal, thorns, regen, crit)
+- Upgrades de cartas en coleccion (+1 nivel y stats por multiplicador del tipo): heroes +20%, enemigos +25%, se reflejan en combate
 - Armour reduce daño recibido (shield se trata como armour)
 
 ========================
