@@ -17,6 +17,7 @@ shader_parameter/alpha_strength = 0.25200001197
 shader_parameter/foil_dir = Vector2(1.07, 0)
 
 [node name="CardView" type="Control"]
+clip_contents = true
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

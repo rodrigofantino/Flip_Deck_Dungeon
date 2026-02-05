@@ -106,13 +106,28 @@ layout_mode = 2
 [node name="EnemySlots" type="HBoxContainer" parent="UI/EnemyArea"]
 custom_minimum_size = Vector2(200, 430)
 layout_mode = 1
-offset_left = -20.0
+offset_left = 40.0
 offset_top = 20.0
-offset_right = 294.0
+offset_right = 354.0
 offset_bottom = 673.0
+alignment = 1
+
+[node name="EnemySlotGroup2" type="VBoxContainer" parent="UI/EnemyArea/EnemySlots"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="Slot3" type="Control" parent="UI/EnemyArea/EnemySlots/EnemySlotGroup2"]
+custom_minimum_size = Vector2(155, 215)
+layout_mode = 2
+
+[node name="Slot4" type="Control" parent="UI/EnemyArea/EnemySlots/EnemySlotGroup2"]
+custom_minimum_size = Vector2(155, 215)
+layout_mode = 2
 
 [node name="EnemySlotGroup1" type="VBoxContainer" parent="UI/EnemyArea/EnemySlots"]
 layout_mode = 2
+size_flags_horizontal = 3
 alignment = 1
 
 [node name="Slot0" type="Control" parent="UI/EnemyArea/EnemySlots/EnemySlotGroup1"]
@@ -124,18 +139,6 @@ custom_minimum_size = Vector2(155, 215)
 layout_mode = 2
 
 [node name="Slot2" type="Control" parent="UI/EnemyArea/EnemySlots/EnemySlotGroup1"]
-custom_minimum_size = Vector2(155, 215)
-layout_mode = 2
-
-[node name="EnemySlotGroup2" type="VBoxContainer" parent="UI/EnemyArea/EnemySlots"]
-layout_mode = 2
-alignment = 1
-
-[node name="Slot3" type="Control" parent="UI/EnemyArea/EnemySlots/EnemySlotGroup2"]
-custom_minimum_size = Vector2(155, 215)
-layout_mode = 2
-
-[node name="Slot4" type="Control" parent="UI/EnemyArea/EnemySlots/EnemySlotGroup2"]
 custom_minimum_size = Vector2(155, 215)
 layout_mode = 2
 

@@ -449,7 +449,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# =========================
 	# ESCALADO VISUAL
 	# =========================
-	card.scale = Vector2(0.24, 0.24)
+	card.scale = Vector2(0.20384, 0.20384)
 
 	# =========================
 	# POSICIÃƒÆ’Ã¢â‚¬Å“N CENTRADA (GLOBAL)
@@ -748,8 +748,6 @@ func _apply_enemy_deck_visibility() -> void:
 func _align_enemy_slots_to_decks() -> void:
 	if enemy_deck_slots.is_empty() or enemy_slots.is_empty():
 		return
-	var base_rect: Rect2 = enemy_slots_container.get_global_rect()
-	var column_x: float = base_rect.position.x + (base_rect.size.x * 0.5)
 	var count: int = min(enemy_deck_slots.size(), enemy_slots.size())
 	for i in range(count):
 		var deck_slot: Control = enemy_deck_slots[i]
@@ -758,9 +756,9 @@ func _align_enemy_slots_to_decks() -> void:
 		var slot_size: Vector2 = enemy_slot.size
 		if slot_size == Vector2.ZERO:
 			slot_size = enemy_slot.get_combined_minimum_size()
-		var target_x: float = column_x - (slot_size.x * 0.5)
+		var current_x: float = enemy_slot.get_global_rect().position.x
 		var target_y: float = deck_rect.get_center().y - (slot_size.y * 0.5)
-		enemy_slot.global_position = Vector2(target_x, target_y)
+		enemy_slot.global_position = Vector2(current_x, target_y)
 
 func _rebuild_enemy_card_views() -> void:
 	enemy_card_views.clear()
@@ -1081,6 +1079,7 @@ func _restore_active_enemies_if_needed() -> void:
 			continue
 		card.reparent(slot, true)
 		card.show_front()
+		card.refresh(enemy_data)
 		enemy_card_views_by_deck[deck_index] = card
 	_rebuild_enemy_card_views()
 	RunState.active_enemy_ids = _get_active_enemy_ids()

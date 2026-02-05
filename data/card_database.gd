@@ -7,6 +7,24 @@ const TUTORIAL_DEFINITION_PRELOADS := {
 	"knight_aprentice": preload("res://data/card_definitions/hero/knight_aprentice.tres")
 }
 
+const FALLBACK_DEFINITION_PATHS: PackedStringArray = [
+	"res://data/card_definitions/dark_forest/dark_forest_corrupted_bat.tres",
+	"res://data/card_definitions/dark_forest/dark_forest_corrupted_spirit.tres",
+	"res://data/card_definitions/dark_forest/dark_forest_fallen_stag.tres",
+	"res://data/card_definitions/dark_forest/dark_forest_rootling.tres",
+	"res://data/card_definitions/dark_forest/dark_forest_shade.tres",
+	"res://data/card_definitions/dark_forest/dark_forest_slime.tres",
+	"res://data/card_definitions/dark_forest/dark_forest_spider.tres",
+	"res://data/card_definitions/dark_forest/dark_forest_sporeling.tres",
+	"res://data/card_definitions/dark_forest/dark_forest_thorn_beast.tres",
+	"res://data/card_definitions/dark_forest/dark_forest_wolf.tres",
+	"res://data/card_definitions/forest/forest_slime.tres",
+	"res://data/card_definitions/forest/forest_spider.tres",
+	"res://data/card_definitions/forest/forest_spirit.tres",
+	"res://data/card_definitions/forest/forest_wolf.tres",
+	"res://data/card_definitions/hero/knight_aprentice.tres"
+]
+
 var definitions: Dictionary = {}
 # Diccionario que guarda todas las CardDefinition cargadas
 
@@ -19,6 +37,7 @@ func load_definitions() -> void:
 	definitions.clear()
 	_scan_card_definitions("res://data/card_definitions")
 	_register_preloaded_tutorial_definitions()
+	_load_fallback_definitions()
 
 	# Alias legacy para no romper referencias viejas
 	if definitions.has("knight_aprentice"):
@@ -53,6 +72,14 @@ func _scan_card_definitions(path: String) -> void:
 					definitions[card_def.definition_id] = card_def
 
 	dir.list_dir_end()
+
+func _load_fallback_definitions() -> void:
+	for path in FALLBACK_DEFINITION_PATHS:
+		var res := load(path)
+		if res is CardDefinition:
+			var card_def: CardDefinition = res
+			if card_def.definition_id != "" and not definitions.has(card_def.definition_id):
+				definitions[card_def.definition_id] = card_def
 
 func _register_preloaded_tutorial_definitions() -> void:
 	for def_id in TUTORIAL_DEFINITION_PRELOADS.keys():
