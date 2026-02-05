@@ -21,14 +21,14 @@ var enemy_draw_queues_by_deck: Array = [] # Array[Array[Dictionary]] (orden real
 # ITEMS (HAND / EQUIP)
 # =========================
 const MAX_HAND_SIZE: int = 5
-const MAX_EQUIP_SLOTS: int = 8
+const MAX_EQUIP_SLOTS: int = 7
 const ITEM_DROP_CHANCE: float = 0.25
 const ITEM_CATALOG_DEFAULT_PATH: String = "res://data/item_catalog_default.tres"
 
 @export var item_catalog: ItemCatalog
 
 var hand_items: Array[String] = []
-var equipped_items: Array[String] = ["", "", "", "", "", "", "", ""]
+var equipped_items: Array[String] = ["", "", "", "", "", "", ""]
 
 var item_drop_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
@@ -560,8 +560,8 @@ func equip_item_from_hand(item_id: String, slot_index: int) -> void:
 	if not hand_items.has(item_id):
 		return
 
-	var idx := slot_index
-	if idx < 0 or idx >= MAX_EQUIP_SLOTS:
+	var idx := _find_slot_for_item(item_id)
+	if idx == -1:
 		idx = _find_first_empty_slot()
 		if idx == -1:
 			idx = 0
@@ -572,11 +572,45 @@ func equip_item_from_hand(item_id: String, slot_index: int) -> void:
 	equip_changed.emit(equipped_items)
 	_apply_equipment_to_hero()
 
+func _find_slot_for_item(item_id: String) -> int:
+	var slot_key := _get_item_slot_key(item_id)
+	if slot_key.is_empty():
+		return -1
+	for i in range(min(equipped_items.size(), MAX_EQUIP_SLOTS)):
+		var equipped_id := equipped_items[i]
+		if equipped_id.is_empty():
+			continue
+		if _get_item_slot_key(equipped_id) == slot_key:
+			return i
+	return -1
+
 func _find_first_empty_slot() -> int:
 	for i in range(MAX_EQUIP_SLOTS):
 		if equipped_items[i].is_empty():
 			return i
 	return -1
+
+func _get_item_type(item_id: String) -> String:
+	if item_id.is_empty() or item_catalog == null:
+		return ""
+	var def := item_catalog.get_item_by_id(item_id)
+	if def == null:
+		return ""
+	return def.item_type
+
+func _get_item_slot_key(item_id: String) -> String:
+	if item_id.is_empty() or item_catalog == null:
+		return ""
+	var def := item_catalog.get_item_by_id(item_id)
+	if def == null:
+		return ""
+	var item_type := def.item_type
+	if item_type == "one_hand":
+		if "shield" in def.item_type_tags:
+			return "one_hand_shield"
+		if "sword" in def.item_type_tags:
+			return "one_hand_sword"
+	return item_type
 
 func _apply_equipment_to_hero() -> void:
 	var hero: Dictionary = cards.get("th", {})
@@ -1045,7 +1079,7 @@ func reset_run(new_mode: String = "normal") -> void:
 	run_loaded = false
 	active_enemy_ids.clear()
 	hand_items.clear()
-	equipped_items = ["", "", "", "", "", "", "", ""]
+	equipped_items = ["", "", "", "", "", "", ""]
 	_apply_equipment_to_hero()
 
 func refresh_upgrades_for_definition(def_id: String = "") -> void:

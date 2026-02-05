@@ -81,7 +81,7 @@ func _layout_cards() -> void:
 	if n == 0:
 		return
 
-	var center := Vector2(size.x * 0.5, size.y)
+	var center := Vector2(size.x * 0.5, size.y * 0.5)
 
 	for i in range(n):
 		var card := _cards[i]
@@ -102,8 +102,9 @@ func _get_pose_for_index(index: int, count: int, center: Vector2, card_size: Vec
 	var spacing: float = max(110.0, card_size.x * HAND_SCALE * 0.9)
 	var total_width: float = spacing * float(max(0, count - 1))
 	var x: float = center.x - (total_width * 0.5) + (float(index) * spacing)
-	var y: float = center.y - 12.0
-	var pos: Vector2 = Vector2(x, y) - (card_size * 0.5)
+	var y: float = center.y
+	var scaled_size := card_size * HAND_SCALE
+	var pos: Vector2 = Vector2(x, y) - (scaled_size * 0.5)
 	var rot: float = 0.0
 	return {"pos": pos, "rot": rot}
 
@@ -150,7 +151,7 @@ func _reflow_existing_cards() -> void:
 	var n := _cards.size()
 	if n == 0:
 		return
-	var center := Vector2(size.x * 0.5, size.y)
+	var center := Vector2(size.x * 0.5, size.y * 0.5)
 	for i in range(n):
 		var card := _cards[i]
 		if card == null or card == _dragging_card:
@@ -210,7 +211,11 @@ func _on_card_hover_entered(card: Control) -> void:
 	var base_pos: Vector2 = pose.get("pos", Vector2.ZERO) as Vector2
 	var base_rot: float = float(pose.get("rot", 0.0))
 	card.z_index = 1000
-	_tween_card_to(card, base_pos + Vector2(0.0, -HOVER_RAISE_Y), base_rot, Vector2.ONE * HAND_SCALE * HOVER_SCALE)
+	var base_scaled := card.size * HAND_SCALE
+	var hover_scaled := card.size * HAND_SCALE * HOVER_SCALE
+	var base_center := base_pos + (base_scaled * 0.5)
+	var hover_pos := base_center - (hover_scaled * 0.5) + Vector2(0.0, -HOVER_RAISE_Y)
+	_tween_card_to(card, hover_pos, base_rot, Vector2.ONE * HAND_SCALE * HOVER_SCALE)
 
 func _on_card_hover_exited(card: Control) -> void:
 	if card == null or card == _dragging_card:

@@ -1,24 +1,13 @@
 extends Control
 class_name HeroEquipZone
 
-const MAX_SLOTS: int = 8
+const MAX_SLOTS: int = 7
 const ITEM_CATALOG_DEFAULT_PATH: String = "res://data/item_catalog_default.tres"
 const STATE_EQUIPPED: int = 2
 
-const SLOT_ORDER: Array[String] = [
-	"helmet",
-	"armour",
-	"gloves",
-	"boots",
-	"one_hand",
-	"two_hands",
-	"amulet",
-	"ring"
-]
-
 @export var item_card_scene: PackedScene
 @export var item_catalog: ItemCatalog
-@onready var slots_container: VBoxContainer = $Slots
+@onready var slots_container: Control = $Slots
 
 func _ready() -> void:
 	if RunState:
@@ -31,11 +20,7 @@ func can_accept(item_id: String) -> bool:
 	return _get_item_type(item_id) != ""
 
 func accept(item_id: String) -> int:
-	var item_type := _get_item_type(item_id)
-	var idx := SLOT_ORDER.find(item_type)
-	if idx == -1:
-		return 0
-	return idx
+	return -1
 
 func is_point_in_zone(global_pos: Vector2) -> bool:
 	return get_global_rect().has_point(global_pos)
@@ -44,7 +29,8 @@ func _on_equip_changed(equipped: Array[String]) -> void:
 	if slots_container == null:
 		return
 
-	for slot in slots_container.get_children():
+	var slots := _get_slot_nodes()
+	for slot in slots:
 		for child in slot.get_children():
 			child.queue_free()
 
@@ -56,9 +42,9 @@ func _on_equip_changed(equipped: Array[String]) -> void:
 			continue
 		if item_card_scene == null:
 			continue
-		if i >= slots_container.get_child_count():
+		if i >= slots.size():
 			break
-		var slot := slots_container.get_child(i) as Control
+		var slot := slots[i]
 		if slot == null:
 			continue
 		var card := item_card_scene.instantiate() as Control
@@ -84,6 +70,33 @@ func _on_equip_changed(equipped: Array[String]) -> void:
 			def = catalog.get_item_by_id(item_id)
 		if def != null and card.has_method("setup"):
 			card.call("setup", def)
+
+func _get_slot_nodes() -> Array[Control]:
+	var slots: Array[Control] = []
+	if slots_container == null:
+		return slots
+	var groups := slots_container.get_children()
+	var grouped_slots: Array = []
+	var max_len := 0
+	for group in groups:
+		if group == null:
+			continue
+		var group_list: Array[Control] = []
+		for slot in group.get_children():
+			if slot is Control:
+				group_list.append(slot)
+		if not group_list.is_empty():
+			grouped_slots.append(group_list)
+			max_len = max(max_len, group_list.size())
+	for i in range(max_len):
+		for group_list in grouped_slots:
+			if i < group_list.size():
+				slots.append(group_list[i])
+	if slots.is_empty():
+		for slot in slots_container.get_children():
+			if slot is Control:
+				slots.append(slot)
+	return slots
 
 func _get_item_catalog() -> ItemCatalog:
 	if item_catalog != null:

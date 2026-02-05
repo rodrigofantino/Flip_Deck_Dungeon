@@ -150,7 +150,7 @@ offset_top = -264.0
 offset_right = 480.0
 offset_bottom = 236.0
 grow_vertical = 2
-pivot_offset = Vector2(77.5, 107.5)
+pivot_offset = Vector2(229.5, 250)
 
 [node name="HeroAnchor" type="Control" parent="UI/HeroArea"]
 custom_minimum_size = Vector2(155, 215)
@@ -176,49 +176,72 @@ offset_top = -262.75
 offset_right = 160.0
 offset_bottom = 308.0
 grow_vertical = 2
+pivot_offset = Vector2(80, 285)
 script = ExtResource("12_equip_script")
 item_card_scene = ExtResource("10_item_card")
 
-[node name="Slots" type="VBoxContainer" parent="UI/HeroArea/HeroEquipZone"]
+[node name="Slots" type="HBoxContainer" parent="UI/HeroArea/HeroEquipZone"]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -62.0
+offset_top = -246.0
+offset_right = 101.0
+offset_bottom = 246.0
 grow_horizontal = 2
 grow_vertical = 2
+pivot_offset = Vector2(80, 285)
 alignment = 1
 
-[node name="Slot0" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
-custom_minimum_size = Vector2(60, 45)
+[node name="SlotGroup1" type="VBoxContainer" parent="UI/HeroArea/HeroEquipZone/Slots"]
 layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 4
+alignment = 1
 
-[node name="Slot1" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
-custom_minimum_size = Vector2(60, 45)
+[node name="Slot0" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots/SlotGroup1"]
+custom_minimum_size = Vector2(60, 120)
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="Slot2" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
-custom_minimum_size = Vector2(60, 45)
+[node name="Slot1" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots/SlotGroup1"]
+custom_minimum_size = Vector2(60, 120)
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="Slot3" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
-custom_minimum_size = Vector2(60, 45)
+[node name="Slot2" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots/SlotGroup1"]
+custom_minimum_size = Vector2(60, 120)
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="Slot4" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
-custom_minimum_size = Vector2(60, 45)
+[node name="Slot3" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots/SlotGroup1"]
+custom_minimum_size = Vector2(60, 120)
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="Slot5" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
-custom_minimum_size = Vector2(60, 45)
+[node name="SlotGroup2" type="VBoxContainer" parent="UI/HeroArea/HeroEquipZone/Slots"]
 layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 4
+alignment = 1
 
-[node name="Slot6" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
-custom_minimum_size = Vector2(60, 45)
+[node name="Slot4" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots/SlotGroup2"]
+custom_minimum_size = Vector2(60, 120)
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="Slot7" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots"]
-custom_minimum_size = Vector2(60, 45)
+[node name="Slot5" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots/SlotGroup2"]
+custom_minimum_size = Vector2(60, 120)
 layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Slot6" type="Control" parent="UI/HeroArea/HeroEquipZone/Slots/SlotGroup2"]
+custom_minimum_size = Vector2(60, 120)
+layout_mode = 2
+size_flags_vertical = 3
 
 [node name="BattleHUD" parent="UI" instance=ExtResource("4_udct1")]
 layout_mode = 1
@@ -231,17 +254,18 @@ offset_bottom = 78.0
 grow_vertical = 1
 
 [node name="HandUI" type="Control" parent="UI"]
-custom_minimum_size = Vector2(0, 260)
+custom_minimum_size = Vector2(0, 200)
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -261.0
-offset_right = -486.0
+offset_top = -201.0
+offset_right = -480.0
 offset_bottom = -1.0
 grow_horizontal = 2
 grow_vertical = 0
+pivot_offset = Vector2(400, 100)
 script = ExtResource("11_hand_ui_script")
 item_card_scene = ExtResource("10_item_card")
 equip_zone_path = NodePath("../HeroArea/HeroEquipZone")
