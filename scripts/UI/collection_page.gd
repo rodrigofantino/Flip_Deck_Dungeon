@@ -86,8 +86,16 @@ func _load_collection() -> void:
 			_card_obtained.append(true)
 	else:
 		var all_ids: Array[String] = []
-		for def_id in CardDatabase.definitions.keys():
-			all_ids.append(String(def_id))
+		var seen_ids: Dictionary = {}
+		for def_key in CardDatabase.definitions.keys():
+			var def: CardDefinition = CardDatabase.get_definition(String(def_key))
+			if def == null:
+				continue
+			var def_id := String(def.definition_id)
+			if def_id == "" or seen_ids.has(def_id):
+				continue
+			seen_ids[def_id] = true
+			all_ids.append(def_id)
 		all_ids = _sort_ids_by_order(all_ids, order)
 		for def_id in all_ids:
 			_card_types.append(def_id)
@@ -98,11 +106,15 @@ func _get_ordered_def_ids(is_play_mode: bool) -> Array[String]:
 	var forest_ids: Array[String] = []
 	var dark_forest_ids: Array[String] = []
 	var other_ids: Array[String] = []
+	var seen_ids: Dictionary = {}
 
 	for def_id in CardDatabase.definitions.keys():
 		var def: CardDefinition = CardDatabase.get_definition(String(def_id))
 		if def == null:
 			continue
+		if def.definition_id == "" or seen_ids.has(def.definition_id):
+			continue
+		seen_ids[def.definition_id] = true
 		if def.card_type == "hero":
 			hero_ids.append(def.definition_id)
 		elif def.biome_modifier == "Forest":

@@ -6,6 +6,15 @@ extends Node
 @export var menu_volume_db: float = -8.0
 @export var battle_volume_db: float = -2.0
 
+const MENU_TRACKS_FALLBACK: Array[AudioStream] = [
+	preload("res://audio/music/background/background_music_01.mp3"),
+	preload("res://audio/music/background/background_music_02.mp3")
+]
+const BATTLE_TRACKS_FALLBACK: Array[AudioStream] = [
+	preload("res://audio/music/battle/battle_music_01.mp3"),
+	preload("res://audio/music/battle/battle_music_02.mp3")
+]
+
 var _menu_player: AudioStreamPlayer
 var _battle_player: AudioStreamPlayer
 var _state: String = "menu"
@@ -32,6 +41,12 @@ func _ready() -> void:
 	_rng.randomize()
 	_menu_tracks = _load_tracks(menu_music_dir)
 	_battle_tracks = _load_tracks(battle_music_dir)
+	if _menu_tracks.is_empty():
+		_menu_tracks = MENU_TRACKS_FALLBACK.duplicate()
+		push_warning("[MusicManager] Menu playlist vacia. Usando fallback preloaded.")
+	if _battle_tracks.is_empty():
+		_battle_tracks = BATTLE_TRACKS_FALLBACK.duplicate()
+		push_warning("[MusicManager] Battle playlist vacia. Usando fallback preloaded.")
 	_menu_index = _get_random_index_for(_menu_tracks)
 	_battle_index = _get_random_index_for(_battle_tracks)
 	_menu_player.finished.connect(func() -> void:
@@ -111,6 +126,7 @@ func _load_tracks(dir_path: String) -> Array[AudioStream]:
 		return result
 	var dir := DirAccess.open(dir_path)
 	if dir == null:
+		push_warning("[MusicManager] No se pudo abrir directorio: %s" % dir_path)
 		return result
 	dir.list_dir_begin()
 	var file_name := dir.get_next()
