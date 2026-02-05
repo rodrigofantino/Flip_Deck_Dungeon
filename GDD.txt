@@ -2,232 +2,105 @@ FLIP DECK DUNGEON
 GAME DESIGN DOCUMENT (GDD)
 
 ========================
-1. VISIÓN GENERAL
+1. VISION GENERAL
 ========================
-Flip Deck Dungeon es un roguelike de cartas con combates por turnos donde todas las cartas
-son entidades vivas con HP, daño, nivel y traits.
+Flip Deck Dungeon es un roguelike de cartas con combates por turnos donde las cartas
+son entidades vivas con HP, dano, nivel e iniciativa.
 
 Plataforma: PC (Steam)
-Motor: Godot 4.x
-Duración de runs: corta / media
-Enfoque: decisiones claras, progresión persistente y alta rejugabilidad.
-Fantasía secundaria: colección TCG (sobres, rarezas, holos, binder).
+Motor: Godot 4.5
+Duracion de runs: corta / media
+Enfoque: decisiones claras, progresion persistente y alta rejugabilidad.
 
 ========================
-2. PILARES DE DISEÑO
+2. PILARES DE DISENO
 ========================
 - Cartas como entidades vivas
 - Una sola fuente de verdad
 - Runs cortas pero profundas
-- Progresión clara (run vs meta)
-- Riesgo vs recompensa explícito
-- Coleccionismo TCG sin romper el roguelike
-  (pool habilitada, no mazos fijos con copias)
+- Progresion clara (run vs meta)
+- Riesgo vs recompensa explicito
 
 ========================
 3. CORE FANTASY
 ========================
-El jugador encarna a un héroe representado por una carta.
-Los enemigos también son cartas que se enfrentan en combates rápidos y letales.
-
-Cada run progresa mediante:
-- Oleadas (escalado automático de poder)
-- Encrucijadas (decisiones estructurales)
-- Loot táctico (ítems y acciones temporales)
-
-La fantasía es la de profundizar en una dungeon viva,
-donde cada decisión vuelve el camino más peligroso y más rentable.
+El jugador encarna a un heroe representado por una carta.
+Los enemigos tambien son cartas que se enfrentan en combates rapidos y letales.
 
 ========================
-4. LOOP PRINCIPAL
+4. LOOP PRINCIPAL (ACTUAL)
 ========================
-MACRO LOOP:
 - Inicio de run
-  - Elección de héroe
-  - Elección de dungeon
-  - Habilitación de pool mínima de cartas
-- Oleadas de combate
-- Encrucijadas post-oleada
-- Boss final (siempre)
-- Derrota, escape o victoria
-- Retorno al meta (Guild Coins, desbloqueos)
-
-MICRO LOOP:
-- Generar encuentro desde los mazos activos
-- Combate
-- Resolución (muerte, drops, dust de run)
-- Limpieza de estado
-- Avance de oleada
+  - Eleccion de heroe
+  - Eleccion de 1+ tipos de enemigo
+  - Construccion de mazos de run
+- Oleadas (max 5)
+  - Robo de enemigos desde 1 a 5 mazos activos
+  - Combate, drops y limpieza de estado
+- Crossroads al limpiar todos los mazos
+  - Agregar mazo (max 5)
+  - Retirar 25% del oro de la run (a oro persistente)
+  - Elegir traits (heroe + enemigo)
+- Victoria al completar la ultima oleada
+- Derrota cuando el heroe muere
 
 ========================
-5. SISTEMA DE OLEADAS
+5. SISTEMA DE OLEADAS Y MAZOS
 ========================
-- Una run está compuesta por oleadas.
-- Cada oleada corresponde a limpiar un mazo enemigo activo.
-- Al completar una oleada:
-  - Todas las cartas activas de la run suben +1 nivel.
-- El nivel de oleada es temporal y no afecta la colección ni el meta.
+- Cada oleada corresponde a limpiar todos los enemigos de los mazos activos.
+- Un mazo tiene tamano fijo de 20 tipos enemigos por oleada.
+- Orden de mazo: ordenado por poder (HP + dano, con nivel), con outlier al final si existe.
+- Danger level = suma del poder de todos los enemigos vivos.
 
 ========================
-6. SISTEMA DE CARTAS
+6. SISTEMA DE CARTAS (ACTUAL)
 ========================
-Tipos de cartas:
-- Héroe (persistente)
-- Enemigo (persistente)
-- Ítem (solo de run, equipable)
-- Acción (solo de run, consumible)
-- Boss (variante especial, generalmente holo)
-
-Atributos de carta:
-- ID
-- Definición base
-- Nivel
-- HP actual / máximo (si aplica)
-- Daño (si aplica)
-- Traits
+Tipos de carta:
+- Heroe (CardDefinition)
+- Enemigo (CardDefinition)
+- Item (ItemCardDefinition, solo de run)
 
 Nota:
-Fuera de la run, las cartas existen como entradas únicas de colección.
-Dentro de la run, el sistema puede generar copias temporales desde la pool habilitada.
+- No hay cartas de accion implementadas.
+- El flag de boss existe en definiciones, pero el boss no es garantizado; se usa un outlier por poder.
 
 ========================
 7. SISTEMA DE COMBATE
 ========================
-Combate por turnos:
-- Turno del héroe
-- Turno de enemigos (loop multi-enemigo)
-- Aplicación de daño
-- Chequeo de muerte
-- Fin de ronda
-
-Encuentros:
-- 1 héroe contra 1 a N enemigos según mazos activos, oleada y amenaza.
-- El boss es siempre el encuentro final.
-
-Drops:
-Al morir un enemigo puede dropear una carta a la mano:
-- Acción (one-shot: heal, cleanse, bomb, etc.)
-- Ítem (equipable)
-
-Guardrails:
-- Límite de mano/botín
-- Reglas claras de descarte y reemplazo
+- Combate por turnos
+- Iniciativa por enemigo vs heroe para decidir el orden
+- Si el primero mata, el segundo no ataca
+- Armour mitiga dano; lifesteal y thorns se aplican en combate
 
 ========================
-8. ÍTEMS Y SLOTS DE ARMAMENTO
+8. ITEMS Y EQUIPAMIENTO (V1)
 ========================
-- Los ítems existen solo durante la run.
-- Se juegan desde la mano.
-- Al equiparse:
-  - Ocupan un slot del héroe
-  - Reemplazan el ítem anterior del slot (se destruye)
-
-Slots base (ejemplo):
-- Arma
-- Armadura
-- Accesorio
-
-Los ítems pueden:
-- Modificar stats
-- Agregar traits temporales
-- Habilitar ataques a múltiples enemigos (ej: Fireball)
+- Drops con 50% de chance al morir enemigo
+- Mano de items max 6 (FIFO)
+- Equipamiento en 7 slots
+- Tipos: one_hand, two_hands, helmet, gloves, boots, armour, amulet, ring
+- one_hand separa sword y shield para permitir ambos
+- Sets tematicos consumen items y dan bonus permanentes; repetibles
 
 ========================
-9. SISTEMA DE TRAITS
+9. TRAITS (V1)
 ========================
-Traits como modificadores de reglas aplicados mediante hooks:
-- Inicio de combate
-- Ataque
-- Daño
-- Muerte
-
-Traits de héroe (run):
-- Se ofrecen en Encrucijadas
-- Impacto sustancial
-- Limitados por run (cap)
-
-No son buffs planos:
-modifican el loop (riesgo, drops, combate, economía).
+- Traits de heroe y enemigo con bonus flat y multiplicadores
+- Seleccion en Crossroads (1 trait heroe + 1 trait enemigo)
+- Traits se aplican a enemigos existentes y en cola
+- Traits se limpian al subir de nivel
 
 ========================
-10. ENCRUCIJADAS (POST-OLEADA)
+10. ECONOMIA (ACTUAL)
 ========================
-Al finalizar cada oleada se abre una Encrucijada con 4 opciones:
-
-1) Agregar un mazo
-   - Se suma un nuevo mazo enemigo
-   - Aumenta dificultad y potencial de recompensa
-   - Escalable (cap V1: 3–5)
-
-2) Elegir trait de héroe
-   - Power spike claro
-   - Modifica la run
-
-3) Escapar
-   - Finaliza la run
-   - El jugador conserva solo el 25% del Dust
-   - Se convierte en Guild Coins
-
-4) Continuar
-   - No se gasta Dust
-   - La run sigue igual
+- Oro de run se obtiene por enemigos
+- Crossroads permite retirar 25% a oro persistente
+- Oro persistente se usa en Shop
 
 ========================
-11. DUST DE RUN Y ECONOMÍA
+11. COLECCION Y BOOSTERS
 ========================
-Dust:
-- Existe solo dentro de la dungeon
-- Moneda temporal de run
-- Se obtiene al derrotar enemigos
-- Se gasta solo en Encrucijadas
-
-Fin de run:
-- Al terminar la run (victoria o escape),
-  todo el Dust restante se convierte automáticamente en Guild Coins.
-- Fuera de la dungeon no existe Dust.
-
-========================
-12. META PROGRESIÓN (GUILD)
-========================
-Guild Coins:
-- Única moneda persistente
-- Se usa para:
-  - Comprar sobres
-  - Desbloquear héroes
-  - Upgrades persistentes
-  - Contratos
-
-========================
-13. COLECCIÓN
-========================
-- Binder de cartas
-- Cartas desbloqueadas + sombras de no desbloqueadas
-- Filtros por rareza y bioma
-
-Sobres:
-- Pueden otorgar enemigos, héroes, ítems, acciones y bosses (holo).
-
-Duplicados:
-- Se desintegran en Guild Coins
-- O se invierten para subir el nivel de la carta
-
-Cartas de mayor nivel:
-- Son más fuertes
-- Generan más valor económico
-
-========================
-14. BOSSES, AFFIX Y VARIANTES
-========================
-- Cada run tiene un boss final
-- Prefijos y sufijos escalan por oleada
-- Pools e incompatibilidades evitan combinaciones injustas
-- Bosses holo son desbloqueos coleccionables
-
-========================
-15. PRINCIPIOS FINALES
-========================
-- Sistemas antes que contenido
-- Datos > UI
-- Claridad > complejidad
-- Toda decisión importante debe ser legible
-  (oleada, amenaza, mazos activos, riesgo)
+- Binder con PageFlip (prototipo 3D)
+- Shop vende packs Forest y Dark Forest
+- Abrir pack da 5 cartas de enemigos por bioma (no tutorial)
+- Upgrade de carta: gastar 5 copias para +1 nivel (impacta stats en combate)

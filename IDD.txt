@@ -4,136 +4,83 @@ IMPLEMENTED DESIGN DOCUMENT (IDD)
 Este documento lista lo que YA esta implementado en el proyecto.
 
 ========================
-1. CORE LOOP IMPLEMENTADO
+1. CORE LOOP Y COMBATE
 ========================
 - Run con heroe y enemigos en combate por turnos
-- Robo de enemigo, combate, resolucion y limpieza de estado
-- Recompensas al derrotar enemigos (oro y XP por nivel del enemigo)
-- Al subir de nivel, el heroe se cura al maximo y su carta refleja el nivel de la run (no persistente)
-- Al subir de nivel, TODOS los enemigos de la run suben tambien su nivel visible
-- Al subir de nivel, hero escala stats base (+20%) y enemigos (+25%); futuras spawns heredan ese nivel
+- Robo real desde 1 a 5 mazos activos y combate por enemigo en mesa
+- CombatManager orquesta turnos con iniciativa por enemigo
+- Formula de iniciativa: clamp(0.15, 0.85, 0.5 + (hero_init - enemy_init) * 0.05)
+- Orden de ataque respeta iniciativa; si el primero mata, el segundo no ataca
+- Mitigacion por armour, lifesteal y thorns aplicados en combate
+- Recompensas por enemigo: oro + XP segun nivel
+- Level up: cura al maximo, escala stats (heroe +20%, enemigos +25%), actualiza niveles visibles
+- Traits activos se limpian al subir de nivel
+- Danger level = suma de poder enemigo (HP + dano, con nivel), mostrado en HUD
+- Auto-draw y auto-combat (toggles en Battle HUD)
 
 ========================
-2. NUEVA RUN Y SELECCION DE CARTAS
+2. WAVES Y CROSSROADS
 ========================
-- Boton Play abre la coleccion en modo seleccion (selection_pending)
+- Run en oleadas (max 5)
+- Al limpiar todos los enemigos de los mazos activos se abre Crossroads
+- Opciones Crossroads: agregar mazo (max 5), retirar 25% del oro de run, elegir traits
+- Tras la ultima oleada se dispara victoria
+
+========================
+3. TRAITS (V1)
+========================
+- TraitResource para heroe y enemigo (flat y multiplicadores de HP/Dano/Iniciativa/Nivel)
+- Base de datos de traits con pools separados (hero/enemy)
+- Seleccion de traits desde popup en Crossroads
+- Traits se aplican a enemigos existentes y a los que esten en cola
+
+========================
+4. ITEMS Y EQUIPAMIENTO (V1)
+========================
+- ItemCardDefinition con stats flat y set_theme
+- Drop de items al morir enemigo (50%)
+- Mano de items (max 6) con FIFO y layout en abanico
+- Drag & drop a equipamiento (7 slots)
+- Reemplazo por tipo y stats en heroe (armour, damage, life, initiative, lifesteal, thorns, regen, crit)
+- One-hand separa sword y shield para permitir ambos
+- Completar set tematico consume items, aplica bonus permanentes y permite seguir equipando
+- Sets repetibles con bonos acumulativos
+- Boton debug en BattleTable para dropear un set completo
+
+========================
+5. SELECCION DE RUN Y DECKS
+========================
+- Boton Play abre coleccion en modo seleccion (selection_pending)
 - El jugador elige 1 heroe y 1+ enemigos; Start Dungeon se habilita al cumplir
-- Se genera un run_deck (run_deck.json) con run_id, definition_id y collection_id
-- Las cartas no persistentes elegidas se remueven de la coleccion al iniciar la run
-- RunManager construye las cartas runtime desde el run_deck al iniciar combate
-- Al derrotar cartas, se remueven del run_deck para mantener el progreso de la run
-- En el flujo de seleccion se puede volver al menu desde Coleccion (Back visible)
-- Sobres permanecen habilitados en la coleccion aun entrando desde Jugar
-- Area de sobres no bloquea clicks del libro ni botones
+- RunManager construye cartas runtime desde run_deck
+- run_deck se guarda en user://save/run_deck.json (por mazos)
+- save_run.json guarda estado de run (cartas, ordenes, mano/equip, traits, oro, etc.)
+- Continue habilitado si hay save de run
 
 ========================
-3. VICTORIA / DERROTA
+6. COLECCION, BOOSTERS Y SHOP
 ========================
-- Popup de derrota con boton volver al menu
-- Popup de victoria con celebracion y VFX (code-driven)
-- La victoria muestra oro ganado
-- La victoria no muestra level up si no hay enemigos restantes
-- Al ganar se guarda oro en progreso persistente (no en derrota/pausa)
-- Al volver al menu desde victoria/derrota se limpia el save de run (Continue deshabilitado)
+- BookView con PageFlip (prototipo 3D) y grilla de cartas
+- Apertura de sobres desde la coleccion (5 cartas por pack)
+- Shop con packs Forest y Dark Forest
+- Comprar descuenta oro persistente y agrega booster al save
+- Popup de carta con upgrade: gastar 5 copias para +1 nivel
+- Upgrades se reflejan en combate (heroe +20%, enemigo +25% por nivel de upgrade)
 
 ========================
-4. VICTORY VFX (CODE-DRIVEN)
-========================
-- Dimmer overlay con breathing
-- Rays/halo con rotacion suave
-- Confetti full screen y lluvia continua
-- Motes/bolitas full screen
-- Mini cards y hojas en bursts
-- Monedas doradas salen del texto de oro durante el conteo
-- Shine sweep en titulo y reflejo metalico animado en oro
-- SFX de flip de carta y monedas (drop y count)
-
-========================
-5. ECONOMIA Y PERSISTENCIA
-========================
-- Oro persistente en coleccion
-- Save de run separado (save_run.json)
-- Continue habilitado si hay save
-- Boton dev reset para limpiar progreso persistente
-
-========================
-6. SHOP
-========================
-- Shop con un pack Dark Forest
-- Boton Buy se habilita si alcanza el oro
-- Al comprar, se descuenta oro y se agrega booster en el save
-
-========================
-7. BOOSTERS
-========================
-- BoosterPackDefinition resource
-- booster_pack_dark_forest.tres
-- boosters guardados en PlayerCollection
-
-========================
-8. UI IMPLEMENTADA
+7. UI, VFX Y AUDIO
 ========================
 - Main menu con oro persistente
-- Pause popup
-- Level up popup
-- Battle HUD
-- Collection UI base
-- Battle HUD muestra chance de atacar primero
-- Mano de items (loot) con layout en abanico, hover y drag & drop
-- Zona de equipamiento bajo el heroe con slots libres (sin tipo fijo)
+- Pause popup, defeat popup, victory popup, level up popup
+- Battle HUD con oro, danger y chance de atacar primero
+- VFX de victoria (rays, confetti, motes, mini cards, coins, shine)
+- MusicManager con playlists de menu y batalla + crossfade
+- Settings con sliders de volumen Master, Music y SFX
 
 ========================
-9. LOCALIZACION
+8. LOCALIZACION Y ASSETS
 ========================
-- Strings de UI en CSV
-- Shop, menu, victory, defeat, level up
-- Etiqueta de iniciativa en CardView (Init)
-
-========================
-10. ASSETS Y CONTENIDO
-========================
+- Strings UI en CSV (menu, shop, victory, defeat, level up, crossroads)
 - Arte tutorial y dark forest
-- Definiciones de cartas dark forest
 - Frames de cartas actualizados
-- Arte de items (cascos) y fondo de carta de item
-
-========================
-11. SISTEMA DE INICIATIVA
-========================
-- Iniciativa por carta (0..10) con probabilidad de atacar primero
-- Formula: clamp(0.15, 0.85, 0.5 + (hero_init - enemy_init) * 0.05)
-- Sorteo por combate usando RNG del proyecto
-- Orden de ataque respeta la iniciativa; si el primero mata, el segundo no ataca
-
-========================
-14. LOOT ITEMS Y EQUIPAMIENTO (V1)
-========================
-- ItemCardDefinition resource con stats flat, tipos de item y set_theme (Cadet, Candlekeep, Mistwarden, Etiquette, Oath, Afterparty)
-- Drop de items al morir enemigo
-- Mano de items (max 6) con FIFO y visual en abanico
-- Drag & drop a equipamiento por slots libres (sin tipo fijo)
-- Reemplazo por tipo y aplicacion de stats en hero (armour, damage, life, initiative, lifesteal, thorns, regen, crit)
-- One-hand: permite espada + escudo (reemplazo por subtipo sword/shield)
-- Completar set tematico consume items del set, aplica stats permanentes y permite seguir equipando
-- Completar sets puede repetirse infinitas veces (bonos acumulativos)
-- Boton debug en BattleTable para dropear un set completo a la mano
-- Upgrades de cartas en coleccion (+1 nivel y stats por multiplicador del tipo): heroes +20%, enemigos +25%, se reflejan en combate
-- Armour reduce daño recibido (shield se trata como armour)
-
-========================
-12. LIBRO DE COLECCION 3D (PROTOTIPO)
-========================
-- Flag en Collection para alternar entre libro 2D y prototipo 3D
-- BookView basado en PageFlip con tapa, contraportada y contenido de paginas con grilla de cartas
-- Flip por click en bordes con banda de deteccion ampliada
-- Click en cartas funciona con seleccion (heroe/enemigos) y feedback visual de borde
-- Fondo de coleccion nuevo (colection_background.png) en modo cover, centrado
-- BookView ajusta posicion/escala al abrir/cerrar sin warpeos
-
-========================
-13. AUDIO (MUSICA + SETTINGS)
-========================
-- MusicManager global con playlists de musica de menu y batalla
-- Crossfade entre musica de menu y batalla, sin cortes al navegar UI
-- Carpetas separadas para music/background y music/battle
-- Settings con sliders de volumen Master, Music y SFX (bus audio)
+- Arte de items y fondo de carta de item

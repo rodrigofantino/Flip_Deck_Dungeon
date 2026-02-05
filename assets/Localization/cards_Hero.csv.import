@@ -2,14 +2,14 @@
 
 importer="csv_translation"
 type="Translation"
-uid="uid://ctetxeh4paqcs"
+uid="uid://du7ssu5fgfabv"
 
 [deps]
 
-files=["res://assets/localization/cards_hero.en.translation", "res://assets/localization/cards_hero.es.translation"]
+files=["res://assets/localization/cards_Hero.en.translation", "res://assets/localization/cards_Hero.es.translation"]
 
-source_file="res://assets/localization/cards_hero.csv"
-dest_files=["res://assets/localization/cards_hero.en.translation", "res://assets/localization/cards_hero.es.translation"]
+source_file="res://assets/localization/cards_Hero.csv"
+dest_files=["res://assets/localization/cards_Hero.en.translation", "res://assets/localization/cards_Hero.es.translation"]
 
 [params]
 

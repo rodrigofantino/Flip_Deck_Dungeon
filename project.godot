@@ -29,6 +29,7 @@ TutorialManage="*res://scripts/game/tutorial_manager.gd"
 CardDatabase="*res://data/card_database.gd"
 MusicManager="*res://scripts/audio/music_manager.gd"
 SaveSystem="*res://data/save_system.gd"
+SceneTransition="*res://scripts/UI/scene_transition.gd"
 
 [display]
 

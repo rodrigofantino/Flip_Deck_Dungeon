@@ -110,7 +110,7 @@ func _wire_ui() -> void:
 		_update_page_label()
 	if back_button:
 		back_button.pressed.connect(func() -> void:
-			get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")
+			SceneTransition.change_scene("res://Scenes/ui/main_menu.tscn")
 		)
 	if booster_popup and booster_popup_title:
 		booster_popup_title.text = tr("COLLECTION_BOOSTER_POPUP_TITLE")
@@ -370,7 +370,7 @@ func _on_start_dungeon_pressed() -> void:
 	print("[Collection] RunState.build_run_deck_from_selection OK")
 	RunState.selection_pending = false
 	print("[Collection] selection_pending=false")
-	var err := get_tree().change_scene_to_file(scene_path)
+	var err := SceneTransition.change_scene(scene_path)
 	print("[Collection] change_scene_to_file err=", err)
 	if err != OK:
 		_debug_battle_table_deps()

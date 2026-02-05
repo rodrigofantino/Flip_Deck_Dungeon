@@ -59,11 +59,11 @@ func _process(delta: float) -> void:
 	
 func _on_p_lay_pressed() -> void:
 	RunState.selection_pending = true
-	get_tree().change_scene_to_file("res://Scenes/ui/collection.tscn")
+	SceneTransition.change_scene("res://Scenes/ui/collection.tscn")
 
 func _on_continue_pressed() -> void:
 	RunState.load_run()
-	get_tree().change_scene_to_file("res://Scenes/battle_table.tscn")
+	SceneTransition.change_scene("res://Scenes/battle_table.tscn")
 
 
 func _on_tutorial_pressed() -> void:
@@ -71,18 +71,18 @@ func _on_tutorial_pressed() -> void:
 	# Inicia el tutorial creando las cartas fijas
 	TutorialManage.start_tutorial()
 	# Cambia a la escena principal de batalla
-	get_tree().change_scene_to_file("res://Scenes/battle_table.tscn")
+	SceneTransition.change_scene("res://Scenes/battle_table.tscn")
 
 
 func _on_settings_button_pressed() -> void:
-	get_tree().change_scene_to_file("res://Scenes/menu/Settings.tscn")
+	SceneTransition.change_scene("res://Scenes/menu/Settings.tscn")
 
 func _on_collection_pressed() -> void:
 	RunState.selection_pending = false
-	get_tree().change_scene_to_file("res://Scenes/ui/collection.tscn")
+	SceneTransition.change_scene("res://Scenes/ui/collection.tscn")
 
 func _on_shop_pressed() -> void:
-	get_tree().change_scene_to_file("res://Scenes/ui/shop.tscn")
+	SceneTransition.change_scene("res://Scenes/ui/shop.tscn")
 
 func _on_dev_reset_pressed() -> void:
 	SaveSystem.reset_progress()

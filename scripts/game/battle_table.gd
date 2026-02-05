@@ -652,7 +652,7 @@ func _on_back_to_menu() -> void:
 		MusicManager.play_menu()
 	if MusicManager:
 		MusicManager.play_menu()
-	get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")
+	SceneTransition.change_scene("res://Scenes/ui/main_menu.tscn")
 
 func _on_ready_for_next_round() -> void:
 	if not auto_combat_enabled:
@@ -1152,4 +1152,4 @@ func _on_pause_menu_pressed() -> void:
 	get_tree().paused = false
 	if MusicManager:
 		MusicManager.play_menu()
-	get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")
+	SceneTransition.change_scene("res://Scenes/ui/main_menu.tscn")

@@ -11,77 +11,73 @@ Separacion estricta entre:
 - UI
 
 ========================
-2. RUNMANAGER
+2. RUNMANAGER (SOURCE OF TRUTH)
 ========================
-Fuente unica de verdad.
+Archivo: data/run_manager.gd (autoload RunState)
 Responsable de:
-- Estado de la run
-- Cartas runtime
-- Economia
+- Estado de la run (modo, oleada, mazos activos)
+- Cartas runtime y colas de robo por mazo
+- Economia (oro de run, danger level)
 - XP y level up
-- Traits
-- Orden de enemigos
+- Items (mano, equipamiento, sets)
+- Traits activos
+- Guardado/carga de run (user://save/save_run.json)
+- Guardado/carga de run_deck (user://save/run_deck.json)
 
 ========================
 3. COMBATMANAGER
 ========================
-Orquestador logico.
-No conoce UI.
-Comunica por seniales.
+Archivo: scripts/combat/combat_context.gd
+- Orquestador logico del combate
+- No conoce UI ni animaciones
+- Resuelve iniciativa y orden de turnos
+- Aplica damage, armour, lifesteal y thorns
+- Comunica por senales (attack_started, damage_applied, card_died, combat_finished)
 
 ========================
-4. CARDVIEW
+4. BATTLETABLE (UI ORQUESTA)
 ========================
-UI pura.
-Refleja estado, no lo modifica.
-Tamano cartas: base 620x860 / en mesa 155x215
+Archivo: scripts/game/battle_table.gd
+- Instancia CardView y posiciona cartas
+- Maneja mazos visuales, slots y robo
+- Conecta CombatManager con UI
+- Maneja Crossroads, level up, pause, victory y defeat
+- Controla auto-draw y auto-combat
 
 ========================
-5. RESOURCES
+5. CARDVIEW
 ========================
-- CardDefinition
-- TraitResource
+Archivo: scripts/game/card_view.gd
+- UI pura, refleja estado sin modificar logica
+- Base size 620x860, escalado en BattleTable y Collection
+
+========================
+6. RESOURCES Y DATA
+========================
+- CardDefinition (heroes y enemigos)
+- ItemCardDefinition (items de run)
+- TraitResource + TraitDatabase
 - BoosterPackDefinition
-- EnemyDefinition
-
-Nunca se modifican en runtime.
-
-========================
-6. SENIALES
-========================
-Toda comunicacion es desacoplada.
-Nada de referencias directas innecesarias.
+- PlayerCollection + Serialization
+- ItemCatalog (res://data/item_catalog_default.tres)
 
 ========================
 7. PERSISTENCIA
 ========================
-- Guardado de run (save_run.json)
-- Progreso persistente (coleccion, oro, boosters)
-- Runs temporales no se guardan
+Archivo: data/save_system.gd
+- Coleccion persistente: user://save/card_collection.json
+- Perfil: user://save/save_profile.json
+- Run: user://save/save_run.json
+- Run deck: user://save/run_deck.json
 
 ========================
-8. UI Y POPUPS
+8. LOCALIZACION
 ========================
-- PausePopup
-- DefeatPopup
-- VictoryPopup con VFX (code-driven)
-- LevelUpPopup
+- assets/localization/game_text.csv
+- LocalizationManager como gateway de strings
 
 ========================
-9. CONVENCIONES
+9. AUDIO
 ========================
-- Tipado explicito
-- Nombres consistentes
-- Una responsabilidad por clase
-
-========================
-10. ESCALABILIDAD
-========================
-Agregar contenido no debe requerir refactor.
-
-========================
-11. PRINCIPIOS TECNICOS
-========================
-- Claridad antes que optimizacion
-- Evitar deuda tecnica
-- Codigo legible y mantenible
+- MusicManager global con playlists y crossfade
+- audio_bus_layout.tres con buses Master/Music/SFX

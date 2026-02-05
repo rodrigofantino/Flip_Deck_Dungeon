@@ -131,6 +131,9 @@ Always place/modify files under these paths and **respect existing subfolders by
 - Keep node paths stable; avoid renaming nodes unless necessary.
 - Avoid unnecessary reserialization noise in `.tscn/.tres` (touch only what you change).
 
+## Godot executable path
+- Godot 4.5.1 (Windows): `C:\Users\gfrod\Downloads\Godot_v4.5.1-stable_win64.exe\Godot_v4.5.1-stable_win64.exe`
+
 ## Godot coding guidelines
 - Use typed GDScript where it already exists.
 - Avoid heavy per-frame logic; prefer signals, timers, and events.

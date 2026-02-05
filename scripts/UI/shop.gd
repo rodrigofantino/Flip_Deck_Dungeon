@@ -140,4 +140,4 @@ func _show_feedback(text: String, color: Color, duration: float) -> void:
 	tween.tween_property(feedback_label, "modulate:a", 0.0, 0.2).set_delay(duration)
 
 func _on_back_pressed() -> void:
-	get_tree().change_scene_to_file("res://Scenes/ui/main_menu.tscn")
+	SceneTransition.change_scene("res://Scenes/ui/main_menu.tscn")
