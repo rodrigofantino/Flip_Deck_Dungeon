@@ -353,9 +353,9 @@ layout_mode = 2
 [node name="CountLabel" type="Label" parent="CardPopup/Panel/Content"]
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 text = "x0"
 horizontal_alignment = 1
-theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 
 [node name="Buttons" type="HBoxContainer" parent="CardPopup/Panel/Content"]
 layout_mode = 2

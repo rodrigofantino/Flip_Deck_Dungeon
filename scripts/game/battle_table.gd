@@ -14,6 +14,7 @@
 
 @onready var battle_hud: Control = $UI/BattleHUD
 @onready var ui_root: Control = $UI
+@onready var debug_set_drop_button: Button = $UI/DebugSetDropButton
 
 @export var defeat_popup_scene: PackedScene
 var defeat_popup: DefeatPopup = null
@@ -149,6 +150,8 @@ func _ready() -> void:
 	await get_tree().process_frame
 	setup_battle()
 	_connect_battle_hud()
+	if debug_set_drop_button != null:
+		debug_set_drop_button.pressed.connect(_on_debug_set_drop_pressed)
 	_connect_run_signals()
 	_update_hud_state()
 	RunState.hero_level_up.connect(_on_hero_level_up)
@@ -378,6 +381,10 @@ func _on_enemy_stats_changed() -> void:
 func _on_pause_pressed() -> void:
 	_toggle_pause()
 
+func _on_debug_set_drop_pressed() -> void:
+	if RunState:
+		RunState.debug_add_full_set_to_hand()
+
 func _on_hero_level_up(new_level: int) -> void:
 	if suppress_level_up_popup:
 		return
@@ -442,7 +449,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# =========================
 	# ESCALADO VISUAL
 	# =========================
-	card.scale = Vector2(0.2, 0.2)
+	card.scale = Vector2(0.24, 0.24)
 
 	# =========================
 	# POSICIÃƒÆ’Ã¢â‚¬Å“N CENTRADA (GLOBAL)

@@ -12,3 +12,5 @@ item_description = "ITEM_AFTERPARTY_CONFETTI_BRIGANDINE_DESC"
 item_type = "armour"
 armour_flat = 2
 initiative_flat = 1
+set_theme = "afterparty"
+SET_THEME_TEST

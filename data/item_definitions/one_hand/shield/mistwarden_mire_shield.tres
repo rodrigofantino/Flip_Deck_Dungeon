@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://c7jecr5ismfkh"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://fcwmuvtncfp3" path="res://assets/cards/items/art/one_hand/shield/mistwarden_mire_shield.png" id="2_art"]
@@ -10,6 +10,6 @@ item_id = "mistwarden_mire_shield"
 item_name = "ITEM_MISTWARDEN_MIRE_SHIELD_NAME"
 item_description = "ITEM_MISTWARDEN_MIRE_SHIELD_DESC"
 item_type = "one_hand"
-item_type_tags = ["shield"]
+item_type_tags = Array[String](["shield"])
 armour_flat = 2
 initiative_flat = -1

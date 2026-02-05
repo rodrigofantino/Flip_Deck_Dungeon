@@ -253,6 +253,14 @@ offset_right = 18.0
 offset_bottom = 78.0
 grow_vertical = 1
 
+[node name="DebugSetDropButton" type="Button" parent="UI"]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 86.0
+offset_right = 168.0
+offset_bottom = 126.0
+text = "Debug Set"
+
 [node name="HandUI" type="Control" parent="UI"]
 custom_minimum_size = Vector2(0, 200)
 layout_mode = 1

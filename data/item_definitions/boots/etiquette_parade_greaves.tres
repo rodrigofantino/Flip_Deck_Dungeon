@@ -12,3 +12,4 @@ item_description = "ITEM_ETIQUETTE_PARADE_GREAVES_DESC"
 item_type = "boots"
 armour_flat = 1
 initiative_flat = 1
+set_theme = "etiquette"

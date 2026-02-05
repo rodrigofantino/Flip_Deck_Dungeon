@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://cqnxb6moi2de"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://4oejoq35cq7u" path="res://assets/cards/items/art/gloves/mistwarden_knot_gauntlets.png" id="2_art"]
@@ -11,3 +11,4 @@ item_name = "ITEM_MISTWARDEN_KNOT_GAUNTLETS_NAME"
 item_description = "ITEM_MISTWARDEN_KNOT_GAUNTLETS_DESC"
 item_type = "gloves"
 damage_flat = 2
+set_theme = "mistwarden"

@@ -11,3 +11,4 @@ item_name = "ITEM_CADET_CAP_HELM_NAME"
 item_description = "ITEM_CADET_CAP_HELM_DESC"
 item_type = "helmet"
 armour_flat = 1
+set_theme = "cadet"

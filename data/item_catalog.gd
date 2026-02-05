@@ -28,6 +28,7 @@ func _rebuild_cache() -> void:
 		if _item_map.has(item.item_id):
 			push_warning("[ItemCatalog] item_id duplicado: " + item.item_id)
 			continue
+		_apply_default_theme(item)
 
 		_item_map[item.item_id] = item
 
@@ -50,3 +51,22 @@ func _get_configuration_warnings() -> PackedStringArray:
 			seen_ids[item.item_id] = true
 
 	return warnings
+
+func _apply_default_theme(item: ItemCardDefinition) -> void:
+	if item == null:
+		return
+	if item.set_theme != "" and item.set_theme != "none":
+		return
+	var id := item.item_id
+	if id.begins_with("cadet_"):
+		item.set_theme = "cadet"
+	elif id.begins_with("candlekeep_"):
+		item.set_theme = "candlekeep"
+	elif id.begins_with("mistwarden_"):
+		item.set_theme = "mistwarden"
+	elif id.begins_with("etiquette_"):
+		item.set_theme = "etiquette"
+	elif id.begins_with("oath_"):
+		item.set_theme = "oath"
+	elif id.begins_with("afterparty_"):
+		item.set_theme = "afterparty"

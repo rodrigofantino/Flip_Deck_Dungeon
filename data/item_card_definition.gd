@@ -22,6 +22,9 @@ class_name ItemCardDefinition
 @export var item_type_tags: Array[String] = []
 # Tags de tipo (ej: ["sword"]). Lista para compatibilidad futura.
 
+@export_enum("none", "cadet", "candlekeep", "mistwarden", "etiquette", "oath", "afterparty") var set_theme: String = "none"
+# Tema de set (coleccion tematica de items).
+
 # =========================
 # FLAT STATS (V1)
 # Valores planos que se suman. Pueden ser negativos para debuffs.

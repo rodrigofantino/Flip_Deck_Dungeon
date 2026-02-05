@@ -16,4 +16,5 @@ script = ExtResource("2_ctrl")
 
 [node name="ClickCatcher" type="Control" parent="."]
 visible = false
+anchors_preset = 0
 mouse_filter = 2

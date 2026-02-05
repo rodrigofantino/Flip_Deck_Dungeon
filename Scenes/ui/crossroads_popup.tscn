@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://d1c5w9p2x8p6r"]
+[gd_scene load_steps=2 format=3 uid="uid://d1c5xap2x8p6r"]
 
 [ext_resource type="Script" uid="uid://ts6fi6kdk56p" path="res://scripts/UI/crossroads_popup.gd" id="1_8bx4s"]
 
@@ -86,4 +86,3 @@ text = "CROSSROADS_OPTION_WITHDRAW"
 [node name="TraitButton" type="Button" parent="Panel/VBoxContainer/Buttons"]
 layout_mode = 2
 text = "CROSSROADS_OPTION_TRAIT"
-

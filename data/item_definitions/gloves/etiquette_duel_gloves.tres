@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://pmeqqheeyyiw"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://p77ptww8gm2t" path="res://assets/cards/items/art/gloves/etiquette_duel_gloves.png" id="2_art"]

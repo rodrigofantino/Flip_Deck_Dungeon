@@ -20,15 +20,25 @@ var enemy_draw_queues_by_deck: Array = [] # Array[Array[Dictionary]] (orden real
 # =========================
 # ITEMS (HAND / EQUIP)
 # =========================
-const MAX_HAND_SIZE: int = 5
+const MAX_HAND_SIZE: int = 6
 const MAX_EQUIP_SLOTS: int = 7
-const ITEM_DROP_CHANCE: float = 0.25
+const ITEM_DROP_CHANCE: float = 0.5
 const ITEM_CATALOG_DEFAULT_PATH: String = "res://data/item_catalog_default.tres"
 
 @export var item_catalog: ItemCatalog
 
 var hand_items: Array[String] = []
 var equipped_items: Array[String] = ["", "", "", "", "", "", ""]
+var completed_set_themes: Array[String] = []
+
+var set_bonus_armour: int = 0
+var set_bonus_damage: int = 0
+var set_bonus_life: int = 0
+var set_bonus_initiative: int = 0
+var set_bonus_lifesteal: int = 0
+var set_bonus_thorns: int = 0
+var set_bonus_regen: int = 0
+var set_bonus_crit: int = 0
 
 var item_drop_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
@@ -45,6 +55,7 @@ signal item_dropped(item_id: String)
 signal hand_changed(hand_items: Array[String])
 signal equip_changed(equipped_items: Array[String])
 signal hero_stats_changed()
+signal set_completed(theme: String, item_ids: Array[String])
 
 # =========================
 # ESTADO ECONOMÃƒÆ’Ã‚ÂA / RIESGO
@@ -554,6 +565,47 @@ func _add_item_to_hand(item_id: String) -> void:
 	hand_items.append(item_id)
 	hand_changed.emit(hand_items)
 
+func debug_add_full_set_to_hand(theme: String = "") -> void:
+	if item_catalog == null:
+		return
+	var selected_theme := theme
+	if selected_theme.is_empty():
+		selected_theme = _pick_theme_with_most_items(_build_theme_item_map())
+	if selected_theme.is_empty():
+		return
+	var items := _get_theme_requirement_items(selected_theme)
+	var added := 0
+	for item_id in items:
+		_add_item_to_hand(item_id)
+		added += 1
+		if added >= MAX_HAND_SIZE:
+			break
+
+func _build_theme_item_map() -> Dictionary:
+	var map := {}
+	if item_catalog == null:
+		return map
+	for item_def in item_catalog.items:
+		if item_def == null:
+			continue
+		var theme := _get_item_theme(item_def.item_id)
+		if theme.is_empty() or theme == "none":
+			continue
+		if not map.has(theme):
+			map[theme] = []
+		(map[theme] as Array).append(item_def.item_id)
+	return map
+
+func _pick_theme_with_most_items(theme_map: Dictionary) -> String:
+	var best_theme := ""
+	var best_count := 0
+	for theme in theme_map.keys():
+		var items: Array = theme_map[theme]
+		if items.size() > best_count:
+			best_count = items.size()
+			best_theme = String(theme)
+	return best_theme
+
 func equip_item_from_hand(item_id: String, slot_index: int) -> void:
 	if item_id.is_empty():
 		return
@@ -567,6 +619,7 @@ func equip_item_from_hand(item_id: String, slot_index: int) -> void:
 			idx = 0
 
 	equipped_items[idx] = item_id
+	_try_complete_set_for_item(item_id)
 	hand_items.erase(item_id)
 	hand_changed.emit(hand_items)
 	equip_changed.emit(equipped_items)
@@ -612,6 +665,130 @@ func _get_item_slot_key(item_id: String) -> String:
 			return "one_hand_sword"
 	return item_type
 
+func _get_item_theme(item_id: String) -> String:
+	if item_id.is_empty() or item_catalog == null:
+		return ""
+	var def := item_catalog.get_item_by_id(item_id)
+	if def == null:
+		return ""
+	var theme := def.set_theme
+	if theme.is_empty() or theme == "none":
+		if item_id.begins_with("cadet_"):
+			theme = "cadet"
+		elif item_id.begins_with("candlekeep_"):
+			theme = "candlekeep"
+		elif item_id.begins_with("mistwarden_"):
+			theme = "mistwarden"
+		elif item_id.begins_with("etiquette_"):
+			theme = "etiquette"
+		elif item_id.begins_with("oath_"):
+			theme = "oath"
+		elif item_id.begins_with("afterparty_"):
+			theme = "afterparty"
+	return theme
+
+func _try_complete_set_for_item(item_id: String) -> void:
+	var theme := _get_item_theme(item_id)
+	if theme.is_empty() or theme == "none":
+		return
+	if item_catalog == null:
+		return
+
+	var required_keys := _get_theme_requirement_keys(theme)
+	if required_keys.is_empty():
+		return
+
+	var present_keys: Array[String] = []
+	for equipped_id in equipped_items:
+		if equipped_id.is_empty():
+			continue
+		if _get_item_theme(equipped_id) != theme:
+			continue
+		var req_key := _get_set_requirement_key(equipped_id)
+		if req_key.is_empty():
+			continue
+		if not present_keys.has(req_key):
+			present_keys.append(req_key)
+
+	for req_key in required_keys:
+		if not present_keys.has(req_key):
+			return
+
+	var consumed_ids: Array[String] = []
+	for equipped_id in equipped_items:
+		if equipped_id.is_empty():
+			continue
+		if _get_item_theme(equipped_id) != theme:
+			continue
+		var def := item_catalog.get_item_by_id(equipped_id)
+		if def == null:
+			continue
+		consumed_ids.append(equipped_id)
+		_add_set_bonus_from_def(def)
+		_remove_equipped_item(equipped_id)
+
+	set_completed.emit(theme, consumed_ids)
+
+func _remove_equipped_item(item_id: String) -> void:
+	for i in range(equipped_items.size()):
+		if equipped_items[i] == item_id:
+			equipped_items[i] = ""
+			return
+
+func _add_set_bonus_from_def(def: ItemCardDefinition) -> void:
+	set_bonus_armour += def.armour_flat + def.shield_flat
+	set_bonus_damage += def.damage_flat
+	set_bonus_life += def.life_flat
+	set_bonus_initiative += def.initiative_flat
+	set_bonus_lifesteal += def.lifesteal_flat
+	set_bonus_thorns += def.thorns_flat
+	set_bonus_regen += def.regen_flat
+	set_bonus_crit += def.crit_chance_flat
+
+func _get_set_requirement_key(item_id: String) -> String:
+	var slot_key := _get_item_slot_key(item_id)
+	return slot_key
+
+func _get_theme_requirement_keys(theme: String) -> Array[String]:
+	var keys: Array[String] = []
+	if item_catalog == null:
+		return keys
+	for item_def in item_catalog.items:
+		if item_def == null:
+			continue
+		if _get_item_theme(item_def.item_id) != theme:
+			continue
+		var key := _get_set_requirement_key(item_def.item_id)
+		if key.is_empty():
+			continue
+		if not keys.has(key):
+			keys.append(key)
+	return keys
+
+func _get_theme_requirement_items(theme: String) -> Array[String]:
+	var items: Array[String] = []
+	if item_catalog == null:
+		return items
+	var keys := _get_theme_requirement_keys(theme)
+	for key in keys:
+		var candidate := _find_theme_item_for_key(theme, key)
+		if candidate != "":
+			items.append(candidate)
+	return items
+
+func _find_theme_item_for_key(theme: String, key: String) -> String:
+	if item_catalog == null:
+		return ""
+	for item_def in item_catalog.items:
+		if item_def == null:
+			continue
+		if _get_item_theme(item_def.item_id) != theme:
+			continue
+		var req_key := _get_set_requirement_key(item_def.item_id)
+		if req_key == key:
+			return item_def.item_id
+	return ""
+
 func _apply_equipment_to_hero() -> void:
 	var hero: Dictionary = cards.get("th", {})
 	if hero.is_empty():
@@ -647,6 +824,15 @@ func _apply_equipment_to_hero() -> void:
 			add_thorns += def.thorns_flat
 			add_regen += def.regen_flat
 			add_crit += def.crit_chance_flat
+
+	add_hp += set_bonus_life
+	add_damage += set_bonus_damage
+	add_initiative += set_bonus_initiative
+	add_armour += set_bonus_armour
+	add_lifesteal += set_bonus_lifesteal
+	add_thorns += set_bonus_thorns
+	add_regen += set_bonus_regen
+	add_crit += set_bonus_crit
 
 	var new_max_hp := base_hp + add_hp
 	var new_damage := base_damage + add_damage
@@ -888,6 +1074,15 @@ func save_run():
 		"enemy_level_multiplier": enemy_level_multiplier,
 		"hand_items": hand_items,
 		"equipped_items": equipped_items,
+		"completed_set_themes": completed_set_themes,
+		"set_bonus_armour": set_bonus_armour,
+		"set_bonus_damage": set_bonus_damage,
+		"set_bonus_life": set_bonus_life,
+		"set_bonus_initiative": set_bonus_initiative,
+		"set_bonus_lifesteal": set_bonus_lifesteal,
+		"set_bonus_thorns": set_bonus_thorns,
+		"set_bonus_regen": set_bonus_regen,
+		"set_bonus_crit": set_bonus_crit,
 	}
 
 	SaveSystem._ensure_save_dir()
@@ -929,6 +1124,15 @@ func load_run():
 	hand_items = _to_string_array(data.get("hand_items", []))
 	equipped_items = _to_string_array(data.get("equipped_items", []))
 	_ensure_equipped_size()
+	completed_set_themes = _to_string_array(data.get("completed_set_themes", []))
+	set_bonus_armour = int(data.get("set_bonus_armour", 0))
+	set_bonus_damage = int(data.get("set_bonus_damage", 0))
+	set_bonus_life = int(data.get("set_bonus_life", 0))
+	set_bonus_initiative = int(data.get("set_bonus_initiative", 0))
+	set_bonus_lifesteal = int(data.get("set_bonus_lifesteal", 0))
+	set_bonus_thorns = int(data.get("set_bonus_thorns", 0))
+	set_bonus_regen = int(data.get("set_bonus_regen", 0))
+	set_bonus_crit = int(data.get("set_bonus_crit", 0))
 
 	if trait_database != null:
 		trait_database.load_all()
@@ -1080,6 +1284,15 @@ func reset_run(new_mode: String = "normal") -> void:
 	active_enemy_ids.clear()
 	hand_items.clear()
 	equipped_items = ["", "", "", "", "", "", ""]
+	completed_set_themes.clear()
+	set_bonus_armour = 0
+	set_bonus_damage = 0
+	set_bonus_life = 0
+	set_bonus_initiative = 0
+	set_bonus_lifesteal = 0
+	set_bonus_thorns = 0
+	set_bonus_regen = 0
+	set_bonus_crit = 0
 	_apply_equipment_to_hero()
 
 func refresh_upgrades_for_definition(def_id: String = "") -> void:

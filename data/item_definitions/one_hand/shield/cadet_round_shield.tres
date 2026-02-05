@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://cv8din0y4itwo"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://cy2kuqk8chfjq" path="res://assets/cards/items/art/one_hand/shield/cadet_round_shield.png" id="2_art"]
@@ -10,5 +10,5 @@ item_id = "cadet_round_shield"
 item_name = "ITEM_CADET_ROUND_SHIELD_NAME"
 item_description = "ITEM_CADET_ROUND_SHIELD_DESC"
 item_type = "one_hand"
-item_type_tags = ["shield"]
+item_type_tags = Array[String](["shield"])
 armour_flat = 1

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ItemCardDefinition" load_steps=3 format=3 uid="uid://441dbsv5ycx8"]
 
 [ext_resource type="Script" uid="uid://ck5sbgm43mtfv" path="res://data/item_card_definition.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://b2q0kts6w8hts" path="res://assets/cards/items/art/one_hand/shield/candlekeep_waxguard.png" id="2_art"]
@@ -10,6 +10,6 @@ item_id = "candlekeep_waxguard"
 item_name = "ITEM_CANDLEKEEP_WAXGUARD_NAME"
 item_description = "ITEM_CANDLEKEEP_WAXGUARD_DESC"
 item_type = "one_hand"
-item_type_tags = ["shield"]
+item_type_tags = Array[String](["shield"])
 armour_flat = 1
 life_flat = 1

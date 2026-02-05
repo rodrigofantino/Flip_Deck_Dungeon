@@ -14,5 +14,4 @@ frame_texture = ExtResource("2_frame")
 max_hp = 6
 damage = 1
 card_type = "enemy"
-boss = false
 biome_modifier = "Dark Forest"

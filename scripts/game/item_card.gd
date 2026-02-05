@@ -23,6 +23,10 @@ var state: CardState = CardState.IN_HAND
 var _dragging: bool = false
 var _drag_offset: Vector2 = Vector2.ZERO
 var _sizing_dirty: bool = false
+var _hover_tween: Tween = null
+var _equipped_base_scale: Vector2 = Vector2.ONE
+
+const EQUIPPED_HOVER_SCALE: float = 1.5
 
 func _ready() -> void:
 	mouse_entered.connect(_on_mouse_entered)
@@ -94,11 +98,44 @@ func _input(event: InputEvent) -> void:
 		drag_released.emit(self, get_global_mouse_position())
 
 func _on_mouse_entered() -> void:
+	if state == CardState.EQUIPPED:
+		_apply_equipped_hover(true)
+		return
 	if state != CardState.IN_HAND or _dragging:
 		return
 	hover_entered.emit(self)
 
 func _on_mouse_exited() -> void:
+	if state == CardState.EQUIPPED:
+		_apply_equipped_hover(false)
+		return
 	if state != CardState.IN_HAND or _dragging:
 		return
 	hover_exited.emit(self)
+
+func _apply_equipped_hover(hover: bool) -> void:
+	if _hover_tween != null and _hover_tween.is_valid():
+		_hover_tween.kill()
+		_hover_tween = null
+	_ensure_center_pivot()
+
+	if hover:
+		_equipped_base_scale = scale
+		var hover_scale := _equipped_base_scale * EQUIPPED_HOVER_SCALE
+		z_index = 2000
+		_hover_tween = create_tween()
+		_hover_tween.set_trans(Tween.TRANS_SINE)
+		_hover_tween.set_ease(Tween.EASE_OUT)
+		_hover_tween.tween_property(self, "scale", hover_scale, 0.12)
+	else:
+		z_index = 0
+		_hover_tween = create_tween()
+		_hover_tween.set_trans(Tween.TRANS_SINE)
+		_hover_tween.set_ease(Tween.EASE_OUT)
+		_hover_tween.tween_property(self, "scale", _equipped_base_scale, 0.12)
+
+func _ensure_center_pivot() -> void:
+	var current_scale := scale
+	var center := global_position + (size * current_scale * 0.5)
+	pivot_offset = size * 0.5
+	global_position = center - (size * current_scale * 0.5)
