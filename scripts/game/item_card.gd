@@ -21,7 +21,6 @@ var item_instance: ItemInstance = null
 var item_id: String = ""
 var state: CardState = CardState.IN_HAND
 
-var _dragging: bool = false
 var _drag_offset: Vector2 = Vector2.ZERO
 var _sizing_dirty: bool = false
 var _hover_tween: Tween = null
@@ -62,7 +61,10 @@ func setup(instance: ItemInstance) -> void:
 		item_stats_label.text = _build_stats_text(item_instance)
 
 func _notification(what: int) -> void:
-	pass
+	if what == NOTIFICATION_DRAG_END:
+		if state == CardState.DRAGGING:
+			set_state(CardState.IN_HAND)
+		drag_released.emit(self, get_global_mouse_position())
 
 func _request_text_fit() -> void:
 	pass
@@ -85,31 +87,47 @@ func _append_stat(parts: Array[String], label: String, value: int) -> void:
 		sign = ""
 	parts.append("%s %s%d" % [label, sign, value])
 
-func _gui_input(event: InputEvent) -> void:
+func _get_drag_data(_at_position: Vector2) -> Variant:
 	if state != CardState.IN_HAND:
-		return
+		return null
+	set_state(CardState.DRAGGING)
+	drag_started.emit(self)
+	var preview := _build_drag_preview()
+	if preview != null:
+		set_drag_preview(preview)
+	return {"item_id": item_id}
 
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed:
-			_dragging = true
-			_drag_offset = get_global_mouse_position() - global_position
-			drag_started.emit(self)
+func _build_drag_preview() -> Control:
+	var preview := Control.new()
+	preview.custom_minimum_size = size
+	preview.size = size
+	preview.scale = scale
+	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-func _input(event: InputEvent) -> void:
-	if not _dragging:
-		return
-	if event is InputEventMouseMotion:
-		global_position = get_global_mouse_position() - _drag_offset
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		_dragging = false
-		drag_released.emit(self, get_global_mouse_position())
+	var bg := TextureRect.new()
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	bg.texture = item_background.texture if item_background != null else null
+	bg.size = size
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	preview.add_child(bg)
+
+	var art := TextureRect.new()
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	art.texture = item_art.texture if item_art != null else null
+	art.size = size
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	preview.add_child(art)
+
+	return preview
 
 func _on_mouse_entered() -> void:
 	if state == CardState.EQUIPPED:
 		_apply_equipped_hover(true)
 		_set_equipped_compact(false, false)
 		return
-	if state != CardState.IN_HAND or _dragging:
+	if state != CardState.IN_HAND:
 		return
 	hover_entered.emit(self)
 
@@ -118,7 +136,7 @@ func _on_mouse_exited() -> void:
 		_apply_equipped_hover(false)
 		_set_equipped_compact(true, false)
 		return
-	if state != CardState.IN_HAND or _dragging:
+	if state != CardState.IN_HAND:
 		return
 	hover_exited.emit(self)
 

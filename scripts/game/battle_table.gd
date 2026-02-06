@@ -11,6 +11,8 @@
 @onready var hero_anchor: Control = $UI/HeroArea/HeroAnchor
 @onready var enemy_decks_container: Control = $UI/EnemyArea/EnemyDeck
 @onready var enemy_slots_container: Control = $UI/EnemyArea/EnemySlots
+@onready var equipment_slots_view: EquipmentSlotsView = $UI/HeroArea/EquipmentSlotsView
+@onready var trait_overlay_view: TraitOverlayView = $UI/TraitOverlayView
 
 @onready var battle_hud: Control = $UI/BattleHUD
 @onready var ui_root: Control = $UI
@@ -155,6 +157,7 @@ func _ready() -> void:
 	RunState.enemy_stats_changed.connect(_on_enemy_stats_changed)
 	RunState.hero_stats_changed.connect(_on_enemy_stats_changed)
 	RunState.wave_started.connect(_on_wave_started)
+	_setup_equipment_slots_view()
 	
 	
 # ==========================================
@@ -171,6 +174,12 @@ func setup_battle() -> void:
 	_cache_enemy_slots()
 	setup_enemy_deck()
 	_restore_active_enemies_if_needed()
+	_setup_equipment_slots_view()
+
+func _setup_equipment_slots_view() -> void:
+	if equipment_slots_view == null or RunState == null:
+		return
+	equipment_slots_view.setup("knight", RunState)
 
 # ==========================================
 # CONNECT BATTLE HUD
@@ -364,6 +373,10 @@ func _handle_enemy_defeated(card_id: String) -> void:
 			current_phase = BattlePhase.IDLE
 		_update_hud_state()
 		return
+	# Si no hay enemigos y no hay encrucijada, asegurar inicio de nueva oleada.
+	if RunState.current_wave <= RunState.waves_per_run:
+		RunState.start_wave_encounter()
+		setup_enemy_deck()
 	current_phase = BattlePhase.IDLE
 	_update_hud_state()
 
@@ -393,16 +406,11 @@ func _on_hero_level_up(new_level: int) -> void:
 		return
 	if not _has_remaining_enemies():
 		return
-	print("[BattleTable] HERO LEVEL UP ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Sin popup de traits")
 	RunState.save_run()
 	if hero_card_view != null:
 		hero_card_view.play_heal_effect()
 
-
-	# FUTURO:
-	# - Pausar combate
-	# - Mostrar popup de traits
-	# - Elegir recompensa
+	_show_level_up_popup(new_level)
 
 # ==========================================
 # CREAR + POSICIONAR + ESCALAR
@@ -425,6 +433,8 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	card.offset_right = card_base_size.x
 	card.offset_bottom = card_base_size.y
 	card.pivot_offset = card_base_size * 0.5
+	card.run_manager = RunState
+	card.trait_overlay = trait_overlay_view
 
 	# =========================
 	# ID + REGISTRO UI
@@ -517,24 +527,20 @@ func _show_level_up_popup(new_level: int) -> void:
 		add_child(level_up_popup)
 		level_up_popup.z_index = 200
 
-		level_up_popup.traits_confirmed.connect(_on_traits_confirmed)
+		level_up_popup.trait_selected.connect(_on_trait_selected)
 
 	# Pedir traits al RunManager
 	var hero_traits: Array[TraitResource] = RunState.get_random_hero_traits(3)
-	var enemy_traits: Array[TraitResource] = RunState.get_random_enemy_traits(3)
 
 	level_up_popup.show_popup(
 		new_level,
-		hero_traits,
-		enemy_traits
+		hero_traits
 	)
-func _on_traits_confirmed(hero_trait_res: TraitResource, enemy_trait_res: TraitResource) -> void:
-	print("ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Âª CONFIRMED TRAITS")
+func _on_trait_selected(hero_trait_res: TraitResource) -> void:
+	print("ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Âª CONFIRMED TRAIT")
 	print("   hero:", hero_trait_res)
-	print("   enemy:", enemy_trait_res)
 
 	RunState.apply_hero_trait(hero_trait_res)
-	RunState.apply_enemy_trait(enemy_trait_res)
 	RunState.save_run()
 
 
@@ -1085,6 +1091,9 @@ func _restore_active_enemies_if_needed() -> void:
 		var card: CardView = existing
 		if card == null:
 			card = _create_and_fit_card(slot, enemy_data)
+		else:
+			card.run_manager = RunState
+			card.trait_overlay = trait_overlay_view
 		if card == null:
 			continue
 		card.reparent(slot, true)

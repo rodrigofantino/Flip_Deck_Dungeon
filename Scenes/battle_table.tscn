@@ -13,6 +13,8 @@
 [ext_resource type="PackedScene" uid="uid://c5bbf25qofvfd" path="res://Scenes/cards/item_card.tscn" id="10_item_card"]
 [ext_resource type="Script" uid="uid://bw4hb1qx2c5sr" path="res://scripts/UI/hand_ui.gd" id="11_hand_ui_script"]
 [ext_resource type="Script" uid="uid://bqx4ck1xk8rrc" path="res://scripts/UI/hero_equip_zone.gd" id="12_equip_script"]
+[ext_resource type="PackedScene" path="res://Scenes/ui/battle/equipment_slots_view.tscn" id="13_equipment_slots_view"]
+[ext_resource type="PackedScene" path="res://Scenes/ui/trait_overlay_view.tscn" id="14_trait_overlay"]
 
 [node name="BattleTable" type="Control"]
 layout_mode = 3
@@ -170,6 +172,7 @@ grow_vertical = 2
 pivot_offset = Vector2(77.5, 107.5)
 
 [node name="HeroEquipZone" type="Control" parent="UI/HeroArea"]
+visible = false
 custom_minimum_size = Vector2(160, 360)
 layout_mode = 1
 anchors_preset = 4
@@ -246,6 +249,17 @@ custom_minimum_size = Vector2(60, 120)
 layout_mode = 2
 size_flags_vertical = 3
 
+[node name="EquipmentSlotsView" parent="UI/HeroArea" instance=ExtResource("13_equipment_slots_view")]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 21.0
+offset_top = -262.0
+offset_right = 201.0
+offset_bottom = 308.0
+grow_vertical = 2
+
 [node name="BattleHUD" parent="UI" instance=ExtResource("4_udct1")]
 layout_mode = 1
 anchors_preset = 10
@@ -255,6 +269,9 @@ offset_top = -22.0
 offset_right = 18.0
 offset_bottom = 78.0
 grow_vertical = 1
+
+[node name="TraitOverlayView" parent="UI" instance=ExtResource("14_trait_overlay")]
+layout_mode = 0
 
 [node name="HandUI" type="Control" parent="UI"]
 custom_minimum_size = Vector2(0, 200)
@@ -271,7 +288,6 @@ grow_vertical = 0
 pivot_offset = Vector2(400, 100)
 script = ExtResource("11_hand_ui_script")
 item_card_scene = ExtResource("10_item_card")
-equip_zone_path = NodePath("../HeroArea/HeroEquipZone")
 
 [node name="DefeatPopup" parent="UI" instance=ExtResource("5_tmutd")]
 visible = false

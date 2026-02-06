@@ -24,11 +24,14 @@ const MAX_HAND_SIZE: int = 6
 const MAX_EQUIP_SLOTS: int = 7
 const ITEM_DROP_CHANCE: float = 0.5
 const ITEM_ARCHETYPE_CATALOG_DEFAULT_PATH: String = "res://data/item_archetype_catalog_default.tres"
+const EQUIPMENT_LAYOUT_KNIGHT_PATH: String = "res://data/equipment_layouts/knight_layout.tres"
 
 @export var item_archetype_catalog: ItemArchetypeCatalog
+@export var equipment_layout_knight: EquipmentLayoutDefinition
 
 var item_instances: Dictionary = {}
 var item_instance_counter: int = 0
+var equipment_manager: EquipmentManager = null
 
 var hand_items: Array[String] = []
 var equipped_items: Array[String] = ["", "", "", "", "", "", ""]
@@ -129,6 +132,14 @@ var enemy_level_multiplier: float = 1.0
 var _upgrade_level_map: Dictionary = {}
 
 # =========================
+# HERO XP (SLOW LEVEL-UP)
+# =========================
+const XP_PER_COMMON_KILL: int = 1
+const XP_PER_MINI_BOSS: int = 3
+const BASE_XP_TO_LEVEL: int = 6
+const XP_PER_LEVEL_STEP: int = 4
+
+# =========================
 # BASE DE DATOS DE TRAITS
 # =========================
 const TRAIT_DB_PATH := "res://data/traits/trait_database_default.tres"
@@ -157,6 +168,9 @@ func _ready() -> void:
 		trait_database = load(TRAIT_DB_PATH)
 	if item_archetype_catalog == null:
 		item_archetype_catalog = load(ITEM_ARCHETYPE_CATALOG_DEFAULT_PATH)
+	if equipment_layout_knight == null:
+		equipment_layout_knight = load(EQUIPMENT_LAYOUT_KNIGHT_PATH)
+	_ensure_equipment_manager()
 	_ensure_boss_catalog()
 	_load_upgrade_levels()
 	_apply_equipment_to_hero()
@@ -235,6 +249,9 @@ func set_run_selection(hero_def_id: String, weights: Dictionary) -> void:
 	enemy_spawn_counter = 0
 	run_seed = int(Time.get_ticks_msec())
 	current_wave = 1
+	hero_level = 1
+	hero_xp = 0
+	xp_to_next_level = _calc_xp_to_next_level(hero_level)
 	item_instances.clear()
 	item_instance_counter = 0
 	hand_items.clear()
@@ -628,10 +645,21 @@ func recalculate_danger_level() -> void:
 func apply_enemy_rewards(enemy: Dictionary) -> void:
 	var enemy_level: int = int(enemy.get("level", 1))
 	var gold_reward: int = max(1, enemy_level)
-	var xp_reward: int = max(1, enemy_level)
+	var xp_reward: int = _calc_xp_reward(enemy)
 
 	_add_gold(gold_reward)
 	_add_hero_xp(xp_reward)
+
+func _calc_xp_reward(enemy: Dictionary) -> int:
+	if enemy.is_empty():
+		return 0
+	var is_boss: bool = bool(enemy.get("is_boss", false)) or enemy.has("boss_id")
+	if is_boss:
+		var boss_kind := int(enemy.get("boss_kind", BossDefinition.BossKind.MINI_BOSS))
+		if boss_kind == BossDefinition.BossKind.FINAL_BOSS:
+			return 0
+		return XP_PER_MINI_BOSS
+	return XP_PER_COMMON_KILL
 
 func apply_enemy_dust(enemy: Dictionary) -> void:
 	var enemy_level: int = int(enemy.get("level", 1))
@@ -840,6 +868,23 @@ func get_hand_items() -> Array[String]:
 func get_equipped_items() -> Array[String]:
 	return equipped_items.duplicate()
 
+func get_equipped_item_id_for_slot(slot_id: String) -> String:
+	var idx := _get_equipment_slot_index(slot_id)
+	if idx < 0:
+		return ""
+	if idx >= equipped_items.size():
+		return ""
+	return String(equipped_items[idx])
+
+func get_equipment_layout_for_class(class_id: String) -> EquipmentLayoutDefinition:
+	if class_id == "knight":
+		return equipment_layout_knight
+	return equipment_layout_knight
+
+func get_equipment_manager() -> EquipmentManager:
+	_ensure_equipment_manager()
+	return equipment_manager
+
 func _add_item_to_hand(item_id: String) -> void:
 	if item_id.is_empty():
 		return
@@ -849,6 +894,19 @@ func _add_item_to_hand(item_id: String) -> void:
 		hand_items.remove_at(0)
 	hand_items.append(item_id)
 	hand_changed.emit(hand_items)
+
+func equip_item_to_slot(slot_id: String, item_id: String) -> int:
+	if item_id.is_empty():
+		return EquipmentManager.EquipResult.FAILED
+	if not hand_items.has(item_id):
+		return EquipmentManager.EquipResult.FAILED
+	var instance := get_item_instance(item_id)
+	if instance == null:
+		return EquipmentManager.EquipResult.FAILED
+	_ensure_equipment_manager()
+	if equipment_manager == null:
+		return EquipmentManager.EquipResult.FAILED
+	return equipment_manager.equip(slot_id, instance)
 
 func debug_add_full_set_to_hand(_theme: String = "") -> void:
 	if item_archetype_catalog == null or item_archetype_catalog.archetypes.is_empty():
@@ -868,14 +926,60 @@ func equip_item_from_hand(item_id: String, slot_index: int) -> void:
 		return
 	if not item_instances.has(item_id):
 		return
+	_ensure_equipment_manager()
+	var instance := get_item_instance(item_id)
+	if equipment_manager != null and instance != null:
+		var slot_id := _get_slot_id_from_index(slot_index)
+		if not equipment_manager.can_equip(slot_id, instance):
+			return
 
 	var idx := _find_slot_for_item(item_id)
 	if idx == -1:
 		idx = _find_first_empty_slot()
-	if idx == -1:
-		idx = 0
+		if idx == -1:
+			idx = 0
 
 	equipped_items[idx] = item_id
+	hand_items.erase(item_id)
+	hand_changed.emit(hand_items)
+	equip_changed.emit(equipped_items)
+	_apply_equipment_to_hero()
+
+func _ensure_equipment_manager() -> void:
+	if equipment_manager != null:
+		return
+	equipment_manager = EquipmentManager.new()
+	if equipment_layout_knight == null:
+		equipment_layout_knight = load(EQUIPMENT_LAYOUT_KNIGHT_PATH)
+	equipment_manager.setup(equipment_layout_knight, self)
+
+func _get_equipment_slot_index(slot_id: String) -> int:
+	if equipment_layout_knight == null:
+		return -1
+	for i in range(equipment_layout_knight.slots.size()):
+		var slot_def := equipment_layout_knight.slots[i]
+		if slot_def != null and slot_def.slot_id == slot_id:
+			return i
+	return -1
+
+func _get_slot_id_from_index(slot_index: int) -> String:
+	if equipment_layout_knight == null:
+		return ""
+	if slot_index < 0 or slot_index >= equipment_layout_knight.slots.size():
+		return ""
+	var slot_def := equipment_layout_knight.slots[slot_index]
+	if slot_def == null:
+		return ""
+	return slot_def.slot_id
+
+func _equip_item_to_slot_index(slot_index: int, item_id: String) -> void:
+	if slot_index < 0 or slot_index >= MAX_EQUIP_SLOTS:
+		return
+	if item_id.is_empty():
+		return
+	if not hand_items.has(item_id):
+		return
+	equipped_items[slot_index] = item_id
 	hand_items.erase(item_id)
 	hand_changed.emit(hand_items)
 	equip_changed.emit(equipped_items)
@@ -915,10 +1019,6 @@ func _get_slot_key_from_archetype(archetype: ItemArchetype) -> String:
 	if archetype == null:
 		return ""
 	if archetype.item_type == CardDefinition.ItemType.ONE_HAND:
-		if "shield" in archetype.item_type_tags:
-			return "one_hand_shield"
-		if "sword" in archetype.item_type_tags:
-			return "one_hand_sword"
 		return "one_hand"
 	if archetype.item_type == CardDefinition.ItemType.TWO_HANDS:
 		return "two_hands"
@@ -998,6 +1098,9 @@ func _apply_equipment_to_hero() -> void:
 # XP Y LEVEL UP
 #############################
 func _add_hero_xp(amount: int) -> void:
+	if amount <= 0:
+		hero_xp_changed.emit(hero_xp, xp_to_next_level)
+		return
 	hero_xp += amount
 
 	while hero_xp >= xp_to_next_level:
@@ -1009,12 +1112,11 @@ func _add_hero_xp(amount: int) -> void:
 
 func _level_up() -> void:
 	hero_level += 1
-	xp_to_next_level = int(float(xp_to_next_level) * XP_GROWTH_FACTOR)
+	xp_to_next_level = _calc_xp_to_next_level(hero_level)
 	hero_level_multiplier *= HERO_LEVEL_UP_STAT_MULT
 	enemy_level_multiplier *= ENEMY_LEVEL_UP_STAT_MULT
 	_rescale_all_cards_from_definitions()
 	_sync_hero_card_level(true)
-	_clear_active_traits_on_level_up()
 	_apply_equipment_to_hero()
 	hero_level_up.emit(hero_level)
 
@@ -1034,6 +1136,9 @@ func _scale_stat(value: int, is_hero: bool, upgrade_level: int) -> int:
 	if upgrade_level > 0:
 		mult *= pow(_get_upgrade_multiplier(is_hero), upgrade_level)
 	return int(round(float(value) * mult))
+
+func _calc_xp_to_next_level(level: int) -> int:
+	return BASE_XP_TO_LEVEL + max(0, level - 1) * XP_PER_LEVEL_STEP
 
 func _get_upgrade_multiplier(is_hero: bool) -> float:
 	return HERO_LEVEL_UP_STAT_MULT if is_hero else ENEMY_LEVEL_UP_STAT_MULT
@@ -1112,10 +1217,8 @@ func _clear_active_traits_on_level_up() -> void:
 func get_random_hero_traits(amount: int) -> Array[TraitResource]:
 	if trait_database == null:
 		return []
-	return _get_random_traits_from_pool(
-		trait_database.hero_traits,
-		amount
-	)
+	var pool := _filter_active_traits(trait_database.hero_traits, active_hero_traits)
+	return _get_random_traits_from_pool(pool, amount)
 
 func get_random_enemy_traits(amount: int) -> Array[TraitResource]:
 	if trait_database == null:
@@ -1135,6 +1238,39 @@ func _get_random_traits_from_pool(
 	var copy := pool.duplicate()
 	copy.shuffle()
 	return copy.slice(0, min(amount, copy.size()))
+
+func _filter_active_traits(
+	pool: Array[TraitResource],
+	active: Array[TraitResource]
+) -> Array[TraitResource]:
+	if active.is_empty():
+		return pool.duplicate()
+	var active_ids: Array[String] = []
+	for trait_res in active:
+		if trait_res != null:
+			active_ids.append(trait_res.trait_id)
+	var result: Array[TraitResource] = []
+	for trait_res in pool:
+		if trait_res == null:
+			continue
+		if active_ids.has(trait_res.trait_id):
+			continue
+		result.append(trait_res)
+	return result
+
+func get_active_hero_traits() -> Array[TraitResource]:
+	return active_hero_traits.duplicate()
+
+func get_boss_traits_for_card(card_data: Dictionary) -> Array[TraitResource]:
+	if card_data.is_empty():
+		return []
+	var boss_id := String(card_data.get("boss_id", ""))
+	if boss_id.is_empty():
+		return []
+	var boss_def := get_boss_definition(boss_id)
+	if boss_def == null:
+		return []
+	return boss_def.boss_traits.duplicate()
 
 
 ########################
@@ -1270,7 +1406,7 @@ func load_run():
 	enemies_defeated_in_wave = int(data.get("enemies_defeated_in_wave", 0))
 	hero_level = int(data.get("hero_level", 1))
 	hero_xp = int(data.get("hero_xp", 0))
-	xp_to_next_level = int(data.get("xp_to_next_level", 4))
+	xp_to_next_level = _calc_xp_to_next_level(hero_level)
 	cards = data.get("cards", {})
 	_load_upgrade_levels()
 	_sync_hero_card_level(false)
@@ -1622,7 +1758,7 @@ func reset_run(new_mode: String = "normal") -> void:
 	enemies_defeated_in_wave = 0
 	hero_level = 1
 	hero_xp = 0
-	xp_to_next_level = 4
+	xp_to_next_level = _calc_xp_to_next_level(hero_level)
 	hero_level_multiplier = 1.0
 	enemy_level_multiplier = 1.0
 	_upgrade_level_map.clear()

@@ -4,7 +4,7 @@ class_name LevelUpPopup
 # =========================
 # SEÑALES
 # =========================
-signal traits_confirmed(hero_trait_res, enemy_trait_res)
+signal trait_selected(trait_res: TraitResource)
 
 # =========================
 # NODOS
@@ -14,6 +14,7 @@ signal traits_confirmed(hero_trait_res, enemy_trait_res)
 
 @onready var hero_traits_container: HBoxContainer = $Panel/"popup container"/HeroColumn/HeroTraitsContainer
 @onready var enemy_traits_container: HBoxContainer = $Panel/"popup container"/EnemyColumn/EnemyTraitsContainer
+@onready var enemy_column: Control = $Panel/"popup container"/EnemyColumn
 
 @export var trait_card_scene: PackedScene
 
@@ -21,7 +22,6 @@ signal traits_confirmed(hero_trait_res, enemy_trait_res)
 # ESTADO
 # =========================
 var selected_hero_trait_res: TraitResource = null
-var selected_enemy_trait_res: TraitResource = null
 
 # =========================
 # CICLO DE VIDA
@@ -31,6 +31,8 @@ func _ready() -> void:
 
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	confirm_button.process_mode = Node.PROCESS_MODE_ALWAYS
+	if enemy_column != null:
+		enemy_column.visible = false
 
 	confirm_button.text = tr("LEVEL_UP_POPUP_BUTTON_CONFIRM")
 	confirm_button.pressed.connect(_on_confirm_pressed)
@@ -40,12 +42,11 @@ func _ready() -> void:
 # =========================
 func show_popup(
 	new_level: int,
-	hero_traits: Array,
-	enemy_traits: Array
+	hero_traits: Array
 ) -> void:
 	level_label.text = tr("LEVEL_UP_POPUP_TITLE_LEVEL_REACHED") % new_level
 
-	_populate_traits(hero_traits, enemy_traits)
+	_populate_traits(hero_traits)
 
 	show()
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -63,18 +64,14 @@ func hide_popup() -> void:
 # =========================
 # TRAITS
 # =========================
-func _populate_traits(hero_traits: Array, enemy_traits: Array) -> void:
+func _populate_traits(hero_traits: Array) -> void:
 	_clear_traits()
 
 	selected_hero_trait_res = null
-	selected_enemy_trait_res = null
 	confirm_button.disabled = true
 
 	for trait_res in hero_traits:
 		_create_trait_card(trait_res, true)
-
-	for trait_res in enemy_traits:
-		_create_trait_card(trait_res, false)
 
 func _clear_traits() -> void:
 	for child in hero_traits_container.get_children():
@@ -103,9 +100,6 @@ func _on_trait_selected(trait_res: TraitResource, is_hero: bool, card: TraitCard
 	if is_hero:
 		selected_hero_trait_res = trait_res
 		_update_group_visual(hero_traits_container, card)
-	else:
-		selected_enemy_trait_res = trait_res
-		_update_group_visual(enemy_traits_container, card)
 
 	_update_confirm_state()
 
@@ -117,7 +111,6 @@ func _update_group_visual(container: Control, selected_card: TraitCard) -> void:
 func _update_confirm_state() -> void:
 	confirm_button.disabled = (
 		selected_hero_trait_res == null
-		or selected_enemy_trait_res == null
 	)
 
 # =========================
@@ -126,11 +119,6 @@ func _update_confirm_state() -> void:
 func _on_confirm_pressed() -> void:
 	print("[LevelUpPopup] CONFIRMED")
 	print("Hero trait:", selected_hero_trait_res.display_name)
-	print("Enemy trait:", selected_enemy_trait_res.display_name)
-
-	traits_confirmed.emit(
-		selected_hero_trait_res,
-		selected_enemy_trait_res
-	)
+	trait_selected.emit(selected_hero_trait_res)
 
 	hide_popup()

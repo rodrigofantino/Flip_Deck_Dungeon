@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="EquipmentLayoutDefinition" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://data/equipment_layout_definition.gd" id="1_layout"]
+[ext_resource type="Script" path="res://data/equipment_slot_definition.gd" id="2_slot"]
+
+[sub_resource type="Resource" id="slot_helmet"]
+script = ExtResource("2_slot")
+slot_id = "helmet"
+accepts_item_type = 0
+
+[sub_resource type="Resource" id="slot_armour"]
+script = ExtResource("2_slot")
+slot_id = "armour"
+accepts_item_type = 1
+
+[sub_resource type="Resource" id="slot_gloves"]
+script = ExtResource("2_slot")
+slot_id = "gloves"
+accepts_item_type = 2
+
+[sub_resource type="Resource" id="slot_boots"]
+script = ExtResource("2_slot")
+slot_id = "boots"
+accepts_item_type = 3
+
+[sub_resource type="Resource" id="slot_one_hand"]
+script = ExtResource("2_slot")
+slot_id = "one_hand"
+accepts_item_type = 4
+
+[sub_resource type="Resource" id="slot_two_hands"]
+script = ExtResource("2_slot")
+slot_id = "two_hands"
+accepts_item_type = 5
+
+[resource]
+script = ExtResource("1_layout")
+class_id = "knight"
+slots = [
+	SubResource("slot_helmet"),
+	SubResource("slot_armour"),
+	SubResource("slot_gloves"),
+	SubResource("slot_boots"),
+	SubResource("slot_one_hand"),
+	SubResource("slot_two_hands")
+]

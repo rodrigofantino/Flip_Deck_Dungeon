@@ -32,6 +32,8 @@ const FLIP_SFX_BUS: String = "SFX"
 
 var card_id: String = ""
 var flip_sfx: AudioStreamPlayer = null
+var run_manager: RunManager = null
+var trait_overlay: TraitOverlayView = null
 
 # =========================
 # INIT
@@ -41,6 +43,9 @@ func _ready() -> void:
 	_setup_flip_sfx()
 	if not is_in_group("card_view"):
 		add_to_group("card_view")
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
 
 func _setup_flip_sfx() -> void:
 	if flip_sfx != null:
@@ -212,6 +217,32 @@ func _play_flip_sfx() -> void:
 	if flip_sfx.playing:
 		flip_sfx.stop()
 	flip_sfx.play()
+
+# =========================
+# TRAIT OVERLAY
+# =========================
+
+func _on_mouse_entered() -> void:
+	if trait_overlay == null or run_manager == null:
+		return
+	var data: Dictionary = run_manager.get_card(card_id)
+	if data.is_empty():
+		return
+	var traits: Array[TraitResource] = []
+	if card_id == "th":
+		traits = run_manager.get_active_hero_traits()
+	elif bool(data.get("is_boss", false)) or data.has("boss_id"):
+		traits = run_manager.get_boss_traits_for_card(data)
+	else:
+		return
+	if traits.is_empty():
+		return
+	trait_overlay.show_for_traits(traits, get_global_rect())
+
+func _on_mouse_exited() -> void:
+	if trait_overlay == null:
+		return
+	trait_overlay.hide_overlay()
 
 # =========================
 # ARTE

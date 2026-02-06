@@ -8,21 +8,14 @@ const HAND_SCALE: float = 0.2548
 const HOVER_SCALE: float = 1.2
 const LAYOUT_TWEEN_TIME: float = 0.2
 const STATE_IN_HAND: int = 0
-const STATE_DRAGGING: int = 1
 
 @export var item_card_scene: PackedScene
-@export var equip_zone_path: NodePath
 
 var _cards: Array[Control] = []
 var _base_pose: Dictionary = {}
-var _dragging_card: Control = null
-var _equip_zone: HeroEquipZone = null
 var _current_items: Array[String] = []
 
 func _ready() -> void:
-	if equip_zone_path != NodePath():
-		_equip_zone = get_node_or_null(equip_zone_path) as HeroEquipZone
-
 	if RunState:
 		RunState.hand_changed.connect(_on_hand_changed)
 		_on_hand_changed(RunState.get_hand_items())
@@ -59,7 +52,6 @@ func _rebuild_cards(items: Array[String]) -> void:
 			card.queue_free()
 	_cards.clear()
 	_base_pose.clear()
-	_dragging_card = null
 	_current_items = items.duplicate()
 
 	if item_card_scene == null:
@@ -83,9 +75,6 @@ func _layout_cards() -> void:
 		var card := _cards[i]
 		if card == null:
 			continue
-		if card == _dragging_card:
-			continue
-
 		var pose := _get_pose_for_index(i, n, center, card.size)
 		_base_pose[card] = pose
 		_apply_card_pose(card, pose["pos"], pose["rot"], Vector2.ONE * HAND_SCALE)
@@ -129,10 +118,6 @@ func _create_card_for_item(item_id: String) -> Control:
 		card.connect("hover_entered", Callable(self, "_on_card_hover_entered"))
 	if card.has_signal("hover_exited"):
 		card.connect("hover_exited", Callable(self, "_on_card_hover_exited"))
-	if card.has_signal("drag_started"):
-		card.connect("drag_started", Callable(self, "_on_card_drag_started"))
-	if card.has_signal("drag_released"):
-		card.connect("drag_released", Callable(self, "_on_card_drag_released"))
 
 	return card
 
@@ -150,7 +135,7 @@ func _reflow_existing_cards() -> void:
 	var center := Vector2(size.x * 0.5, size.y * 0.5)
 	for i in range(n):
 		var card := _cards[i]
-		if card == null or card == _dragging_card:
+		if card == null:
 			continue
 		var pose := _get_pose_for_index(i, n, center, card.size)
 		_base_pose[card] = pose
@@ -198,7 +183,7 @@ func _apply_card_pose(card: Control, pos: Vector2, rot: float, scale: Vector2) -
 	card.scale = scale
 
 func _on_card_hover_entered(card: Control) -> void:
-	if card == null or card == _dragging_card:
+	if card == null:
 		return
 	_reflow_existing_cards()
 	if not _base_pose.has(card):
@@ -214,43 +199,10 @@ func _on_card_hover_entered(card: Control) -> void:
 	_tween_card_to(card, hover_pos, base_rot, Vector2.ONE * HAND_SCALE * HOVER_SCALE)
 
 func _on_card_hover_exited(card: Control) -> void:
-	if card == null or card == _dragging_card:
+	if card == null:
 		return
 	_return_card_to_hand(card)
 	_reflow_existing_cards()
-
-func _on_card_drag_started(card: Control) -> void:
-	if card == null:
-		return
-	_dragging_card = card
-	card.z_index = 2000
-	if card.has_method("set_state"):
-		card.call("set_state", STATE_DRAGGING)
-
-func _on_card_drag_released(card: Control, global_pos: Vector2) -> void:
-	if card == null:
-		return
-
-	var item_id := String(card.get("item_id"))
-
-	var accepted := false
-	if _equip_zone != null and _equip_zone.is_point_in_zone(global_pos):
-		if _equip_zone.can_accept(item_id):
-			var slot_index := _equip_zone.accept(item_id)
-			RunState.equip_item_from_hand(item_id, slot_index)
-			accepted = true
-	if not accepted and _equip_zone != null and _is_point_over_hero(global_pos):
-		if _equip_zone.can_accept(item_id):
-			var slot_index := _equip_zone.accept(item_id)
-			RunState.equip_item_from_hand(item_id, slot_index)
-			accepted = true
-
-	if not accepted:
-		_return_card_to_hand(card)
-
-	_dragging_card = null
-	if card.has_method("set_state"):
-		card.call("set_state", STATE_IN_HAND)
 
 func _return_card_to_hand(card: Control) -> void:
 	if card == null:
@@ -263,13 +215,5 @@ func _return_card_to_hand(card: Control) -> void:
 	card.z_index = 0
 	_tween_card_to(card, base_pos, base_rot, Vector2.ONE * HAND_SCALE)
 
-func _is_point_over_hero(global_pos: Vector2) -> bool:
-	for node in get_tree().get_nodes_in_group("card_view"):
-		if not (node is CardView):
-			continue
-		var card := node as CardView
-		if card.card_id != "th":
-			continue
-		if card.get_global_rect().has_point(global_pos):
-			return true
+func _is_point_over_hero(_global_pos: Vector2) -> bool:
 	return false
