@@ -60,3 +60,59 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="RunControls" type="HBoxContainer" parent="."]
+visible = false
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = -26.0
+offset_right = -4.0
+offset_bottom = -4.0
+mouse_filter = 1
+alignment = 1
+
+[node name="IncludeCheck" type="CheckBox" parent="RunControls"]
+layout_mode = 2
+text = "Incluir"
+
+[node name="WeightLabel" type="Label" parent="RunControls"]
+layout_mode = 2
+text = "Peso"
+
+[node name="WeightSpin" type="SpinBox" parent="RunControls"]
+layout_mode = 2
+min_value = 1.0
+max_value = 3.0
+step = 1.0
+rounded = true
+allow_greater = false
+allow_lesser = false
+
+[node name="ItemTypeOverlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+mouse_filter = 2
+
+[node name="OverlayLabel" type="Label" parent="ItemTypeOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 6.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = -6.0
+autowrap_mode = 3
+mouse_filter = 2

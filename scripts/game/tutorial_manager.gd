@@ -9,7 +9,10 @@ func start_tutorial():
 	SaveSystem.ensure_collection()
 	RunState.reset_run("tutorial")
 	RunState.clear_tutorial_cards()
-	RunState.set_run_selection(TUTORIAL_HERO_DEF_ID, TUTORIAL_ENEMY_TYPES)
+	var weights: Dictionary = {}
+	for enemy_id in TUTORIAL_ENEMY_TYPES:
+		weights[enemy_id] = 1
+	RunState.set_run_selection(TUTORIAL_HERO_DEF_ID, weights)
 	RunState.save_run()
 
 func end_tutorial():

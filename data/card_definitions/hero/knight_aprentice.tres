@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://b4j1cc7qna18q"]
 
 [ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/card_definition.gd" id="1_fgiq4"]
-[ext_resource type="Texture2D" uid="uid://bh5cnhjxrrtin" path="res://assets/cards/art/tutorial_knight_aprentice.png" id="1_nju0v"]
+[ext_resource type="Texture2D" uid="uid://bh5cnhjxrrtin" path="res://assets/cards/art/hero/knight_aprentice.png" id="1_nju0v"]
 [ext_resource type="Texture2D" uid="uid://c1x62iswoiqc7" path="res://assets/cards/frame/card_front_final.png" id="2_5l7ja"]
 
 [resource]

@@ -23,9 +23,12 @@ var enemy_draw_queues_by_deck: Array = [] # Array[Array[Dictionary]] (orden real
 const MAX_HAND_SIZE: int = 6
 const MAX_EQUIP_SLOTS: int = 7
 const ITEM_DROP_CHANCE: float = 0.5
-const ITEM_CATALOG_DEFAULT_PATH: String = "res://data/item_catalog_default.tres"
+const ITEM_ARCHETYPE_CATALOG_DEFAULT_PATH: String = "res://data/item_archetype_catalog_default.tres"
 
-@export var item_catalog: ItemCatalog
+@export var item_archetype_catalog: ItemArchetypeCatalog
+
+var item_instances: Dictionary = {}
+var item_instance_counter: int = 0
 
 var hand_items: Array[String] = []
 var equipped_items: Array[String] = ["", "", "", "", "", "", ""]
@@ -56,6 +59,7 @@ signal hand_changed(hand_items: Array[String])
 signal equip_changed(equipped_items: Array[String])
 signal hero_stats_changed()
 signal set_completed(theme: String, item_ids: Array[String])
+signal dust_changed(new_dust: int, delta: int)
 
 # =========================
 # ESTADO ECONOMÃƒÆ’Ã‚ÂA / RIESGO
@@ -67,6 +71,21 @@ var active_decks_count: int = 1
 const MAX_ACTIVE_DECKS: int = 5
 var enemies_defeated_count: int = 0
 @export var crossroads_every_n: int = 3
+var dust: int = 0
+
+# =========================
+# WAVES
+# =========================
+signal wave_started(wave_index: int, waves_total: int)
+signal wave_progress_changed(wave_index: int, defeated: int, total: int)
+signal wave_completed(wave_index: int)
+signal final_boss_started(boss_id: String)
+signal mini_boss_started(boss_id: String)
+
+var current_wave: int = 1
+var waves_per_run: int = 20
+var enemies_per_wave: int = 5
+var enemies_defeated_in_wave: int = 0
 
 # =========================
 # TRAITS ACTIVOS
@@ -83,13 +102,13 @@ var active_enemy_ids: Array[String] = []
 # =========================
 var selected_hero_def_id: String = ""
 var selected_enemy_types: Array[String] = []
+var enemy_weights: Dictionary = {}
 var run_deck_types: Array[String] = [] # Deck 0 (legacy/compat)
 var run_deck_types_by_deck: Array = [] # Array[Array[String]]
 var run_seed: int = 0
 var enemy_spawn_counter: int = 0
 const RUN_DECK_SIZE: int = 20
-var current_wave: int = 1
-const MAX_WAVES: int = 5
+const MAX_WAVES: int = 20
 
 # =========================
 # PROGRESIÃƒÆ’Ã¢â‚¬Å“N DEL JUGADOR
@@ -115,14 +134,30 @@ var _upgrade_level_map: Dictionary = {}
 const TRAIT_DB_PATH := "res://data/traits/trait_database_default.tres"
 @export var trait_database: TraitDatabase
 
+# =========================
+# BOSSES
+# =========================
+const BOSS_DEFS_FOLDER := "res://data/bosses/defs"
+const MINI_BOSS_WAVES: Array[int] = [5, 10, 15]
+const FINAL_BOSS_WAVES: Array[int] = [20]
+const MINI_BOSS_IDS: Array[String] = [
+	"forest_stag_king",
+	"forest_boar_warden",
+	"forest_fungus_patriarch"
+]
+const FINAL_BOSS_ID: String = "forest_fallen_elf"
+
+@export var boss_catalog: BossCatalog
+
 
 
 func _ready() -> void:
 	item_drop_rng.randomize()
 	if trait_database == null:
 		trait_database = load(TRAIT_DB_PATH)
-	if item_catalog == null:
-		item_catalog = load(ITEM_CATALOG_DEFAULT_PATH)
+	if item_archetype_catalog == null:
+		item_archetype_catalog = load(ITEM_ARCHETYPE_CATALOG_DEFAULT_PATH)
+	_ensure_boss_catalog()
 	_load_upgrade_levels()
 	_apply_equipment_to_hero()
 
@@ -131,6 +166,19 @@ func _ready() -> void:
 	else:
 		print("[RunManager] TraitDatabase cargada OK")
 		debug_print_traits()
+
+func _ensure_boss_catalog() -> void:
+	if boss_catalog == null:
+		boss_catalog = BossCatalog.new()
+		boss_catalog.bosses_folder = BOSS_DEFS_FOLDER
+	boss_catalog.load_all()
+
+func get_boss_definition(boss_id: String) -> BossDefinition:
+	if boss_catalog == null:
+		_ensure_boss_catalog()
+	if boss_catalog == null:
+		return null
+	return boss_catalog.get_by_id(boss_id)
 
 ######################################
 # INIT RUN
@@ -162,21 +210,88 @@ func init_run() -> void:
 		else:
 			recalc_card_stats(card, active_enemy_traits)
 
+	if not run_loaded:
+		start_wave_encounter()
+
 
 
 # =========================
 # =========================
 # SELECCION / RUN DECK (TYPES)
 # =========================
-func set_run_selection(hero_def_id: String, enemy_types: Array[String]) -> void:
+func set_run_selection(hero_def_id: String, weights: Dictionary) -> void:
 	selected_hero_def_id = hero_def_id
-	selected_enemy_types = enemy_types.duplicate()
+	enemy_weights.clear()
+	for key in weights.keys():
+		var enemy_id := String(key)
+		if enemy_id == "":
+			continue
+		var weight := int(weights.get(key, 1))
+		enemy_weights[enemy_id] = clampi(weight, 1, 3)
+	_sync_selected_enemy_types_from_weights()
 	run_deck_types.clear()
 	run_deck_types_by_deck.clear()
 	enemy_draw_queues_by_deck.clear()
 	enemy_spawn_counter = 0
 	run_seed = int(Time.get_ticks_msec())
 	current_wave = 1
+	item_instances.clear()
+	item_instance_counter = 0
+	hand_items.clear()
+	equipped_items = ["", "", "", "", "", "", ""]
+
+func set_enemy_selected(enemy_id: String, selected: bool) -> void:
+	if enemy_id.is_empty():
+		return
+	if selected:
+		if not enemy_weights.has(enemy_id):
+			enemy_weights[enemy_id] = 1
+	else:
+		enemy_weights.erase(enemy_id)
+	_sync_selected_enemy_types_from_weights()
+
+func set_enemy_weight(enemy_id: String, weight: int) -> void:
+	if enemy_id.is_empty():
+		return
+	if not enemy_weights.has(enemy_id):
+		return
+	enemy_weights[enemy_id] = clampi(weight, 1, 3)
+
+func get_selected_enemy_ids() -> Array[String]:
+	return _get_enemy_weights_keys()
+
+func is_valid_selection() -> bool:
+	var count := enemy_weights.size()
+	if count < 2 or count > 5:
+		return false
+	for key in enemy_weights.keys():
+		var weight := int(enemy_weights.get(key, 0))
+		if weight < 1 or weight > 3:
+			return false
+	return true
+
+func get_selection_error_message() -> String:
+	var count := enemy_weights.size()
+	if count < 2:
+		return "Seleccioná al menos 2 enemigos."
+	if count > 5:
+		return "Máximo 5 enemigos."
+	for key in enemy_weights.keys():
+		var weight := int(enemy_weights.get(key, 0))
+		if weight < 1 or weight > 3:
+			return "Peso inválido en selección."
+	return ""
+
+func _sync_selected_enemy_types_from_weights() -> void:
+	selected_enemy_types = _get_enemy_weights_keys()
+
+func _get_enemy_weights_keys() -> Array[String]:
+	var ids: Array[String] = []
+	for key in enemy_weights.keys():
+		var id_str := String(key)
+		if id_str != "":
+			ids.append(id_str)
+	return ids
 
 func build_run_deck_from_selection() -> void:
 	if selected_enemy_types.is_empty():
@@ -271,7 +386,7 @@ func create_card_instance(
 	else:
 		card_level = def.level + max(0, hero_level - 1) + upgrade_level
 
-	var card := {
+	var card: Dictionary = {
 		"id": id,
 		"definition": definition_key,
 		"is_tutorial": is_tutorial,
@@ -310,6 +425,57 @@ func create_card_instance(
 			
 
 	return card
+
+func create_boss_instance(
+	boss_def: BossDefinition,
+	deck_index: int = 0
+) -> Dictionary:
+	if boss_def == null:
+		return {}
+
+	var id := _generate_boss_instance_id(boss_def.boss_id)
+	var trait_ids: Array[String] = []
+	for trait_res in boss_def.boss_traits:
+		if trait_res != null and not trait_res.trait_id.strip_edges().is_empty():
+			trait_ids.append(trait_res.trait_id)
+
+	var card: Dictionary = {
+		"id": id,
+		"definition": boss_def.boss_id,
+		"boss_id": boss_def.boss_id,
+		"is_boss": true,
+		"boss_kind": boss_def.boss_kind,
+		"boss_trait_ids": trait_ids,
+		"deck_index": deck_index,
+
+		# BASE
+		"base_hp": boss_def.base_max_hp,
+		"base_damage": boss_def.base_damage,
+		"base_initiative": boss_def.base_initiative,
+		"base_armour": boss_def.base_armour,
+
+		# RUNTIME
+		"max_hp": boss_def.base_max_hp,
+		"current_hp": boss_def.base_max_hp,
+		"damage": boss_def.base_damage,
+		"initiative": boss_def.base_initiative,
+		"armour": boss_def.base_armour,
+
+		"level": boss_def.base_level,
+		"upgrade_level": 0
+	}
+
+	cards[id] = card
+	recalc_card_stats(card, active_enemy_traits)
+	return card
+
+func _generate_boss_instance_id(boss_id: String) -> String:
+	var index := 1
+	var id := "b_%s_%d" % [boss_id, index]
+	while cards.has(id):
+		index += 1
+		id = "b_%s_%d" % [boss_id, index]
+	return id
 
 func recalc_card_stats(
 	card: Dictionary,
@@ -415,17 +581,6 @@ func are_enemy_draw_queues_empty() -> bool:
 ########################################
 # LIMPIEZA DE CARTAS DE TUTORIAL
 ########################################
-func clear_tutorial_cards():
-	var ids_to_remove := []
-
-	for id in cards.keys():
-		if id.begins_with("t"):
-			ids_to_remove.append(id)
-
-	for id in ids_to_remove:
-		cards.erase(id)
-
-
 ########################################
 # CONSULTA DE CARTAS
 ########################################
@@ -434,13 +589,6 @@ func get_card(id: String) -> Dictionary:
 
 func get_all_cards() -> Array:
 	return cards.values()
-
-func get_tutorial_cards():
-	var result := []
-	for card in cards.values():
-		if card.is_tutorial:
-			result.append(card)
-	return result
 
 
 ###########################
@@ -485,23 +633,157 @@ func apply_enemy_rewards(enemy: Dictionary) -> void:
 	_add_gold(gold_reward)
 	_add_hero_xp(xp_reward)
 
-func try_drop_item_from_enemy() -> void:
-	if item_catalog == null or item_catalog.items.is_empty():
+func apply_enemy_dust(enemy: Dictionary) -> void:
+	var enemy_level: int = int(enemy.get("level", 1))
+	var dust_gain: int = 2 * enemy_level
+	dust += dust_gain
+	dust_changed.emit(dust, dust_gain)
+
+func try_drop_item_from_enemy(enemy_data: Dictionary) -> void:
+	if item_archetype_catalog == null or item_archetype_catalog.archetypes.is_empty():
+		return
+	if enemy_data.is_empty():
 		return
 	if item_drop_rng.randf() > ITEM_DROP_CHANCE:
 		return
-	var pool: Array[ItemCardDefinition] = []
-	for item_def in item_catalog.items:
-		if item_def != null:
-			pool.append(item_def)
+
+	var def_id := String(enemy_data.get("definition", ""))
+	var enemy_def: CardDefinition = null
+	if not def_id.is_empty():
+		enemy_def = CardDatabase.get_definition(def_id)
+
+	var item_type := roll_item_type_for_enemy(enemy_def)
+	var pool := item_archetype_catalog.get_by_type_and_class(item_type, "knight")
+	if pool.is_empty():
+		pool = item_archetype_catalog.archetypes.duplicate()
 	if pool.is_empty():
 		return
 	var idx := item_drop_rng.randi_range(0, pool.size() - 1)
-	var def: ItemCardDefinition = pool[idx]
-	if def == null:
+	var archetype: ItemArchetype = pool[idx]
+	if archetype == null:
 		return
-	_add_item_to_hand(def.item_id)
-	item_dropped.emit(def.item_id)
+
+	var enemy_level: int = int(enemy_data.get("level", 1))
+	var instance := _create_item_instance(archetype, enemy_level)
+	if instance == null:
+		return
+	_add_item_to_hand(instance.instance_id)
+	item_dropped.emit(instance.instance_id)
+
+func roll_item_type_for_enemy(enemy_def: CardDefinition) -> int:
+	var weights: Dictionary = {}
+	if enemy_def != null:
+		weights = enemy_def.get_allowed_item_type_weights()
+	if weights.is_empty():
+		weights = CardDefinition._get_default_item_type_weights()
+
+	var total_weight: int = 0
+	for key in weights.keys():
+		var weight := int(weights.get(key, 0))
+		if weight > 0:
+			total_weight += weight
+	if total_weight <= 0:
+		weights = CardDefinition._get_default_item_type_weights()
+		for key in weights.keys():
+			var weight := int(weights.get(key, 0))
+			if weight > 0:
+				total_weight += weight
+		if total_weight <= 0:
+			return int(CardDefinition.ItemType.HELMET)
+
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var roll := rng.randi_range(1, total_weight)
+	var acc: int = 0
+	var keys: Array = weights.keys()
+	keys.sort()
+	for key in keys:
+		var weight := int(weights.get(key, 0))
+		if weight <= 0:
+			continue
+		acc += weight
+		if roll <= acc:
+			return int(key)
+	return int(CardDefinition.ItemType.HELMET)
+
+func get_item_instance(item_id: String) -> ItemInstance:
+	if item_id.is_empty():
+		return null
+	var raw: Variant = item_instances.get(item_id, null)
+	if raw is ItemInstance:
+		return raw
+	return null
+
+func _create_item_instance(archetype: ItemArchetype, enemy_level: int) -> ItemInstance:
+	if archetype == null:
+		return null
+	var instance := ItemInstance.new()
+	item_instance_counter += 1
+	instance.instance_id = "it_%s_%d" % [archetype.item_id, item_instance_counter]
+	instance.archetype = archetype
+	instance.item_level = max(1, enemy_level)
+	instance.rarity = _roll_item_rarity()
+	instance.mods = _roll_item_mods(instance.rarity, archetype.item_class)
+	item_instances[instance.instance_id] = instance
+	return instance
+
+func _create_random_item_instance_for_debug() -> ItemInstance:
+	if item_archetype_catalog == null or item_archetype_catalog.archetypes.is_empty():
+		return null
+	var idx := item_drop_rng.randi_range(0, item_archetype_catalog.archetypes.size() - 1)
+	var archetype: ItemArchetype = item_archetype_catalog.archetypes[idx]
+	return _create_item_instance(archetype, 1)
+
+func _roll_item_rarity() -> int:
+	var roll := item_drop_rng.randi_range(1, 100)
+	if roll <= 70:
+		return 1
+	if roll <= 90:
+		return 2
+	if roll <= 98:
+		return 3
+	return 4
+
+func _roll_item_mods(count: int, item_class: String) -> Array[ItemMod]:
+	var result: Array[ItemMod] = []
+	if count <= 0:
+		return result
+	var pool := _get_mod_pool_for_class(item_class)
+	if pool.is_empty():
+		return result
+	var available := pool.duplicate()
+	for i in range(count):
+		if available.is_empty():
+			break
+		var idx := item_drop_rng.randi_range(0, available.size() - 1)
+		var mod: ItemMod = available[idx]
+		available.remove_at(idx)
+		result.append(mod)
+	return result
+
+func _get_mod_pool_for_class(item_class: String) -> Array[ItemMod]:
+	var pool: Array[ItemMod] = []
+	if item_class != "knight":
+		return pool
+	# Pool Knight V1 (solo stats soportadas)
+	pool.append(_build_mod("knight_armour_1", 1, 0, 0, 0))
+	pool.append(_build_mod("knight_armour_2", 2, 0, 0, 0))
+	pool.append(_build_mod("knight_damage_1", 0, 1, 0, 0))
+	pool.append(_build_mod("knight_damage_2", 0, 2, 0, 0))
+	pool.append(_build_mod("knight_life_2", 0, 0, 2, 0))
+	pool.append(_build_mod("knight_life_3", 0, 0, 3, 0))
+	pool.append(_build_mod("knight_initiative_1", 0, 0, 0, 1))
+	pool.append(_build_mod("knight_initiative_2", 0, 0, 0, 2))
+	return pool
+
+func _build_mod(id: String, armour: int, damage: int, life: int, initiative: int) -> ItemMod:
+	var mod := ItemMod.new()
+	mod.mod_id = id
+	mod.armour_flat = armour
+	mod.damage_flat = damage
+	mod.life_flat = life
+	mod.initiative_flat = initiative
+	return mod
 
 func register_enemy_defeated(has_remaining_enemies: bool) -> void:
 	enemies_defeated_count += 1
@@ -543,6 +825,7 @@ func apply_withdraw_25_cost_75() -> Dictionary:
 	var withdraw_amount: int = int(preview.get("withdraw", 0))
 	var cost_amount: int = int(preview.get("cost", 0))
 	gold = 0
+	dust = 0
 	gold_changed.emit(gold)
 	if withdraw_amount > 0:
 		SaveSystem.add_persistent_gold(withdraw_amount)
@@ -560,66 +843,39 @@ func get_equipped_items() -> Array[String]:
 func _add_item_to_hand(item_id: String) -> void:
 	if item_id.is_empty():
 		return
+	if not item_instances.has(item_id):
+		return
 	if hand_items.size() >= MAX_HAND_SIZE:
 		hand_items.remove_at(0)
 	hand_items.append(item_id)
 	hand_changed.emit(hand_items)
 
-func debug_add_full_set_to_hand(theme: String = "") -> void:
-	if item_catalog == null:
+func debug_add_full_set_to_hand(_theme: String = "") -> void:
+	if item_archetype_catalog == null or item_archetype_catalog.archetypes.is_empty():
 		return
-	var selected_theme := theme
-	if selected_theme.is_empty():
-		selected_theme = _pick_theme_with_most_items(_build_theme_item_map())
-	if selected_theme.is_empty():
-		return
-	var items := _get_theme_requirement_items(selected_theme)
 	var added := 0
-	for item_id in items:
-		_add_item_to_hand(item_id)
-		added += 1
-		if added >= MAX_HAND_SIZE:
+	while added < min(MAX_HAND_SIZE, 4):
+		var instance := _create_random_item_instance_for_debug()
+		if instance == null:
 			break
-
-func _build_theme_item_map() -> Dictionary:
-	var map := {}
-	if item_catalog == null:
-		return map
-	for item_def in item_catalog.items:
-		if item_def == null:
-			continue
-		var theme := _get_item_theme(item_def.item_id)
-		if theme.is_empty() or theme == "none":
-			continue
-		if not map.has(theme):
-			map[theme] = []
-		(map[theme] as Array).append(item_def.item_id)
-	return map
-
-func _pick_theme_with_most_items(theme_map: Dictionary) -> String:
-	var best_theme := ""
-	var best_count := 0
-	for theme in theme_map.keys():
-		var items: Array = theme_map[theme]
-		if items.size() > best_count:
-			best_count = items.size()
-			best_theme = String(theme)
-	return best_theme
+		_add_item_to_hand(instance.instance_id)
+		added += 1
 
 func equip_item_from_hand(item_id: String, slot_index: int) -> void:
 	if item_id.is_empty():
 		return
 	if not hand_items.has(item_id):
 		return
+	if not item_instances.has(item_id):
+		return
 
 	var idx := _find_slot_for_item(item_id)
 	if idx == -1:
 		idx = _find_first_empty_slot()
-		if idx == -1:
-			idx = 0
+	if idx == -1:
+		idx = 0
 
 	equipped_items[idx] = item_id
-	_try_complete_set_for_item(item_id)
 	hand_items.erase(item_id)
 	hand_changed.emit(hand_items)
 	equip_changed.emit(equipped_items)
@@ -643,91 +899,11 @@ func _find_first_empty_slot() -> int:
 			return i
 	return -1
 
-func _get_item_type(item_id: String) -> String:
-	if item_id.is_empty() or item_catalog == null:
-		return ""
-	var def := item_catalog.get_item_by_id(item_id)
-	if def == null:
-		return ""
-	return def.item_type
-
 func _get_item_slot_key(item_id: String) -> String:
-	if item_id.is_empty() or item_catalog == null:
+	var instance := get_item_instance(item_id)
+	if instance == null or instance.archetype == null:
 		return ""
-	var def := item_catalog.get_item_by_id(item_id)
-	if def == null:
-		return ""
-	var item_type := def.item_type
-	if item_type == "one_hand":
-		if "shield" in def.item_type_tags:
-			return "one_hand_shield"
-		if "sword" in def.item_type_tags:
-			return "one_hand_sword"
-	return item_type
-
-func _get_item_theme(item_id: String) -> String:
-	if item_id.is_empty() or item_catalog == null:
-		return ""
-	var def := item_catalog.get_item_by_id(item_id)
-	if def == null:
-		return ""
-	var theme := def.set_theme
-	if theme.is_empty() or theme == "none":
-		if item_id.begins_with("cadet_"):
-			theme = "cadet"
-		elif item_id.begins_with("candlekeep_"):
-			theme = "candlekeep"
-		elif item_id.begins_with("mistwarden_"):
-			theme = "mistwarden"
-		elif item_id.begins_with("etiquette_"):
-			theme = "etiquette"
-		elif item_id.begins_with("oath_"):
-			theme = "oath"
-		elif item_id.begins_with("afterparty_"):
-			theme = "afterparty"
-	return theme
-
-func _try_complete_set_for_item(item_id: String) -> void:
-	var theme := _get_item_theme(item_id)
-	if theme.is_empty() or theme == "none":
-		return
-	if item_catalog == null:
-		return
-
-	var required_keys := _get_theme_requirement_keys(theme)
-	if required_keys.is_empty():
-		return
-
-	var present_keys: Array[String] = []
-	for equipped_id in equipped_items:
-		if equipped_id.is_empty():
-			continue
-		if _get_item_theme(equipped_id) != theme:
-			continue
-		var req_key := _get_set_requirement_key(equipped_id)
-		if req_key.is_empty():
-			continue
-		if not present_keys.has(req_key):
-			present_keys.append(req_key)
-
-	for req_key in required_keys:
-		if not present_keys.has(req_key):
-			return
-
-	var consumed_ids: Array[String] = []
-	for equipped_id in equipped_items:
-		if equipped_id.is_empty():
-			continue
-		if _get_item_theme(equipped_id) != theme:
-			continue
-		var def := item_catalog.get_item_by_id(equipped_id)
-		if def == null:
-			continue
-		consumed_ids.append(equipped_id)
-		_add_set_bonus_from_def(def)
-		_remove_equipped_item(equipped_id)
-
-	set_completed.emit(theme, consumed_ids)
+	return _get_slot_key_from_archetype(instance.archetype)
 
 func _remove_equipped_item(item_id: String) -> void:
 	for i in range(equipped_items.size()):
@@ -735,58 +911,25 @@ func _remove_equipped_item(item_id: String) -> void:
 			equipped_items[i] = ""
 			return
 
-func _add_set_bonus_from_def(def: ItemCardDefinition) -> void:
-	set_bonus_armour += def.armour_flat + def.shield_flat
-	set_bonus_damage += def.damage_flat
-	set_bonus_life += def.life_flat
-	set_bonus_initiative += def.initiative_flat
-	set_bonus_lifesteal += def.lifesteal_flat
-	set_bonus_thorns += def.thorns_flat
-	set_bonus_regen += def.regen_flat
-	set_bonus_crit += def.crit_chance_flat
-
-func _get_set_requirement_key(item_id: String) -> String:
-	var slot_key := _get_item_slot_key(item_id)
-	return slot_key
-
-func _get_theme_requirement_keys(theme: String) -> Array[String]:
-	var keys: Array[String] = []
-	if item_catalog == null:
-		return keys
-	for item_def in item_catalog.items:
-		if item_def == null:
-			continue
-		if _get_item_theme(item_def.item_id) != theme:
-			continue
-		var key := _get_set_requirement_key(item_def.item_id)
-		if key.is_empty():
-			continue
-		if not keys.has(key):
-			keys.append(key)
-	return keys
-
-func _get_theme_requirement_items(theme: String) -> Array[String]:
-	var items: Array[String] = []
-	if item_catalog == null:
-		return items
-	var keys := _get_theme_requirement_keys(theme)
-	for key in keys:
-		var candidate := _find_theme_item_for_key(theme, key)
-		if candidate != "":
-			items.append(candidate)
-	return items
-
-func _find_theme_item_for_key(theme: String, key: String) -> String:
-	if item_catalog == null:
+func _get_slot_key_from_archetype(archetype: ItemArchetype) -> String:
+	if archetype == null:
 		return ""
-	for item_def in item_catalog.items:
-		if item_def == null:
-			continue
-		if _get_item_theme(item_def.item_id) != theme:
-			continue
-		var req_key := _get_set_requirement_key(item_def.item_id)
-		if req_key == key:
-			return item_def.item_id
+	if archetype.item_type == CardDefinition.ItemType.ONE_HAND:
+		if "shield" in archetype.item_type_tags:
+			return "one_hand_shield"
+		if "sword" in archetype.item_type_tags:
+			return "one_hand_sword"
+		return "one_hand"
+	if archetype.item_type == CardDefinition.ItemType.TWO_HANDS:
+		return "two_hands"
+	if archetype.item_type == CardDefinition.ItemType.HELMET:
+		return "helmet"
+	if archetype.item_type == CardDefinition.ItemType.ARMOUR:
+		return "armour"
+	if archetype.item_type == CardDefinition.ItemType.GLOVES:
+		return "gloves"
+	if archetype.item_type == CardDefinition.ItemType.BOOTS:
+		return "boots"
 	return ""
 
 func _apply_equipment_to_hero() -> void:
@@ -808,22 +951,16 @@ func _apply_equipment_to_hero() -> void:
 	var add_regen: int = 0
 	var add_crit: int = 0
 
-	if item_catalog != null:
-		for item_id in equipped_items:
-			if item_id.is_empty():
-				continue
-			var def := item_catalog.get_item_by_id(item_id)
-			if def == null:
-				continue
-			add_hp += def.life_flat
-			add_damage += def.damage_flat
-			add_initiative += def.initiative_flat
-			add_armour += def.armour_flat
-			add_armour += def.shield_flat
-			add_lifesteal += def.lifesteal_flat
-			add_thorns += def.thorns_flat
-			add_regen += def.regen_flat
-			add_crit += def.crit_chance_flat
+	for item_id in equipped_items:
+		if item_id.is_empty():
+			continue
+		var instance := get_item_instance(item_id)
+		if instance == null:
+			continue
+		add_hp += instance.get_total_life_flat()
+		add_damage += instance.get_total_damage_flat()
+		add_initiative += instance.get_total_initiative_flat()
+		add_armour += instance.get_total_armour_flat()
 
 	add_hp += set_bonus_life
 	add_damage += set_bonus_damage
@@ -1051,9 +1188,14 @@ func save_run():
 		"run_mode": run_mode,
 		"is_temporary_run": is_temporary_run,
 		"gold": gold,
+		"dust": dust,
 		"danger_level": danger_level,
 		"active_decks_count": active_decks_count,
 		"enemies_defeated_count": enemies_defeated_count,
+		"current_wave": current_wave,
+		"waves_per_run": waves_per_run,
+		"enemies_per_wave": enemies_per_wave,
+		"enemies_defeated_in_wave": enemies_defeated_in_wave,
 		"hero_level": hero_level,
 		"hero_xp": hero_xp,
 		"xp_to_next_level": xp_to_next_level,
@@ -1066,12 +1208,15 @@ func save_run():
 		"active_enemy_id": active_enemy_ids[0] if active_enemy_ids.size() > 0 else "",
 		"selected_hero_def_id": selected_hero_def_id,
 		"selected_enemy_types": selected_enemy_types,
+		"enemy_weights": enemy_weights,
 		"run_deck_types": run_deck_types,
 		"run_deck_types_by_deck": run_deck_types_by_deck,
 		"run_seed": run_seed,
 		"enemy_spawn_counter": enemy_spawn_counter,
 		"hero_level_multiplier": hero_level_multiplier,
 		"enemy_level_multiplier": enemy_level_multiplier,
+		"item_instances": _serialize_item_instances(),
+		"item_instance_counter": item_instance_counter,
 		"hand_items": hand_items,
 		"equipped_items": equipped_items,
 		"completed_set_themes": completed_set_themes,
@@ -1109,20 +1254,34 @@ func load_run():
 		push_error("Save corrupto")
 		return
 
+	if item_archetype_catalog == null:
+		item_archetype_catalog = load(ITEM_ARCHETYPE_CATALOG_DEFAULT_PATH)
+
 	run_mode = data.get("run_mode", "normal")
 	is_temporary_run = data.get("is_temporary_run", false)
 	gold = int(data.get("gold", 0))
+	dust = int(data.get("dust", 0))
 	danger_level = int(data.get("danger_level", 0))
 	active_decks_count = int(data.get("active_decks_count", 1))
 	enemies_defeated_count = int(data.get("enemies_defeated_count", 0))
+	current_wave = int(data.get("current_wave", 1))
+	waves_per_run = int(data.get("waves_per_run", 20))
+	enemies_per_wave = int(data.get("enemies_per_wave", 5))
+	enemies_defeated_in_wave = int(data.get("enemies_defeated_in_wave", 0))
 	hero_level = int(data.get("hero_level", 1))
 	hero_xp = int(data.get("hero_xp", 0))
 	xp_to_next_level = int(data.get("xp_to_next_level", 4))
 	cards = data.get("cards", {})
 	_load_upgrade_levels()
 	_sync_hero_card_level(false)
+	item_instances = _deserialize_item_instances(data.get("item_instances", []))
+	item_instance_counter = int(data.get("item_instance_counter", 0))
+	if item_instance_counter <= 0 and not item_instances.is_empty():
+		_recalc_item_instance_counter()
 	hand_items = _to_string_array(data.get("hand_items", []))
 	equipped_items = _to_string_array(data.get("equipped_items", []))
+	hand_items = _filter_item_instance_ids(hand_items)
+	equipped_items = _sanitize_equipped_items(equipped_items)
 	_ensure_equipped_size()
 	completed_set_themes = _to_string_array(data.get("completed_set_themes", []))
 	set_bonus_armour = int(data.get("set_bonus_armour", 0))
@@ -1167,6 +1326,11 @@ func load_run():
 			active_enemy_ids = [legacy_id]
 	selected_hero_def_id = String(data.get("selected_hero_def_id", ""))
 	selected_enemy_types = _to_string_array(data.get("selected_enemy_types", []))
+	enemy_weights = _sanitize_enemy_weights(data.get("enemy_weights", {}))
+	if enemy_weights.is_empty() and not selected_enemy_types.is_empty():
+		for enemy_id in selected_enemy_types:
+			if enemy_id != "":
+				enemy_weights[enemy_id] = 1
 	run_deck_types = _to_string_array(data.get("run_deck_types", []))
 	run_deck_types_by_deck = data.get("run_deck_types_by_deck", [])
 	if run_deck_types_by_deck.is_empty() and not run_deck_types.is_empty():
@@ -1195,6 +1359,73 @@ func _to_string_array(value: Variant) -> Array[String]:
 		if typeof(entry) == TYPE_STRING:
 			result.append(String(entry))
 	return result
+
+func _sanitize_enemy_weights(value: Variant) -> Dictionary:
+	var result: Dictionary = {}
+	if typeof(value) != TYPE_DICTIONARY:
+		return result
+	var dict_value := value as Dictionary
+	for key in dict_value.keys():
+		var id_str := String(key)
+		if id_str == "":
+			continue
+		var weight := int(dict_value.get(key, 1))
+		result[id_str] = clampi(weight, 1, 3)
+	return result
+
+func _serialize_item_instances() -> Array:
+	var result: Array = []
+	for key in item_instances.keys():
+		var raw: Variant = item_instances.get(key, null)
+		if raw is ItemInstance:
+			var inst: ItemInstance = raw
+			result.append(inst.to_dict())
+	return result
+
+func _deserialize_item_instances(value: Variant) -> Dictionary:
+	var result: Dictionary = {}
+	if typeof(value) != TYPE_ARRAY:
+		return result
+	var list := value as Array
+	for entry in list:
+		if entry is Dictionary:
+			var inst := ItemInstance.from_dict(entry, item_archetype_catalog)
+			if inst != null and inst.archetype != null and not inst.instance_id.is_empty():
+				result[inst.instance_id] = inst
+	return result
+
+func _filter_item_instance_ids(items: Array[String]) -> Array[String]:
+	var result: Array[String] = []
+	for item_id in items:
+		if item_instances.has(item_id):
+			result.append(item_id)
+	return result
+
+func _sanitize_equipped_items(items: Array[String]) -> Array[String]:
+	var result: Array[String] = []
+	for i in range(MAX_EQUIP_SLOTS):
+		var id := ""
+		if i < items.size():
+			id = items[i]
+		if id != "" and not item_instances.has(id):
+			id = ""
+		result.append(id)
+	return result
+
+func _recalc_item_instance_counter() -> void:
+	var max_id: int = 0
+	for key in item_instances.keys():
+		var id_str := String(key)
+		var parts := id_str.split("_")
+		if parts.size() < 3:
+			continue
+		var num_str := parts[parts.size() - 1]
+		if not num_str.is_valid_int():
+			continue
+		var num := int(num_str)
+		if num > max_id:
+			max_id = num
+	item_instance_counter = max_id
 
 func _ensure_equipped_size() -> void:
 	while equipped_items.size() < MAX_EQUIP_SLOTS:
@@ -1234,6 +1465,7 @@ func _resolve_traits(ids: Array, trait_map: Dictionary) -> Array[TraitResource]:
 
 func _emit_run_state_signals() -> void:
 	gold_changed.emit(gold)
+	dust_changed.emit(dust, 0)
 	danger_level_changed.emit(danger_level)
 	active_decks_changed.emit(active_decks_count)
 	hero_xp_changed.emit(hero_xp, xp_to_next_level)
@@ -1246,15 +1478,125 @@ func _build_cards_from_run_deck() -> void:
 		return
 	create_card_instance("th", selected_hero_def_id, false, -1)
 
-	if run_deck_types_by_deck.is_empty():
-		_build_run_deck_types_for_decks(active_decks_count)
+func start_wave_encounter() -> void:
+	if current_wave > waves_per_run:
+		return
+	_clear_enemy_cards()
+	enemy_draw_queues_by_deck.clear()
+	_ensure_deck_arrays(1)
+	active_decks_count = 1
+	active_enemy_ids.clear()
+	enemies_defeated_in_wave = 0
 
-	_ensure_deck_arrays(active_decks_count)
-	for deck_index in range(active_decks_count):
-		var deck: Array = run_deck_types_by_deck[deck_index]
-		for def_id in deck:
-			var run_id := _generate_enemy_id(def_id)
-			create_card_instance(run_id, def_id, false, deck_index)
+	wave_started.emit(current_wave, waves_per_run)
+
+	if _is_mini_boss_wave(current_wave):
+		var mini_id := _pick_mini_boss_id()
+		if not mini_id.is_empty():
+			_spawn_boss_by_id(mini_id)
+			mini_boss_started.emit(mini_id)
+		prepare_progressive_deck()
+		wave_progress_changed.emit(current_wave, 0, 0)
+		return
+
+	if _is_final_boss_wave(current_wave):
+		_spawn_boss_by_id(FINAL_BOSS_ID)
+		final_boss_started.emit(FINAL_BOSS_ID)
+		prepare_progressive_deck()
+		wave_progress_changed.emit(current_wave, 0, 0)
+		return
+
+	if selected_enemy_types.is_empty():
+		return
+
+	for i in range(enemies_per_wave):
+		var def_id := _pick_random_enemy_type()
+		var run_id := _generate_enemy_id(def_id)
+		create_card_instance(run_id, def_id, false, 0)
+
+	prepare_progressive_deck()
+	wave_progress_changed.emit(current_wave, enemies_defeated_in_wave, enemies_per_wave)
+
+func handle_enemy_defeated_for_wave(enemy_data: Dictionary) -> bool:
+	if enemy_data.is_empty():
+		return false
+
+	var is_boss: bool = bool(enemy_data.get("is_boss", false)) or enemy_data.has("boss_id")
+	if is_boss:
+		var boss_kind := int(enemy_data.get("boss_kind", BossDefinition.BossKind.MINI_BOSS))
+		wave_completed.emit(current_wave)
+		if boss_kind == BossDefinition.BossKind.FINAL_BOSS:
+			return true
+		current_wave += 1
+		enemies_defeated_in_wave = 0
+		if current_wave > waves_per_run:
+			return true
+		start_wave_encounter()
+		return false
+
+	enemies_defeated_in_wave += 1
+	wave_progress_changed.emit(current_wave, enemies_defeated_in_wave, enemies_per_wave)
+	if enemies_defeated_in_wave >= enemies_per_wave:
+		wave_completed.emit(current_wave)
+		current_wave += 1
+		enemies_defeated_in_wave = 0
+		if current_wave > waves_per_run:
+			return true
+		start_wave_encounter()
+
+	return false
+
+func is_wave_boss(wave_index: int) -> bool:
+	return _is_mini_boss_wave(wave_index) or _is_final_boss_wave(wave_index)
+
+func is_current_wave_boss() -> bool:
+	return is_wave_boss(current_wave)
+
+func _is_mini_boss_wave(wave_index: int) -> bool:
+	return MINI_BOSS_WAVES.has(wave_index)
+
+func _is_final_boss_wave(wave_index: int) -> bool:
+	return wave_index == waves_per_run or FINAL_BOSS_WAVES.has(wave_index)
+
+func _pick_random_enemy_type() -> String:
+	if selected_enemy_types.is_empty():
+		return ""
+	var rng := RandomNumberGenerator.new()
+	rng.seed = run_seed + (current_wave * 733) + enemy_spawn_counter
+	var idx := rng.randi_range(0, selected_enemy_types.size() - 1)
+	return selected_enemy_types[idx]
+
+func _maybe_add_wave_boss() -> void:
+	if MINI_BOSS_WAVES.has(current_wave):
+		_spawn_mini_boss()
+		return
+	if FINAL_BOSS_WAVES.has(current_wave):
+		_spawn_final_boss()
+
+func _spawn_mini_boss() -> void:
+	var boss_id := _pick_mini_boss_id()
+	if boss_id.is_empty():
+		return
+	_spawn_boss_by_id(boss_id)
+
+func _spawn_final_boss() -> void:
+	_spawn_boss_by_id(FINAL_BOSS_ID)
+
+func _spawn_boss_by_id(boss_id: String) -> void:
+	_ensure_boss_catalog()
+	var boss_def := get_boss_definition(boss_id)
+	if boss_def == null:
+		push_warning("[RunManager] BossDefinition no encontrada: " + boss_id)
+		return
+	create_boss_instance(boss_def, 0)
+
+func _pick_mini_boss_id() -> String:
+	if MINI_BOSS_IDS.is_empty():
+		return ""
+	var rng := RandomNumberGenerator.new()
+	rng.seed = run_seed + (current_wave * 911) + 17
+	var idx := rng.randi_range(0, MINI_BOSS_IDS.size() - 1)
+	return MINI_BOSS_IDS[idx]
 
 func reset_run(new_mode: String = "normal") -> void:
 	run_mode = new_mode
@@ -1267,6 +1609,7 @@ func reset_run(new_mode: String = "normal") -> void:
 	danger_level = 0
 	selected_hero_def_id = ""
 	selected_enemy_types.clear()
+	enemy_weights.clear()
 	run_deck_types.clear()
 	run_deck_types_by_deck.clear()
 	run_seed = 0
@@ -1274,6 +1617,9 @@ func reset_run(new_mode: String = "normal") -> void:
 	active_decks_count = 1
 	enemies_defeated_count = 0
 	current_wave = 1
+	waves_per_run = 20
+	enemies_per_wave = 5
+	enemies_defeated_in_wave = 0
 	hero_level = 1
 	hero_xp = 0
 	xp_to_next_level = 4
@@ -1283,6 +1629,8 @@ func reset_run(new_mode: String = "normal") -> void:
 	run_loaded = false
 	active_enemy_ids.clear()
 	hand_items.clear()
+	item_instances.clear()
+	item_instance_counter = 0
 	equipped_items = ["", "", "", "", "", "", ""]
 	completed_set_themes.clear()
 	set_bonus_armour = 0
@@ -1340,22 +1688,10 @@ func _get_upgrade_level(def_id: String) -> int:
 	return int(_upgrade_level_map.get(def_id, 0))
 
 func try_start_next_wave() -> bool:
-	if current_wave >= MAX_WAVES:
+	if current_wave >= waves_per_run:
 		return false
 	current_wave += 1
-	_clear_enemy_cards()
-	run_deck_types.clear()
-	run_deck_types_by_deck.clear()
-	enemy_draw_queues_by_deck.clear()
-	enemy_spawn_counter = 0
-	_build_run_deck_types_for_decks(active_decks_count)
-	_ensure_deck_arrays(active_decks_count)
-	for deck_index in range(active_decks_count):
-		var deck: Array = run_deck_types_by_deck[deck_index]
-		for def_id in deck:
-			var run_id := _generate_enemy_id(def_id)
-			create_card_instance(run_id, def_id, false, deck_index)
-	prepare_progressive_deck()
+	start_wave_encounter()
 	return true
 
 func _clear_enemy_cards() -> void:
@@ -1409,12 +1745,8 @@ func prepare_progressive_deck() -> void:
 			for entry in raw_deck:
 				if entry is Dictionary:
 					deck_enemies.append(entry)
-		var queue: Array[Dictionary] = _build_progressive_deck_for_enemies(deck_enemies)
-		enemy_draw_queues_by_deck[deck_index] = queue
-
-		print("[DECK READY] Orden final: deck=", deck_index)
-		for i in range(queue.size()):
-			var _enemy: Dictionary = queue[i]
+		deck_enemies.shuffle()
+		enemy_draw_queues_by_deck[deck_index] = deck_enemies
 
 	# =========================
 	# RECALCULAR RIESGO
@@ -1505,72 +1837,6 @@ func _clean_enemy_queue(queue: Array) -> Array:
 				cleaned.append(entry)
 	return cleaned
 
-func _build_progressive_deck_for_enemies(enemies: Array[Dictionary]) -> Array[Dictionary]:
-	var queue: Array[Dictionary] = []
-	if enemies.is_empty():
-		return queue
-
-	# =========================
-	# CALCULAR PODER PROMEDIO
-	# =========================
-	var total_power: int = 0
-	for enemy in enemies:
-		total_power += calculate_enemy_power(enemy)
-	var avg_power: float = float(total_power) / float(enemies.size())
-
-	# =========================
-	# DETECTAR BOSS (OUTLIER)
-	# =========================
-	var boss: Dictionary = {}
-	var boss_power: int = 0
-	for enemy in enemies:
-		var p: int = calculate_enemy_power(enemy)
-		if p > avg_power * 2.5 and p > boss_power:
-			boss = enemy
-			boss_power = p
-	if not boss.is_empty():
-		enemies.erase(boss)
-
-	# =========================
-	# ORDENAR POR DIFICULTAD
-	# =========================
-	enemies.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return calculate_enemy_power(a) < calculate_enemy_power(b)
-	)
-
-	# =========================
-	# DIVIDIR EN BUCKETS
-	# =========================
-	var bucket_easy: Array[Dictionary] = []
-	var bucket_mid: Array[Dictionary] = []
-	var bucket_hard: Array[Dictionary] = []
-
-	var third: int = max(1, enemies.size() / 3)
-	for i in range(enemies.size()):
-		if i < third:
-			bucket_easy.append(enemies[i])
-		elif i < third * 2:
-			bucket_mid.append(enemies[i])
-		else:
-			bucket_hard.append(enemies[i])
-
-	# =========================
-	# SHUFFLE INTERNO
-	# =========================
-	bucket_easy.shuffle()
-	bucket_mid.shuffle()
-	bucket_hard.shuffle()
-
-	# =========================
-	# CONSTRUIR MAZO FINAL
-	# =========================
-	queue.append_array(bucket_easy)
-	queue.append_array(bucket_mid)
-	queue.append_array(bucket_hard)
-	if not boss.is_empty():
-		queue.append(boss)
-
-	return queue
 
 func replace_enemy_trait(old_trait, new_trait) -> void:
 	active_enemy_traits.erase(old_trait)

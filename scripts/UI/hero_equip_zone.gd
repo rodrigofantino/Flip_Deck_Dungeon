@@ -2,11 +2,9 @@ extends Control
 class_name HeroEquipZone
 
 const MAX_SLOTS: int = 7
-const ITEM_CATALOG_DEFAULT_PATH: String = "res://data/item_catalog_default.tres"
 const STATE_EQUIPPED: int = 2
 
 @export var item_card_scene: PackedScene
-@export var item_catalog: ItemCatalog
 @export var hero_anchor_path: NodePath
 @onready var slots_container: Control = $Slots
 @onready var hero_anchor: Control = null
@@ -21,7 +19,10 @@ func _ready() -> void:
 func can_accept(item_id: String) -> bool:
 	if item_id.is_empty():
 		return false
-	return _get_item_type(item_id) != ""
+	var instance: ItemInstance = RunState.get_item_instance(item_id)
+	if instance == null or instance.archetype == null:
+		return false
+	return instance.archetype.item_type >= 0
 
 func accept(item_id: String) -> int:
 	return -1
@@ -37,8 +38,6 @@ func _on_equip_changed(equipped: Array[String]) -> void:
 	for slot in slots:
 		for child in slot.get_children():
 			child.queue_free()
-
-	var catalog := _get_item_catalog()
 
 	for i in range(min(equipped.size(), MAX_SLOTS)):
 		var item_id := equipped[i]
@@ -69,11 +68,12 @@ func _on_equip_changed(equipped: Array[String]) -> void:
 		if card.has_method("set_state"):
 			card.call("set_state", STATE_EQUIPPED)
 
-		var def: ItemCardDefinition = null
-		if catalog != null:
-			def = catalog.get_item_by_id(item_id)
-		if def != null and card.has_method("setup"):
-			card.call("setup", def)
+		var instance: ItemInstance = RunState.get_item_instance(item_id)
+		if instance == null:
+			card.queue_free()
+			continue
+		if card.has_method("setup"):
+			card.call("setup", instance)
 
 func _get_slot_nodes() -> Array[Control]:
 	var slots: Array[Control] = []
@@ -148,18 +148,3 @@ func _get_hero_center() -> Vector2:
 	if hero_anchor != null:
 		return hero_anchor.get_global_rect().get_center()
 	return get_global_rect().get_center()
-
-func _get_item_catalog() -> ItemCatalog:
-	if item_catalog != null:
-		return item_catalog
-	item_catalog = load(ITEM_CATALOG_DEFAULT_PATH) as ItemCatalog
-	return item_catalog
-
-func _get_item_type(item_id: String) -> String:
-	var catalog := _get_item_catalog()
-	if catalog == null:
-		return ""
-	var def := catalog.get_item_by_id(item_id)
-	if def == null:
-		return ""
-	return def.item_type

@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://cmevs5qudpn56"]
 
-[ext_resource type="Texture2D" uid="uid://b004gidpi74yj" path="res://assets/cards/art/tutorial_forest_slime.png" id="1_art"]
+[ext_resource type="Texture2D" uid="uid://b004gidpi74yj" path="res://assets/cards/art/forest/forest_slime.png" id="1_art"]
 [ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/card_definition.gd" id="2_def"]
 [ext_resource type="Texture2D" uid="uid://y17wevh7ckms" path="res://assets/cards/frame/card_forest_front.png" id="3_frame"]
 
@@ -14,3 +14,11 @@ frame_texture = ExtResource("3_frame")
 max_hp = 3
 damage = 1
 card_type = "enemy"
+allowed_item_types = {
+0: 2,
+1: 4,
+2: 1,
+3: 1,
+4: 3,
+5: 0
+}

@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="ItemArchetypeCatalog" load_steps=26 format=3]
+
+[ext_resource type="Script" path="res://data/item_archetype_catalog.gd" id="1_catalog"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/open_helm.tres" id="2_open_helm"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/visored_helm.tres" id="3_visored_helm"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/great_helm.tres" id="4_great_helm"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/chapel_de_fer.tres" id="5_chapel_de_fer"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/leather_armour.tres" id="6_leather_armour"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/chainmail.tres" id="7_chainmail"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/brigandine.tres" id="8_brigandine"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/plate_armour.tres" id="9_plate_armour"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/duel_gloves.tres" id="10_duel_gloves"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/grip_wraps.tres" id="11_grip_wraps"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/steel_gauntlets.tres" id="12_steel_gauntlets"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/quick_bracers.tres" id="13_quick_bracers"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/leather_boots.tres" id="14_leather_boots"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/greaves.tres" id="15_greaves"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/sabatons.tres" id="16_sabatons"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/trail_runners.tres" id="17_trail_runners"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/rapier.tres" id="18_rapier"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/arming_sword.tres" id="19_arming_sword"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/mace.tres" id="20_mace"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/kite_shield.tres" id="21_kite_shield"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/greatsword.tres" id="22_greatsword"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/halberd.tres" id="23_halberd"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/maul.tres" id="24_maul"]
+[ext_resource type="Resource" path="res://data/items/archetypes/knight/long_spear.tres" id="25_long_spear"]
+
+[resource]
+script = ExtResource("1_catalog")
+archetypes = [
+	ExtResource("2_open_helm"),
+	ExtResource("3_visored_helm"),
+	ExtResource("4_great_helm"),
+	ExtResource("5_chapel_de_fer"),
+	ExtResource("6_leather_armour"),
+	ExtResource("7_chainmail"),
+	ExtResource("8_brigandine"),
+	ExtResource("9_plate_armour"),
+	ExtResource("10_duel_gloves"),
+	ExtResource("11_grip_wraps"),
+	ExtResource("12_steel_gauntlets"),
+	ExtResource("13_quick_bracers"),
+	ExtResource("14_leather_boots"),
+	ExtResource("15_greaves"),
+	ExtResource("16_sabatons"),
+	ExtResource("17_trail_runners"),
+	ExtResource("18_rapier"),
+	ExtResource("19_arming_sword"),
+	ExtResource("20_mace"),
+	ExtResource("21_kite_shield"),
+	ExtResource("22_greatsword"),
+	ExtResource("23_halberd"),
+	ExtResource("24_maul"),
+	ExtResource("25_long_spear")
+]

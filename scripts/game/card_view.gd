@@ -67,6 +67,18 @@ func setup_from_definition(definition: CardDefinition, upgrade_level: int = 0) -
 	if definition.frame_texture and front_frame:
 		front_frame.texture = definition.frame_texture
 
+func setup_from_boss_definition(definition: BossDefinition) -> void:
+	if definition == null:
+		return
+
+	_fit_art(Vector2(200, 120))
+	_refresh_boss_labels(definition)
+
+	if definition.art:
+		art.texture = definition.art
+	if definition.frame_texture and front_frame:
+		front_frame.texture = definition.frame_texture
+
 # =========================
 # REFRESH DESDE RUNTIME (TRAITS / COMBATE)
 # =========================
@@ -294,6 +306,43 @@ func _refresh_all_labels(definition: CardDefinition, upgrade_level: int) -> void
 	_fit_label_text(
 		damage_label,
 		"%s %d" % [tr("CARD_VIEW_STATS_DAMAGE"), display_damage],
+		10
+	)
+
+func _refresh_boss_labels(definition: BossDefinition) -> void:
+	_fit_label_text(
+		name_label,
+		definition.boss_name,
+		12
+	)
+
+	_fit_label_text(
+		description_label,
+		"",
+		10
+	)
+
+	_fit_label_text(
+		level_label,
+		"%d" % int(definition.base_level),
+		10
+	)
+
+	_fit_label_text(
+		initiative_label,
+		"%s %d" % [tr("CARD_VIEW_STATS_POWER"), int(definition.base_initiative)],
+		10
+	)
+
+	_fit_label_text(
+		hp_label,
+		"%s %d" % [tr("CARD_VIEW_STATS_HP"), int(definition.base_max_hp)],
+		10
+	)
+
+	_fit_label_text(
+		damage_label,
+		"%s %d" % [tr("CARD_VIEW_STATS_DAMAGE"), int(definition.base_damage)],
 		10
 	)
 

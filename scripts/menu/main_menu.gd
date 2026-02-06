@@ -39,6 +39,7 @@ func _ready() -> void:
 	continue_button.disabled = not RunState.has_saved_run()
 	if tutorial_button:
 		tutorial_button.disabled = true
+		tutorial_button.visible = false
 	if endless_button:
 		endless_button.disabled = true
 	_update_gold_label()
@@ -67,11 +68,7 @@ func _on_continue_pressed() -> void:
 
 
 func _on_tutorial_pressed() -> void:
-	print("tutorial pressed")
-	# Inicia el tutorial creando las cartas fijas
-	TutorialManage.start_tutorial()
-	# Cambia a la escena principal de batalla
-	SceneTransition.change_scene("res://Scenes/battle_table.tscn")
+	print("tutorial disabled")
 
 
 func _on_settings_button_pressed() -> void:

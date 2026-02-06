@@ -39,6 +39,18 @@ signal attack_animation_finished
 signal ready_for_next_round
 
 # ==========================================
+# BOSS TRAITS (IDS)
+# ==========================================
+const TRAIT_GORE_CHARGE := "gore_charge"
+const TRAIT_RAGE_TUSK := "rage_tusk"
+const TRAIT_SPORE_RENEWAL := "spore_renewal"
+const TRAIT_PRETERNATURAL_INIT := "preternatural_initiative"
+
+# Estado por combate / ronda
+var _round_first_actor_id: String = ""
+var _trait_state: Dictionary = {}
+
+# ==========================================
 # INITIATIVE (UTILS)
 # ==========================================
 
@@ -101,6 +113,8 @@ func start_combat(enemy_card_ids: Array[String]) -> void:
 	if enemy_ids.is_empty():
 		_finish_combat(true)
 		return
+	_trait_state.clear()
+	_round_first_actor_id = ""
 	current_phase = CombatPhase.START_COMBAT
 	phase_changed.emit(current_phase)
 
@@ -128,6 +142,10 @@ func _resolve_turn_order(order: Array[String]) -> void:
 	if hero.is_empty():
 		_finish_combat(false)
 		return
+	if order.size() > 0:
+		_round_first_actor_id = order[0]
+	else:
+		_round_first_actor_id = ""
 
 	for attacker_id in order:
 		if attacker_id == hero_id:
@@ -147,6 +165,7 @@ func _resolve_turn_order(order: Array[String]) -> void:
 			var target: Dictionary = run_manager.get_card(target_id)
 			if not target.is_empty() and int(target.current_hp) <= 0:
 				_handle_death(target_id)
+			_handle_end_of_actor_turn(hero_id)
 		else:
 			var enemy: Dictionary = run_manager.get_card(attacker_id)
 			if enemy.is_empty() or int(enemy.get("current_hp", 0)) <= 0:
@@ -161,6 +180,7 @@ func _resolve_turn_order(order: Array[String]) -> void:
 				_handle_death(hero_id)
 				_finish_combat(false)
 				return
+			_handle_end_of_actor_turn(attacker_id)
 
 	enemy_ids = _filter_alive_enemy_ids(enemy_ids)
 	if enemy_ids.is_empty():
@@ -170,6 +190,27 @@ func _resolve_turn_order(order: Array[String]) -> void:
 	_finish_combat(false)
 
 func _build_turn_order(hero: Dictionary, enemies: Array[String]) -> Array[String]:
+	var priority: Array[String] = []
+	var remaining: Array[String] = []
+	for enemy_id in enemies:
+		var enemy: Dictionary = run_manager.get_card(enemy_id)
+		if enemy.is_empty():
+			continue
+		if _has_boss_trait(enemy, TRAIT_PRETERNATURAL_INIT):
+			priority.append(enemy_id)
+		else:
+			remaining.append(enemy_id)
+
+	_sort_enemies_by_initiative(priority)
+	var base_order := _build_turn_order_core(hero, remaining)
+	if priority.is_empty():
+		return base_order
+	var final_order: Array[String] = []
+	final_order.append_array(priority)
+	final_order.append_array(base_order)
+	return final_order
+
+func _build_turn_order_core(hero: Dictionary, enemies: Array[String]) -> Array[String]:
 	var hero_init: int = int(hero.get("initiative", 0))
 	var before: Array[String] = []
 	var after: Array[String] = []
@@ -245,13 +286,15 @@ func _apply_damage(attacker_id: String, target_id: String, amount: int) -> void:
 	if card.is_empty():
 		return
 
+	var final_amount := _get_modified_attack_damage(attacker_id, amount)
 	var armour: int = int(card.get("armour", 0))
-	var mitigated: int = max(amount - armour, 0)
+	var mitigated: int = max(final_amount - armour, 0)
 
 	card.current_hp -= mitigated
 	card.current_hp = max(card.current_hp, 0)
 
 	damage_applied.emit(target_id, mitigated)
+	_handle_rage_tusk_trigger(target_id, card)
 
 	var lifesteal: int = 0
 	if attacker_id != "":
@@ -268,6 +311,68 @@ func _apply_damage(attacker_id: String, target_id: String, amount: int) -> void:
 		if not attacker2.is_empty():
 			attacker2["current_hp"] = max(int(attacker2.get("current_hp", 0)) - thorns, 0)
 			damage_applied.emit(attacker_id, thorns)
+
+func _get_modified_attack_damage(attacker_id: String, base_amount: int) -> int:
+	if attacker_id == "":
+		return base_amount
+	var attacker: Dictionary = run_manager.get_card(attacker_id)
+	if attacker.is_empty():
+		return base_amount
+	var amount := base_amount
+	if _has_boss_trait(attacker, TRAIT_GORE_CHARGE) and attacker_id == _round_first_actor_id:
+		amount += 2
+	return amount
+
+func _handle_rage_tusk_trigger(target_id: String, card: Dictionary) -> void:
+	if not _has_boss_trait(card, TRAIT_RAGE_TUSK):
+		return
+	var state := _get_trait_state(target_id)
+	if state.get("rage_tusk_triggered", false):
+		return
+	var max_hp: int = int(card.get("max_hp", 0))
+	if max_hp <= 0:
+		return
+	var current_hp: int = int(card.get("current_hp", 0))
+	var hp_pct: float = float(current_hp) / float(max_hp)
+	if hp_pct <= 0.60:
+		card["damage"] = int(card.get("damage", 0)) + 1
+		state["rage_tusk_triggered"] = true
+		_trait_state[target_id] = state
+		damage_applied.emit(target_id, 0)
+
+func _handle_end_of_actor_turn(attacker_id: String) -> void:
+	if attacker_id == "":
+		return
+	var attacker: Dictionary = run_manager.get_card(attacker_id)
+	if attacker.is_empty():
+		return
+	if not _has_boss_trait(attacker, TRAIT_SPORE_RENEWAL):
+		return
+	var max_hp: int = int(attacker.get("max_hp", 0))
+	if max_hp <= 0:
+		return
+	var current_hp: int = int(attacker.get("current_hp", 0))
+	if current_hp <= 0:
+		return
+	var new_hp: int = min(current_hp + 1, max_hp)
+	if new_hp != current_hp:
+		attacker["current_hp"] = new_hp
+		damage_applied.emit(attacker_id, 0)
+
+func _has_boss_trait(card: Dictionary, trait_id: String) -> bool:
+	if card.is_empty():
+		return false
+	var raw: Variant = card.get("boss_trait_ids", [])
+	if raw is Array:
+		for entry in raw:
+			if String(entry) == trait_id:
+				return true
+	return false
+
+func _get_trait_state(card_id: String) -> Dictionary:
+	if not _trait_state.has(card_id):
+		_trait_state[card_id] = {}
+	return _trait_state[card_id]
 
 
 func _handle_death(card_id: String) -> void:

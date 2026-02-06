@@ -11,10 +11,10 @@ const COLLECTION_SAVE_PATH := "user://save/card_collection.json"
 # Ruta del archivo de guardado de la colecciÃ³n base
 const RUN_DECK_SAVE_PATH := "user://save/run_deck.json"
 # Ruta del archivo de guardado del deck de la run actual
-const DEFAULT_TUTORIAL_COUNTS := {
+const DEFAULT_STARTER_COUNTS := {
 	"knight_aprentice": 1,
 	"forest_slime": 1,
-	"forest_spider": 1
+	"forest_wolf": 1
 }
 
 
@@ -122,10 +122,10 @@ static func load_collection() -> PlayerCollection:
 
 static func ensure_collection() -> PlayerCollection:
 	var existing := load_collection()
-	if existing != null and _is_valid_tutorial_collection(existing):
+	if existing != null and _is_valid_starter_collection(existing):
 		return existing
 
-	var collection := build_default_tutorial_collection()
+	var collection := build_default_starter_collection()
 	save_collection(collection)
 	return collection
 
@@ -158,7 +158,7 @@ static func reset_progress() -> void:
 		DirAccess.remove_absolute("user://save/save_run.json")
 	ensure_collection()
 
-static func build_default_tutorial_collection() -> PlayerCollection:
+static func build_default_starter_collection() -> PlayerCollection:
 	return _build_default_collection()
 
 
@@ -168,12 +168,12 @@ static func _build_default_collection() -> PlayerCollection:
 	if CardDatabase.definitions.is_empty():
 		CardDatabase.load_definitions()
 
-	for def_id in DEFAULT_TUTORIAL_COUNTS.keys():
+	for def_id in DEFAULT_STARTER_COUNTS.keys():
 		var def: CardDefinition = CardDatabase.get_definition(def_id)
 		if def == null:
-			push_warning("[SaveSystem] Falta definicion tutorial: " + def_id)
+			push_warning("[SaveSystem] Falta definicion starter: " + def_id)
 			continue
-		var count := int(DEFAULT_TUTORIAL_COUNTS[def_id])
+		var count := int(DEFAULT_STARTER_COUNTS[def_id])
 		collection.add_type(def_id, count)
 
 	return collection
@@ -195,12 +195,12 @@ static func _generate_instance_id(definition_id: String) -> String:
 	return "%s_%d_%d" % [definition_id, time_ms, rand]
 
 
-static func _is_valid_tutorial_collection(collection: PlayerCollection) -> bool:
+static func _is_valid_starter_collection(collection: PlayerCollection) -> bool:
 	if collection == null:
 		return false
 
-	for def_id in DEFAULT_TUTORIAL_COUNTS.keys():
-		if collection.get_owned_count(def_id) != int(DEFAULT_TUTORIAL_COUNTS[def_id]):
+	for def_id in DEFAULT_STARTER_COUNTS.keys():
+		if collection.get_owned_count(def_id) != int(DEFAULT_STARTER_COUNTS[def_id]):
 			return false
 	return true
 
@@ -291,17 +291,17 @@ static func remove_from_run_deck(definition_id: String) -> void:
 	save_run_deck(deck)
 
 
-static func build_tutorial_run_deck() -> Array[String]:
+static func build_starter_run_deck() -> Array[String]:
 	var result: Array[String] = []
 	if CardDatabase.definitions.is_empty():
 		CardDatabase.load_definitions()
-	for def_id in DEFAULT_TUTORIAL_COUNTS.keys():
+	for def_id in DEFAULT_STARTER_COUNTS.keys():
 		var def: CardDefinition = CardDatabase.get_definition(def_id)
 		if def == null:
 			continue
 		if def.card_type != "enemy":
 			continue
-		var count := int(DEFAULT_TUTORIAL_COUNTS[def_id])
+		var count := int(DEFAULT_STARTER_COUNTS[def_id])
 		for i in range(count):
 			result.append(def_id)
 	return result

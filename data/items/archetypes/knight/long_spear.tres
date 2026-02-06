@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemArchetype" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://data/item_archetype.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/cards/items/item_card_background.png" id="2_bg"]
+[ext_resource type="Texture2D" path="res://assets/cards/items/art/two_hands/basic_2handsword.png" id="3_art"]
+
+[resource]
+script = ExtResource("1_item")
+item_id = "long_spear"
+item_name = "Long Spear"
+item_description = ""
+item_type = 5
+item_class = "knight"
+item_card_background = ExtResource("2_bg")
+art = ExtResource("3_art")
+damage_flat = 4
+initiative_flat = 2

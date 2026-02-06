@@ -10,8 +10,22 @@ extends Control
 @onready var selection_panel: VBoxContainer = $SelectionPanel
 @onready var select_hero_label: Label = $SelectionPanel/SelectHeroLabel
 @onready var select_enemies_label: Label = $SelectionPanel/SelectEnemiesLabel
+@onready var selection_error_label: Label = $SelectionPanel/SelectionErrorLabel
 @onready var start_dungeon_button: Button = $SelectionPanel/StartDungeonButton
 @onready var back_button: Button = $SelectionPanel/BackButton
+@onready var item_type_panel: VBoxContainer = $SelectionPanel/ItemTypeDistribution
+@onready var label_helmet: Label = $SelectionPanel/ItemTypeDistribution/RowHelmet/LabelHelmet
+@onready var label_armour: Label = $SelectionPanel/ItemTypeDistribution/RowArmour/LabelArmour
+@onready var label_gloves: Label = $SelectionPanel/ItemTypeDistribution/RowGloves/LabelGloves
+@onready var label_boots: Label = $SelectionPanel/ItemTypeDistribution/RowBoots/LabelBoots
+@onready var label_one_hand: Label = $SelectionPanel/ItemTypeDistribution/RowOneHand/LabelOneHand
+@onready var label_two_hands: Label = $SelectionPanel/ItemTypeDistribution/RowTwoHands/LabelTwoHands
+@onready var bar_helmet: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowHelmet/BarHelmet
+@onready var bar_armour: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowArmour/BarArmour
+@onready var bar_gloves: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowGloves/BarGloves
+@onready var bar_boots: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowBoots/BarBoots
+@onready var bar_one_hand: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowOneHand/BarOneHand
+@onready var bar_two_hands: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowTwoHands/BarTwoHands
 @onready var booster_area: Control = $BoosterArea
 @onready var booster_list: VBoxContainer = $BoosterArea/BoosterList
 @onready var booster_popup: Control = $BoosterPopup
@@ -59,13 +73,28 @@ class PackView:
 
 var selection_mode: bool = false
 var selected_hero_def_id: String = ""
-var selected_enemy_types: Dictionary = {}
+var selected_enemy_weights: Dictionary = {}
 var selected_pack: PackView = null
 var open_defs: Array[CardDefinition] = []
 var open_cards: Array[CardView] = []
 var open_collection: PlayerCollection = null
 var _pending_book_refresh: bool = false
 var _popup_def: CardDefinition = null
+var _selection_error_override: String = ""
+
+const MIN_ENEMY_SELECTION: int = 2
+const MAX_ENEMY_SELECTION: int = 5
+const MIN_ENEMY_WEIGHT: int = 1
+const MAX_ENEMY_WEIGHT: int = 3
+
+const ITEM_TYPE_ORDER: Array[int] = [
+	CardDefinition.ItemType.HELMET,
+	CardDefinition.ItemType.ARMOUR,
+	CardDefinition.ItemType.GLOVES,
+	CardDefinition.ItemType.BOOTS,
+	CardDefinition.ItemType.ONE_HAND,
+	CardDefinition.ItemType.TWO_HANDS
+]
 
 func _ready() -> void:
 	_configure_design_layout()
@@ -248,6 +277,8 @@ func _init_selection_ui() -> void:
 	if selection_panel:
 		selection_panel.visible = true
 		selection_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	if selection_mode:
+		_reset_selection_state()
 	_set_booster_interactivity(true)
 	if select_hero_label:
 		select_hero_label.text = tr("COLLECTION_SELECT_HERO")
@@ -259,6 +290,11 @@ func _init_selection_ui() -> void:
 		start_dungeon_button.text = tr("COLLECTION_START_DUNGEON")
 		start_dungeon_button.pressed.connect(_on_start_dungeon_pressed)
 		start_dungeon_button.visible = selection_mode
+	if item_type_panel:
+		item_type_panel.visible = selection_mode
+	if selection_error_label:
+		selection_error_label.text = ""
+		selection_error_label.visible = selection_mode
 	_update_selection_state()
 	if not selection_mode:
 		_clear_selection_visuals()
@@ -267,6 +303,14 @@ func _clear_selection_visuals() -> void:
 	for slot in get_tree().get_nodes_in_group("collection_slots"):
 		if slot is CollectionSlot:
 			(slot as CollectionSlot).set_selected(false)
+			(slot as CollectionSlot).configure_run_controls(false, false, false, MIN_ENEMY_WEIGHT)
+
+func _reset_selection_state() -> void:
+	selected_hero_def_id = ""
+	selected_enemy_weights.clear()
+	_selection_error_override = ""
+	if selection_error_label:
+		selection_error_label.text = ""
 
 func _on_page_slot_clicked(slot: CollectionSlot) -> void:
 	if not selection_mode:
@@ -285,10 +329,24 @@ func _on_page_slot_clicked(slot: CollectionSlot) -> void:
 		else:
 			selected_hero_def_id = slot.current_def_id
 	elif slot.current_card_type == "enemy":
-		if selected_enemy_types.has(slot.current_def_id):
-			selected_enemy_types.erase(slot.current_def_id)
-		else:
-			selected_enemy_types[slot.current_def_id] = true
+		var currently_selected := selected_enemy_weights.has(slot.current_def_id)
+		_set_enemy_selected(slot.current_def_id, not currently_selected)
+	_update_selection_state()
+
+func _on_page_enemy_selected(slot: CollectionSlot, selected: bool) -> void:
+	if not selection_mode or slot == null:
+		return
+	if slot.current_card_type != "enemy":
+		return
+	_set_enemy_selected(slot.current_def_id, selected)
+	_update_selection_state()
+
+func _on_page_enemy_weight_changed(slot: CollectionSlot, weight: int) -> void:
+	if not selection_mode or slot == null:
+		return
+	if slot.current_card_type != "enemy":
+		return
+	_set_enemy_weight(slot.current_def_id, weight)
 	_update_selection_state()
 
 func _update_slot_selection(slot: CollectionSlot) -> void:
@@ -298,9 +356,18 @@ func _update_slot_selection(slot: CollectionSlot) -> void:
 	if slot.current_card_type == "hero":
 		selected = slot.current_def_id == selected_hero_def_id
 	elif slot.current_card_type == "enemy":
-		selected = selected_enemy_types.has(slot.current_def_id)
+		selected = selected_enemy_weights.has(slot.current_def_id)
 	print("[Collection] slot select:", slot.current_def_id, " type=", slot.current_card_type, " selected=", selected)
 	slot.set_selected(selected)
+	var show_controls := selection_mode and slot.current_card_type == "enemy" and slot.is_obtained
+	var weight := int(selected_enemy_weights.get(slot.current_def_id, MIN_ENEMY_WEIGHT))
+	slot.configure_run_controls(show_controls, selection_mode, selected, weight)
+	if show_controls:
+		var spawn_weight := int(selected_enemy_weights.get(slot.current_def_id, 0))
+		var overlay_text := _build_enemy_item_type_overlay(slot.current_def_id, spawn_weight)
+		slot.configure_item_type_overlay(true, overlay_text)
+	else:
+		slot.configure_item_type_overlay(false, "")
 
 func _update_selection_state() -> void:
 	if not selection_mode:
@@ -308,21 +375,129 @@ func _update_selection_state() -> void:
 			select_hero_label.visible = false
 		if select_enemies_label:
 			select_enemies_label.visible = false
+		if item_type_panel:
+			item_type_panel.visible = false
 		if start_dungeon_button:
 			start_dungeon_button.visible = false
 		_clear_selection_visuals()
 		return
 	var has_hero := selected_hero_def_id != ""
-	var has_enemies := selected_enemy_types.size() > 0
+	var enemy_count := selected_enemy_weights.size()
+	var has_enemies := enemy_count >= MIN_ENEMY_SELECTION
 	if select_hero_label:
 		_set_hint_visible(select_hero_label, not has_hero)
 	if select_enemies_label:
 		_set_hint_visible(select_enemies_label, not has_enemies)
 	if start_dungeon_button:
-		start_dungeon_button.disabled = not (has_hero and has_enemies)
+		start_dungeon_button.disabled = not (has_hero and has_enemies and enemy_count <= MAX_ENEMY_SELECTION)
+	if selection_error_label:
+		selection_error_label.text = _get_selection_error()
+		selection_error_label.visible = selection_mode and selection_error_label.text != ""
 	for slot in get_tree().get_nodes_in_group("collection_slots"):
 		if slot is CollectionSlot:
 			_update_slot_selection(slot)
+	_update_item_type_distribution()
+
+func _set_enemy_selected(enemy_id: String, selected: bool) -> void:
+	if enemy_id == "":
+		return
+	if selected:
+		if selected_enemy_weights.size() >= MAX_ENEMY_SELECTION:
+			_selection_error_override = "Máximo %d enemigos." % MAX_ENEMY_SELECTION
+			return
+		if not selected_enemy_weights.has(enemy_id):
+			selected_enemy_weights[enemy_id] = MIN_ENEMY_WEIGHT
+	else:
+		if selected_enemy_weights.has(enemy_id):
+			selected_enemy_weights.erase(enemy_id)
+	_selection_error_override = ""
+
+func _set_enemy_weight(enemy_id: String, weight: int) -> void:
+	if enemy_id == "":
+		return
+	if not selected_enemy_weights.has(enemy_id):
+		return
+	var clamped := clampi(weight, MIN_ENEMY_WEIGHT, MAX_ENEMY_WEIGHT)
+	selected_enemy_weights[enemy_id] = clamped
+
+func _get_selection_error() -> String:
+	if _selection_error_override != "":
+		return _selection_error_override
+	var count := selected_enemy_weights.size()
+	if count < MIN_ENEMY_SELECTION:
+		return "Seleccioná al menos %d enemigos." % MIN_ENEMY_SELECTION
+	if count > MAX_ENEMY_SELECTION:
+		return "Máximo %d enemigos." % MAX_ENEMY_SELECTION
+	return ""
+
+func _build_item_type_scores() -> Dictionary:
+	var scores: Dictionary = {}
+	for item_type in ITEM_TYPE_ORDER:
+		scores[item_type] = 0
+
+	for enemy_id in selected_enemy_weights.keys():
+		var spawn_weight := int(selected_enemy_weights.get(enemy_id, 0))
+		if spawn_weight <= 0:
+			continue
+		var def: CardDefinition = CardDatabase.get_definition(String(enemy_id))
+		if def == null:
+			continue
+		var weights: Dictionary = def.get_allowed_item_type_weights()
+		for item_type in ITEM_TYPE_ORDER:
+			var weight := int(weights.get(item_type, 0))
+			if weight <= 0:
+				continue
+			var current := int(scores.get(item_type, 0))
+			scores[item_type] = current + (spawn_weight * weight)
+
+	return scores
+
+func _update_item_type_distribution() -> void:
+	if item_type_panel == null:
+		return
+	var scores: Dictionary = _build_item_type_scores()
+	var total: int = 0
+	for item_type in ITEM_TYPE_ORDER:
+		total += int(scores.get(item_type, 0))
+
+	_update_distribution_row(label_helmet, bar_helmet, CardDefinition.ItemType.HELMET, scores, total)
+	_update_distribution_row(label_armour, bar_armour, CardDefinition.ItemType.ARMOUR, scores, total)
+	_update_distribution_row(label_gloves, bar_gloves, CardDefinition.ItemType.GLOVES, scores, total)
+	_update_distribution_row(label_boots, bar_boots, CardDefinition.ItemType.BOOTS, scores, total)
+	_update_distribution_row(label_one_hand, bar_one_hand, CardDefinition.ItemType.ONE_HAND, scores, total)
+	_update_distribution_row(label_two_hands, bar_two_hands, CardDefinition.ItemType.TWO_HANDS, scores, total)
+
+func _update_distribution_row(label: Label, bar: ProgressBar, item_type: int, scores: Dictionary, total: int) -> void:
+	if label == null or bar == null:
+		return
+	var score := int(scores.get(item_type, 0))
+	var percent: int = 0
+	if total > 0:
+		percent = int(round((float(score) / float(total)) * 100.0))
+	label.text = "%s %d%%" % [CardDefinition.get_item_type_name(item_type), percent]
+	bar.value = percent
+	bar.tooltip_text = "%d%%" % percent
+
+func _build_enemy_item_type_overlay(def_id: String, spawn_weight: int) -> String:
+	var def: CardDefinition = CardDatabase.get_definition(def_id)
+	if def == null:
+		return ""
+	var weights: Dictionary = def.get_allowed_item_type_weights()
+	var total: int = 0
+	for item_type in ITEM_TYPE_ORDER:
+		total += int(weights.get(item_type, 0))
+	if total <= 0:
+		total = 1
+
+	var lines: Array[String] = []
+	lines.append("Peso (spawn): %d" % spawn_weight)
+	for item_type in ITEM_TYPE_ORDER:
+		var weight := int(weights.get(item_type, 0))
+		var percent := int(round((float(weight) / float(total)) * 100.0))
+		var name := CardDefinition.get_item_type_name(item_type)
+		lines.append("%s: %d (%d%%)" % [name, weight, percent])
+
+	return "\n".join(lines)
 
 func _set_hint_visible(label: Label, show: bool) -> void:
 	if label == null:
@@ -341,9 +516,10 @@ func _set_booster_interactivity(enabled: bool) -> void:
 		booster_popup.visible = enabled and booster_popup.visible
 
 func _on_start_dungeon_pressed() -> void:
-	print("[Collection] StartDungeon pressed. hero=", selected_hero_def_id, " enemies=", selected_enemy_types.size())
-	if selected_hero_def_id == "" or selected_enemy_types.size() == 0:
-		push_warning("[Collection] StartDungeon blocked. hero or enemies missing.")
+	print("[Collection] StartDungeon pressed. hero=", selected_hero_def_id, " enemies=", selected_enemy_weights.size())
+	var error_msg := _get_selection_error()
+	if selected_hero_def_id == "" or error_msg != "":
+		push_warning("[Collection] StartDungeon blocked. hero or enemies missing/invalid.")
 		return
 	var scene_path := "res://Scenes/battle_table.tscn"
 	print("[Collection] checking scene exists:", scene_path)
@@ -358,13 +534,13 @@ func _on_start_dungeon_pressed() -> void:
 		var first_line := file.get_line()
 		file.close()
 		print("[Collection] battle_table first line:", first_line)
-	var enemies: Array[String] = []
-	for key in selected_enemy_types.keys():
-		enemies.append(String(key))
-	print("[Collection] enemies list size=", enemies.size())
+	var weights: Dictionary = {}
+	for key in selected_enemy_weights.keys():
+		weights[String(key)] = int(selected_enemy_weights.get(key, MIN_ENEMY_WEIGHT))
+	print("[Collection] enemies list size=", weights.size())
 	RunState.reset_run()
 	print("[Collection] RunState.reset_run OK")
-	RunState.set_run_selection(selected_hero_def_id, enemies)
+	RunState.set_run_selection(selected_hero_def_id, weights)
 	print("[Collection] RunState.set_run_selection OK")
 	RunState.build_run_deck_from_selection()
 	print("[Collection] RunState.build_run_deck_from_selection OK")

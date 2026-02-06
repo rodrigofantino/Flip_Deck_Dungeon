@@ -14,7 +14,6 @@
 
 @onready var battle_hud: Control = $UI/BattleHUD
 @onready var ui_root: Control = $UI
-@onready var debug_set_drop_button: Button = $UI/DebugSetDropButton
 
 @export var defeat_popup_scene: PackedScene
 var defeat_popup: DefeatPopup = null
@@ -150,14 +149,12 @@ func _ready() -> void:
 	await get_tree().process_frame
 	setup_battle()
 	_connect_battle_hud()
-	if debug_set_drop_button != null:
-		debug_set_drop_button.pressed.connect(_on_debug_set_drop_pressed)
 	_connect_run_signals()
 	_update_hud_state()
 	RunState.hero_level_up.connect(_on_hero_level_up)
-	RunState.crossroads_requested.connect(_on_crossroads_requested)
 	RunState.enemy_stats_changed.connect(_on_enemy_stats_changed)
 	RunState.hero_stats_changed.connect(_on_enemy_stats_changed)
+	RunState.wave_started.connect(_on_wave_started)
 	
 	
 # ==========================================
@@ -284,8 +281,6 @@ func spawn_enemies_from_decks() -> void:
 	if pending_enemy_moves == 0:
 		current_phase = BattlePhase.IDLE
 		_update_hud_state()
-		if not RunState.has_remaining_enemies():
-			_open_end_of_wave_crossroads()
 
 
 # ==========================================
@@ -338,7 +333,8 @@ func _handle_enemy_defeated(card_id: String) -> void:
 	# 1 Recompensas
 	if enemy_data != null:
 		RunState.apply_enemy_rewards(enemy_data)
-		RunState.try_drop_item_from_enemy()
+		RunState.apply_enemy_dust(enemy_data)
+		RunState.try_drop_item_from_enemy(enemy_data)
 	suppress_level_up_popup = false
 
 	var has_remaining_enemies: bool = not victory_after_defeat
@@ -352,6 +348,10 @@ func _handle_enemy_defeated(card_id: String) -> void:
 
 	# 4 Visual
 	_remove_enemy_view(card_id)
+	var run_completed := RunState.handle_enemy_defeated_for_wave(enemy_data)
+	if run_completed:
+		_show_victory()
+		return
 	if _get_active_enemy_ids().size() > 0:
 		current_phase = BattlePhase.ENEMY_ACTIVE
 		_update_hud_state()
@@ -364,7 +364,8 @@ func _handle_enemy_defeated(card_id: String) -> void:
 			current_phase = BattlePhase.IDLE
 		_update_hud_state()
 		return
-	_open_end_of_wave_crossroads()
+	current_phase = BattlePhase.IDLE
+	_update_hud_state()
 
 func _open_end_of_wave_crossroads() -> void:
 	if crossroads_open:
@@ -378,12 +379,14 @@ func _connect_run_signals() -> void:
 func _on_enemy_stats_changed() -> void:
 	_refresh_all_card_views()
 
+func _on_wave_started(_wave_index: int, _waves_total: int) -> void:
+	setup_enemy_deck()
+	current_phase = BattlePhase.IDLE
+	_update_hud_state()
+
 func _on_pause_pressed() -> void:
 	_toggle_pause()
 
-func _on_debug_set_drop_pressed() -> void:
-	if RunState:
-		RunState.debug_add_full_set_to_hand()
 
 func _on_hero_level_up(new_level: int) -> void:
 	if suppress_level_up_popup:
@@ -434,12 +437,19 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	# DEFINICIÃƒÆ’Ã¢â‚¬Å“N (Resource)
 	# =========================
 	var def_id: String = String(card_data["definition"])
-	var definition: CardDefinition = CardDatabase.get_definition(def_id)
 	var card_type: String = ""
-	if definition != null:
-		var upgrade_level := int(card_data.get("upgrade_level", 0))
-		card.setup_from_definition(definition, upgrade_level)
-		card_type = definition.card_type
+	if bool(card_data.get("is_boss", false)) or card_data.has("boss_id"):
+		var boss_id: String = String(card_data.get("boss_id", def_id))
+		var boss_def: BossDefinition = RunState.get_boss_definition(boss_id)
+		if boss_def != null:
+			card.setup_from_boss_definition(boss_def)
+			card_type = "enemy"
+	else:
+		var definition: CardDefinition = CardDatabase.get_definition(def_id)
+		if definition != null:
+			var upgrade_level := int(card_data.get("upgrade_level", 0))
+			card.setup_from_definition(definition, upgrade_level)
+			card_type = definition.card_type
 
 	# =========================
 	# POSICIÃƒÆ’Ã¢â‚¬Å“N BASE
@@ -1102,6 +1112,15 @@ func _update_initiative_chance_for_active_enemy() -> void:
 	if enemy.is_empty():
 		battle_hud.update_initiative_chance(0.0)
 		return
+	var raw_traits: Variant = enemy.get("boss_trait_ids", [])
+	var trait_ids: Array[String] = []
+	if raw_traits is Array:
+		for entry in raw_traits:
+			trait_ids.append(String(entry))
+	for trait_id in trait_ids:
+		if trait_id == "preternatural_initiative":
+			battle_hud.update_initiative_chance(0.0)
+			return
 	var hero_init: int = int(hero.get("initiative", 0))
 	var enemy_init: int = int(enemy.get("initiative", 0))
 	var p: float = CombatManager.calc_hero_first_chance(hero_init, enemy_init)

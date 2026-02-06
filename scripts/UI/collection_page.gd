@@ -51,10 +51,18 @@ func _build_slots() -> void:
 			continue
 		slot.card_view_scene = card_view_scene
 		slot.slot_clicked.connect(_on_slot_clicked)
+		slot.enemy_selected_toggled.connect(_on_enemy_selected_toggled)
+		slot.enemy_weight_changed.connect(_on_enemy_weight_changed)
 		grid.add_child(slot)
 
 func _on_slot_clicked(slot: CollectionSlot) -> void:
 	get_tree().call_group("collection_root", "_on_page_slot_clicked", slot)
+
+func _on_enemy_selected_toggled(slot: CollectionSlot, selected: bool) -> void:
+	get_tree().call_group("collection_root", "_on_page_enemy_selected", slot, selected)
+
+func _on_enemy_weight_changed(slot: CollectionSlot, weight: int) -> void:
+	get_tree().call_group("collection_root", "_on_page_enemy_weight_changed", slot, weight)
 
 func _load_collection() -> void:
 	if CardDatabase.definitions.is_empty():

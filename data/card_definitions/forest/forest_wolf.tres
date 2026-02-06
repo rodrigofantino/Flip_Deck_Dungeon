@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://ck3fjkcgqyeha"]
 
 [ext_resource type="Script" uid="uid://ck01mn5y0wxw4" path="res://data/card_definition.gd" id="1_def"]
-[ext_resource type="Texture2D" uid="uid://d00egcimb647p" path="res://assets/cards/art/tutorial_forest_wolf.png" id="2_art"]
+[ext_resource type="Texture2D" uid="uid://bky2ufd121im0" path="res://assets/cards/art/forest/forest_wolf.png" id="2_art"]
 [ext_resource type="Texture2D" uid="uid://y17wevh7ckms" path="res://assets/cards/frame/card_forest_front.png" id="3_frame"]
 
 [resource]
@@ -15,3 +15,11 @@ max_hp = 4
 damage = 2
 initiative = 6
 card_type = "enemy"
+allowed_item_types = {
+0: 1,
+1: 1,
+2: 2,
+3: 3,
+4: 3,
+5: 0
+}

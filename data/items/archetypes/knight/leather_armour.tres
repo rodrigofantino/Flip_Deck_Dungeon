@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemArchetype" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://data/item_archetype.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/cards/items/item_card_background.png" id="2_bg"]
+[ext_resource type="Texture2D" path="res://assets/cards/items/art/armour/basic_armour.png" id="3_art"]
+
+[resource]
+script = ExtResource("1_item")
+item_id = "leather_armour"
+item_name = "Leather Armour"
+item_description = ""
+item_type = 1
+item_class = "knight"
+item_card_background = ExtResource("2_bg")
+art = ExtResource("3_art")
+armour_flat = 1
+life_flat = 2

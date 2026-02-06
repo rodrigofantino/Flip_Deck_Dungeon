@@ -17,7 +17,7 @@ enum CardState {
 @onready var item_description_label: Label = $item_description
 @onready var item_stats_label: Label = $item_stats
 
-var definition: ItemCardDefinition = null
+var item_instance: ItemInstance = null
 var item_id: String = ""
 var state: CardState = CardState.IN_HAND
 
@@ -44,20 +44,22 @@ func set_state(new_state: CardState) -> void:
 	else:
 		_set_equipped_compact(false, true)
 
-func setup(def: ItemCardDefinition) -> void:
-	definition = def
-	if definition == null:
-		push_error("[ItemCard] Definition null")
+func setup(instance: ItemInstance) -> void:
+	item_instance = instance
+	if item_instance == null or item_instance.archetype == null:
+		push_error("[ItemCard] Instance/archetype null")
 		return
 
 	if item_art != null:
-		item_art.texture = definition.art
+		item_art.texture = item_instance.archetype.art
+	if item_background != null and item_instance.archetype.item_card_background != null:
+		item_background.texture = item_instance.archetype.item_card_background
 	if item_name_label != null:
-		item_name_label.text = tr(definition.item_name)
+		item_name_label.text = tr(item_instance.archetype.item_name)
 	if item_description_label != null:
-		item_description_label.text = tr(definition.item_description)
+		item_description_label.text = tr(item_instance.archetype.item_description)
 	if item_stats_label != null:
-		item_stats_label.text = _build_stats_text(definition)
+		item_stats_label.text = _build_stats_text(item_instance)
 
 func _notification(what: int) -> void:
 	pass
@@ -65,16 +67,14 @@ func _notification(what: int) -> void:
 func _request_text_fit() -> void:
 	pass
 
-func _build_stats_text(def: ItemCardDefinition) -> String:
+func _build_stats_text(instance: ItemInstance) -> String:
 	var parts: Array[String] = []
-	_append_stat(parts, tr("ITEM_STAT_ARMOUR"), def.armour_flat)
-	_append_stat(parts, tr("ITEM_STAT_DAMAGE"), def.damage_flat)
-	_append_stat(parts, tr("ITEM_STAT_LIFE"), def.life_flat)
-	_append_stat(parts, tr("ITEM_STAT_INITIATIVE"), def.initiative_flat)
-	_append_stat(parts, tr("ITEM_STAT_LIFESTEAL"), def.lifesteal_flat)
-	_append_stat(parts, tr("ITEM_STAT_THORNS"), def.thorns_flat)
-	_append_stat(parts, tr("ITEM_STAT_REGEN"), def.regen_flat)
-	_append_stat(parts, tr("ITEM_STAT_CRIT"), def.crit_chance_flat)
+	if instance == null:
+		return ""
+	_append_stat(parts, tr("ITEM_STAT_ARMOUR"), instance.get_total_armour_flat())
+	_append_stat(parts, tr("ITEM_STAT_DAMAGE"), instance.get_total_damage_flat())
+	_append_stat(parts, tr("ITEM_STAT_LIFE"), instance.get_total_life_flat())
+	_append_stat(parts, tr("ITEM_STAT_INITIATIVE"), instance.get_total_initiative_flat())
 	return ", ".join(parts)
 
 func _append_stat(parts: Array[String], label: String, value: int) -> void:

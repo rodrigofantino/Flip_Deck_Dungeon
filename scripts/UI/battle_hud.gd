@@ -18,6 +18,9 @@ signal pause_pressed
 @onready var danger_label: Label = $TopBar/DangerLabel
 @onready var gold_label: Label = $TopBar/GoldLabel
 @onready var initiative_label: Label = $TopBar/InitiativeLabel
+@onready var wave_label: Label = $TopBar/WaveLabel
+@onready var wave_progress_label: Label = $TopBar/WaveProgressLabel
+@onready var dust_label: Label = $TopBar/DustLabel
 
 @onready var draw_button: Button = $Controls/VBoxButtons/HBoxDraw/DrawButton
 @onready var combat_button: Button = $Controls/VBoxButtons/HboxCombat/CombatButton
@@ -78,13 +81,23 @@ func _ready() -> void:
 	# Escuchar al RunManager
 	RunState.gold_changed.connect(update_gold)
 	RunState.danger_level_changed.connect(update_danger)
+	RunState.dust_changed.connect(update_dust)
+	RunState.wave_started.connect(update_wave)
+	RunState.wave_progress_changed.connect(update_wave_progress)
 
 	# Inicial
 	gold_amount = RunState.gold
 	gold_display_value = RunState.gold
 	_update_gold_label(gold_display_value)
 	update_danger(RunState.danger_level)
+	update_dust(RunState.dust, 0)
 	update_initiative_chance(0.0)
+	update_wave(RunState.current_wave, RunState.waves_per_run)
+	update_wave_progress(
+		RunState.current_wave,
+		RunState.enemies_defeated_in_wave,
+		RunState.enemies_per_wave
+	)
 
 	set_draw_enabled(true)
 	set_combat_enabled(false)
@@ -115,6 +128,11 @@ func update_gold(value: int) -> void:
 		return
 
 	_start_gold_gain_count(delta, GOLD_GAIN_DURATION)
+
+func update_dust(value: int, _delta: int) -> void:
+	if dust_label == null:
+		return
+	dust_label.text = "Dust: %d" % value
 
 
 func _start_gold_gain_count(_delta: int, duration: float) -> void:
@@ -239,6 +257,27 @@ func update_initiative_chance(prob: float) -> void:
 		return
 	var percent: int = int(round(prob * 100.0))
 	initiative_label.text = "Chance to attack first: %d%%" % percent
+
+func update_wave(wave_index: int, waves_total: int) -> void:
+	if wave_label == null:
+		return
+	wave_label.text = "Wave %d/%d" % [wave_index, waves_total]
+	_update_wave_progress_label(
+		wave_index,
+		RunState.enemies_defeated_in_wave,
+		RunState.enemies_per_wave
+	)
+
+func update_wave_progress(wave_index: int, defeated: int, total: int) -> void:
+	_update_wave_progress_label(wave_index, defeated, total)
+
+func _update_wave_progress_label(wave_index: int, defeated: int, total: int) -> void:
+	if wave_progress_label == null:
+		return
+	if RunState.is_wave_boss(wave_index):
+		wave_progress_label.text = "Boss Encounter"
+	else:
+		wave_progress_label.text = "Kills %d/%d" % [defeated, total]
 
 
 func set_draw_enabled(enabled: bool) -> void:

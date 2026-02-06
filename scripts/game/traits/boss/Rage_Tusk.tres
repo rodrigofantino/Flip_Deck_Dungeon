@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/traits/trait_resource.gd" id="1_trait"]
+
+[resource]
+script = ExtResource("1_trait")
+trait_id = "rage_tusk"
+display_name = "Rage Tusk"
+description = "La primera vez que baja a  60% HP, gana +1 DMG hasta fin del combate."
+trait_type = 1

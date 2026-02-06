@@ -9,6 +9,11 @@ class_name CollectionSlot
 @onready var selection_outline: Panel = $SelectionOutline
 @onready var count_overlay: ColorRect = $CountOverlay
 @onready var count_label: Label = $CountOverlay/CountLabel
+@onready var run_controls: HBoxContainer = $RunControls
+@onready var include_check: CheckBox = $RunControls/IncludeCheck
+@onready var weight_spin: SpinBox = $RunControls/WeightSpin
+@onready var item_overlay: ColorRect = $ItemTypeOverlay
+@onready var item_overlay_label: Label = $ItemTypeOverlay/OverlayLabel
 
 var card_view: CardView = null
 var current_def_id: String = ""
@@ -17,8 +22,14 @@ var is_obtained: bool = false
 var owned_count: int = 0
 var show_count_on_hover: bool = false
 var _base_modulate: Color = Color(1, 1, 1, 1)
+var _overlay_enabled: bool = false
+var _overlay_text: String = ""
 
 signal slot_clicked(slot: CollectionSlot)
+signal enemy_selected_toggled(slot: CollectionSlot, selected: bool)
+signal enemy_weight_changed(slot: CollectionSlot, weight: int)
+
+var _suppress_run_signals: bool = false
 
 func set_occupied(definition: CardDefinition, obtained: bool = true, upgrade_level: int = 0) -> void:
 	_clear_card()
@@ -93,6 +104,12 @@ func _ready() -> void:
 		style.bg_color = Color(0, 0, 0, 0)
 		selection_outline.add_theme_stylebox_override("panel", style)
 		selection_outline.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if run_controls:
+		run_controls.mouse_filter = Control.MOUSE_FILTER_STOP
+	if include_check:
+		include_check.toggled.connect(_on_include_toggled)
+	if weight_spin:
+		weight_spin.value_changed.connect(_on_weight_changed)
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -102,6 +119,27 @@ func _gui_input(event: InputEvent) -> void:
 func set_selected(selected: bool) -> void:
 	if selection_outline:
 		selection_outline.visible = selected and is_obtained
+
+func configure_run_controls(
+	visible: bool,
+	enabled: bool,
+	selected: bool,
+	weight: int
+) -> void:
+	if run_controls:
+		run_controls.visible = visible
+	if include_check:
+		include_check.visible = visible
+		include_check.disabled = not enabled
+	if weight_spin:
+		weight_spin.visible = visible
+		weight_spin.editable = enabled and selected
+	_suppress_run_signals = true
+	if include_check:
+		include_check.button_pressed = selected
+	if weight_spin:
+		weight_spin.value = clampi(weight, 1, 3)
+	_suppress_run_signals = false
 
 func _fit_card() -> void:
 	if card_view == null:
@@ -116,20 +154,23 @@ func _fit_card() -> void:
 	card_view.position = (target_size * 0.5) - (card_base_size * final_scale * 0.5)
 
 func _on_mouse_entered() -> void:
-	if not show_count_on_hover:
-		return
 	if card_view == null:
 		return
-	_show_count_overlay()
-	card_view.modulate = _base_modulate * Color(0.8, 0.8, 0.8, 1.0)
+	if show_count_on_hover:
+		_show_count_overlay()
+		card_view.modulate = _base_modulate * Color(0.8, 0.8, 0.8, 1.0)
+	if _overlay_enabled:
+		_show_item_overlay()
+	if _overlay_enabled:
+		_show_item_overlay()
 
 func _on_mouse_exited() -> void:
-	if not show_count_on_hover:
-		return
 	if card_view == null:
 		return
-	_hide_count_overlay()
-	card_view.modulate = _base_modulate
+	if show_count_on_hover:
+		_hide_count_overlay()
+		card_view.modulate = _base_modulate
+	_hide_item_overlay()
 
 func _show_count_overlay() -> void:
 	if count_overlay == null or count_label == null:
@@ -141,3 +182,31 @@ func _hide_count_overlay() -> void:
 	if count_overlay == null:
 		return
 	count_overlay.visible = false
+
+func configure_item_type_overlay(enabled: bool, text: String) -> void:
+	_overlay_enabled = enabled
+	_overlay_text = text
+	if item_overlay_label:
+		item_overlay_label.text = text
+	if not enabled:
+		_hide_item_overlay()
+
+func _show_item_overlay() -> void:
+	if item_overlay == null:
+		return
+	item_overlay.visible = true
+
+func _hide_item_overlay() -> void:
+	if item_overlay == null:
+		return
+	item_overlay.visible = false
+
+func _on_include_toggled(pressed: bool) -> void:
+	if _suppress_run_signals:
+		return
+	enemy_selected_toggled.emit(self, pressed)
+
+func _on_weight_changed(value: float) -> void:
+	if _suppress_run_signals:
+		return
+	enemy_weight_changed.emit(self, int(round(value)))

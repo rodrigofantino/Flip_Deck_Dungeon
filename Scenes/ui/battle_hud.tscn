@@ -34,6 +34,32 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 15
 text = "GOLD LABEL"
 
+[node name="SpacerDust" type="Control" parent="TopBar"]
+custom_minimum_size = Vector2(5, 0)
+layout_mode = 2
+
+[node name="DustLabel" type="Label" parent="TopBar"]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Dust: 0"
+
+[node name="SpacerWave" type="Control" parent="TopBar"]
+custom_minimum_size = Vector2(5, 0)
+layout_mode = 2
+
+[node name="WaveLabel" type="Label" parent="TopBar"]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Wave 1/20"
+
+[node name="WaveProgressLabel" type="Label" parent="TopBar"]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Kills 0/5"
+
 [node name="Spacer2" type="Control" parent="TopBar"]
 custom_minimum_size = Vector2(5, 0)
 layout_mode = 2

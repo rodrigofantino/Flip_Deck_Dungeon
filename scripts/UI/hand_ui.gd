@@ -7,12 +7,10 @@ const HOVER_RAISE_Y: float = 36.0
 const HAND_SCALE: float = 0.2548
 const HOVER_SCALE: float = 1.2
 const LAYOUT_TWEEN_TIME: float = 0.2
-const ITEM_CATALOG_DEFAULT_PATH: String = "res://data/item_catalog_default.tres"
 const STATE_IN_HAND: int = 0
 const STATE_DRAGGING: int = 1
 
 @export var item_card_scene: PackedScene
-@export var item_catalog: ItemCatalog
 @export var equip_zone_path: NodePath
 
 var _cards: Array[Control] = []
@@ -67,10 +65,8 @@ func _rebuild_cards(items: Array[String]) -> void:
 	if item_card_scene == null:
 		return
 
-	var catalog := _get_item_catalog()
-
 	for item_id in items:
-		var card := _create_card_for_item(item_id, catalog)
+		var card := _create_card_for_item(item_id)
 		if card != null:
 			_cards.append(card)
 
@@ -108,7 +104,7 @@ func _get_pose_for_index(index: int, count: int, center: Vector2, card_size: Vec
 	var rot: float = 0.0
 	return {"pos": pos, "rot": rot}
 
-func _create_card_for_item(item_id: String, catalog: ItemCatalog) -> Control:
+func _create_card_for_item(item_id: String) -> Control:
 	if item_card_scene == null:
 		return null
 	var card := item_card_scene.instantiate() as Control
@@ -122,11 +118,12 @@ func _create_card_for_item(item_id: String, catalog: ItemCatalog) -> Control:
 		card.call("set_state", STATE_IN_HAND)
 	card.set("item_id", item_id)
 
-	var def: ItemCardDefinition = null
-	if catalog != null:
-		def = catalog.get_item_by_id(item_id)
-	if def != null and card.has_method("setup"):
-		card.call("setup", def)
+	var instance: ItemInstance = RunState.get_item_instance(item_id)
+	if instance == null:
+		card.queue_free()
+		return null
+	if card.has_method("setup"):
+		card.call("setup", instance)
 
 	if card.has_signal("hover_entered"):
 		card.connect("hover_entered", Callable(self, "_on_card_hover_entered"))
@@ -140,8 +137,7 @@ func _create_card_for_item(item_id: String, catalog: ItemCatalog) -> Control:
 	return card
 
 func _add_card(item_id: String, total_count: int) -> void:
-	var catalog := _get_item_catalog()
-	var card := _create_card_for_item(item_id, catalog)
+	var card := _create_card_for_item(item_id)
 	if card == null:
 		return
 	_cards.append(card)
@@ -277,9 +273,3 @@ func _is_point_over_hero(global_pos: Vector2) -> bool:
 		if card.get_global_rect().has_point(global_pos):
 			return true
 	return false
-
-func _get_item_catalog() -> ItemCatalog:
-	if item_catalog != null:
-		return item_catalog
-	item_catalog = load(ITEM_CATALOG_DEFAULT_PATH) as ItemCatalog
-	return item_catalog
