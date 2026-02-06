@@ -13,6 +13,7 @@ var _card_types: Array[String] = []
 var _card_obtained: Array[bool] = []
 var _owned_count_map: Dictionary = {}
 var _upgrade_level_map: Dictionary = {}
+var _hero_unspent_map: Dictionary = {}
 var _show_counts: bool = false
 var _is_play_mode: bool = false
 
@@ -70,6 +71,7 @@ func _load_collection() -> void:
 	var collection := SaveSystem.load_collection()
 	if collection == null:
 		collection = SaveSystem.ensure_collection()
+	var profile: PlayerProfile = ProfileService.get_profile()
 	var obtained := {}
 	for def_id in collection.get_all_types():
 		obtained[String(def_id)] = true
@@ -79,6 +81,19 @@ func _load_collection() -> void:
 	_upgrade_level_map.clear()
 	for def_id in collection.upgrade_level.keys():
 		_upgrade_level_map[String(def_id)] = int(collection.upgrade_level.get(def_id, 0))
+	_hero_unspent_map.clear()
+	if profile != null:
+		for def_key in CardDatabase.definitions.keys():
+			var def: CardDefinition = CardDatabase.get_definition(String(def_key))
+			if def == null:
+				continue
+			if def.card_type != "hero":
+				continue
+			var def_id := String(def.definition_id)
+			if def_id == "":
+				continue
+			var progression: HeroProgression = profile.get_or_create_progression(StringName(def_id))
+			_hero_unspent_map[def_id] = progression.unspent_points
 	_is_play_mode = RunState.selection_pending
 	_card_types.clear()
 	_card_obtained.clear()
@@ -204,7 +219,11 @@ func _refresh() -> void:
 					var upgrade_level := int(_upgrade_level_map.get(def_id, 0))
 					slot.set_occupied(def, obtained, upgrade_level)
 					var count := int(_owned_count_map.get(def_id, 0))
-					slot.set_owned_count(count, _show_counts)
+					var override_text := ""
+					if def.card_type == "hero":
+						var unspent := int(_hero_unspent_map.get(def_id, 0))
+						override_text = "UP %d" % unspent
+					slot.set_owned_count(count, _show_counts, override_text)
 				else:
 					slot.set_empty()
 			else:

@@ -123,6 +123,8 @@ signal hero_level_up(new_level: int)
 var hero_level: int = 1
 var hero_xp: int = 0
 var xp_to_next_level: int = 4
+var run_xp_earned: int = 0
+var enemy_level: int = 1
 
 const XP_GROWTH_FACTOR: float = 2.0
 const HERO_LEVEL_UP_STAT_MULT: float = 1.2
@@ -251,7 +253,15 @@ func set_run_selection(hero_def_id: String, weights: Dictionary) -> void:
 	current_wave = 1
 	hero_level = 1
 	hero_xp = 0
+	if not hero_def_id.is_empty():
+		var profile: PlayerProfile = ProfileService.get_profile()
+		if profile != null:
+			var progression: HeroProgression = profile.get_or_create_progression(StringName(hero_def_id))
+			hero_level = progression.level
+			hero_xp = progression.xp
 	xp_to_next_level = _calc_xp_to_next_level(hero_level)
+	run_xp_earned = 0
+	enemy_level = 1
 	item_instances.clear()
 	item_instance_counter = 0
 	hand_items.clear()
@@ -401,7 +411,7 @@ func create_card_instance(
 	if id == "th":
 		card_level = hero_level + upgrade_level
 	else:
-		card_level = def.level + max(0, hero_level - 1) + upgrade_level
+		card_level = def.level + max(0, enemy_level - 1) + upgrade_level
 
 	var card: Dictionary = {
 		"id": id,
@@ -876,6 +886,32 @@ func get_equipped_item_id_for_slot(slot_id: String) -> String:
 		return ""
 	return String(equipped_items[idx])
 
+func get_equipped_item_ids_for_item_type(item_type: int) -> Array[String]:
+	var result: Array[String] = []
+	if equipment_layout_knight == null:
+		return result
+	for i in range(min(equipment_layout_knight.slots.size(), equipped_items.size())):
+		var slot_def := equipment_layout_knight.slots[i]
+		if slot_def == null:
+			continue
+		if slot_def.accepts_item_type != item_type:
+			continue
+		var item_id := String(equipped_items[i])
+		if not item_id.is_empty():
+			result.append(item_id)
+	return result
+
+func get_slot_ids_for_item_type(item_type: int) -> Array[String]:
+	var result: Array[String] = []
+	if equipment_layout_knight == null:
+		return result
+	for slot_def in equipment_layout_knight.slots:
+		if slot_def == null:
+			continue
+		if slot_def.accepts_item_type == item_type:
+			result.append(slot_def.slot_id)
+	return result
+
 func get_equipment_layout_for_class(class_id: String) -> EquipmentLayoutDefinition:
 	if class_id == "knight":
 		return equipment_layout_knight
@@ -907,6 +943,8 @@ func equip_item_to_slot(slot_id: String, item_id: String) -> int:
 	if equipment_manager == null:
 		return EquipmentManager.EquipResult.FAILED
 	return equipment_manager.equip(slot_id, instance)
+
+
 
 func debug_add_full_set_to_hand(_theme: String = "") -> void:
 	if item_archetype_catalog == null or item_archetype_catalog.archetypes.is_empty():
@@ -986,6 +1024,14 @@ func _equip_item_to_slot_index(slot_index: int, item_id: String) -> void:
 	_apply_equipment_to_hero()
 
 func _find_slot_for_item(item_id: String) -> int:
+	var instance := get_item_instance(item_id)
+	if instance == null or instance.archetype == null:
+		return -1
+	if instance.archetype.item_type == CardDefinition.ItemType.ONE_HAND:
+		var slot_id := get_slot_id_for_item(item_id)
+		if slot_id.is_empty():
+			return -1
+		return _get_equipment_slot_index(slot_id)
 	var slot_key := _get_item_slot_key(item_id)
 	if slot_key.is_empty():
 		return -1
@@ -1019,7 +1065,7 @@ func _get_slot_key_from_archetype(archetype: ItemArchetype) -> String:
 	if archetype == null:
 		return ""
 	if archetype.item_type == CardDefinition.ItemType.ONE_HAND:
-		return "one_hand"
+		return "one_hand_main"
 	if archetype.item_type == CardDefinition.ItemType.TWO_HANDS:
 		return "two_hands"
 	if archetype.item_type == CardDefinition.ItemType.HELMET:
@@ -1030,6 +1076,40 @@ func _get_slot_key_from_archetype(archetype: ItemArchetype) -> String:
 		return "gloves"
 	if archetype.item_type == CardDefinition.ItemType.BOOTS:
 		return "boots"
+	return ""
+
+func get_slot_id_for_item(item_id: String) -> String:
+	var instance := get_item_instance(item_id)
+	if instance == null or instance.archetype == null:
+		return ""
+	if instance.archetype.item_type != CardDefinition.ItemType.ONE_HAND:
+		return _get_slot_key_from_archetype(instance.archetype)
+	var slot_ids := get_slot_ids_for_item_type(CardDefinition.ItemType.ONE_HAND)
+	if slot_ids.is_empty():
+		return ""
+	var tag := _get_one_hand_tag(instance.archetype)
+	if tag != "":
+		for slot_id in slot_ids:
+			var equipped_id := get_equipped_item_id_for_slot(slot_id)
+			if equipped_id.is_empty():
+				continue
+			var equipped_instance := get_item_instance(equipped_id)
+			if equipped_instance == null or equipped_instance.archetype == null:
+				continue
+			if _get_one_hand_tag(equipped_instance.archetype) == tag:
+				return slot_id
+	for slot_id in slot_ids:
+		if get_equipped_item_id_for_slot(slot_id).is_empty():
+			return slot_id
+	return slot_ids[0]
+
+func _get_one_hand_tag(archetype: ItemArchetype) -> String:
+	if archetype == null:
+		return ""
+	for tag in archetype.item_type_tags:
+		var tag_str := String(tag).to_lower()
+		if tag_str == "sword" or tag_str == "shield":
+			return tag_str
 	return ""
 
 func _apply_equipment_to_hero() -> void:
@@ -1101,24 +1181,40 @@ func _add_hero_xp(amount: int) -> void:
 	if amount <= 0:
 		hero_xp_changed.emit(hero_xp, xp_to_next_level)
 		return
-	hero_xp += amount
-
-	while hero_xp >= xp_to_next_level:
-		hero_xp -= xp_to_next_level
-		_level_up()
-
+	var hero_id: StringName = StringName(selected_hero_def_id)
+	if hero_id == &"":
+		return
+	var profile: PlayerProfile = ProfileService.get_profile()
+	if profile == null:
+		return
+	var progression: HeroProgression = profile.get_or_create_progression(hero_id)
+	ProfileService.award_run_xp(hero_id, amount)
+	profile = ProfileService.get_profile()
+	progression = profile.get_or_create_progression(hero_id)
+	var new_level: int = progression.level
+	hero_xp = progression.xp
+	xp_to_next_level = _calc_xp_to_next_level(new_level)
+	while hero_level < new_level:
+		hero_level += 1
+		_apply_hero_level_up_effects()
 	hero_xp_changed.emit(hero_xp, xp_to_next_level)
 
 
 func _level_up() -> void:
 	hero_level += 1
 	xp_to_next_level = _calc_xp_to_next_level(hero_level)
+	_apply_hero_level_up_effects()
+
+func _apply_hero_level_up_effects() -> void:
 	hero_level_multiplier *= HERO_LEVEL_UP_STAT_MULT
-	enemy_level_multiplier *= ENEMY_LEVEL_UP_STAT_MULT
 	_rescale_all_cards_from_definitions()
 	_sync_hero_card_level(true)
 	_apply_equipment_to_hero()
 	hero_level_up.emit(hero_level)
+
+func _enemy_level_up() -> void:
+	enemy_level += 1
+	enemy_level_multiplier *= ENEMY_LEVEL_UP_STAT_MULT
 
 
 func _sync_hero_card_level(full_heal: bool) -> void:
@@ -1138,7 +1234,7 @@ func _scale_stat(value: int, is_hero: bool, upgrade_level: int) -> int:
 	return int(round(float(value) * mult))
 
 func _calc_xp_to_next_level(level: int) -> int:
-	return BASE_XP_TO_LEVEL + max(0, level - 1) * XP_PER_LEVEL_STEP
+	return ProfileService.xp_required_for_level(level)
 
 func _get_upgrade_multiplier(is_hero: bool) -> float:
 	return HERO_LEVEL_UP_STAT_MULT if is_hero else ENEMY_LEVEL_UP_STAT_MULT
@@ -1190,7 +1286,7 @@ func _update_card_level_from_definition(card: Dictionary) -> void:
 	if card.get("id", "") == "th":
 		card["level"] = hero_level + upgrade_level
 	else:
-		card["level"] = def.level + max(0, hero_level - 1) + upgrade_level
+		card["level"] = def.level + max(0, enemy_level - 1) + upgrade_level
 
 func _clear_active_traits_on_level_up() -> void:
 	if active_hero_traits.is_empty() and active_enemy_traits.is_empty():
@@ -1334,6 +1430,8 @@ func save_run():
 		"enemies_defeated_in_wave": enemies_defeated_in_wave,
 		"hero_level": hero_level,
 		"hero_xp": hero_xp,
+		"run_xp_earned": run_xp_earned,
+		"enemy_level": enemy_level,
 		"xp_to_next_level": xp_to_next_level,
 		"cards": cards,
 		"enemy_draw_orders": enemy_draw_orders,
@@ -1406,6 +1504,8 @@ func load_run():
 	enemies_defeated_in_wave = int(data.get("enemies_defeated_in_wave", 0))
 	hero_level = int(data.get("hero_level", 1))
 	hero_xp = int(data.get("hero_xp", 0))
+	run_xp_earned = int(data.get("run_xp_earned", 0))
+	enemy_level = int(data.get("enemy_level", 1))
 	xp_to_next_level = _calc_xp_to_next_level(hero_level)
 	cards = data.get("cards", {})
 	_load_upgrade_levels()
@@ -1419,6 +1519,7 @@ func load_run():
 	hand_items = _filter_item_instance_ids(hand_items)
 	equipped_items = _sanitize_equipped_items(equipped_items)
 	_ensure_equipped_size()
+	_migrate_equipped_items_for_one_hand_slots()
 	completed_set_themes = _to_string_array(data.get("completed_set_themes", []))
 	set_bonus_armour = int(data.get("set_bonus_armour", 0))
 	set_bonus_damage = int(data.get("set_bonus_damage", 0))
@@ -1569,6 +1670,29 @@ func _ensure_equipped_size() -> void:
 	if equipped_items.size() > MAX_EQUIP_SLOTS:
 		equipped_items = equipped_items.slice(0, MAX_EQUIP_SLOTS)
 
+func _migrate_equipped_items_for_one_hand_slots() -> void:
+	var new_two_hands_idx := _get_equipment_slot_index("two_hands")
+	if new_two_hands_idx == -1:
+		return
+	var old_two_hands_idx := 5
+	if new_two_hands_idx == old_two_hands_idx:
+		return
+	if old_two_hands_idx < 0 or old_two_hands_idx >= equipped_items.size():
+		return
+	var old_id := String(equipped_items[old_two_hands_idx])
+	if old_id.is_empty():
+		return
+	var inst := get_item_instance(old_id)
+	if inst == null or inst.archetype == null:
+		return
+	if inst.archetype.item_type != CardDefinition.ItemType.TWO_HANDS:
+		return
+	if new_two_hands_idx >= equipped_items.size():
+		return
+	if String(equipped_items[new_two_hands_idx]).is_empty():
+		equipped_items[new_two_hands_idx] = old_id
+		equipped_items[old_two_hands_idx] = ""
+
 func has_saved_run() -> bool:
 	if not FileAccess.file_exists("user://save/save_run.json"):
 		return false
@@ -1663,22 +1787,22 @@ func handle_enemy_defeated_for_wave(enemy_data: Dictionary) -> bool:
 		wave_completed.emit(current_wave)
 		if boss_kind == BossDefinition.BossKind.FINAL_BOSS:
 			return true
+		_enemy_level_up()
 		current_wave += 1
 		enemies_defeated_in_wave = 0
 		if current_wave > waves_per_run:
 			return true
-		start_wave_encounter()
 		return false
 
 	enemies_defeated_in_wave += 1
 	wave_progress_changed.emit(current_wave, enemies_defeated_in_wave, enemies_per_wave)
 	if enemies_defeated_in_wave >= enemies_per_wave:
 		wave_completed.emit(current_wave)
+		_enemy_level_up()
 		current_wave += 1
 		enemies_defeated_in_wave = 0
 		if current_wave > waves_per_run:
 			return true
-		start_wave_encounter()
 
 	return false
 
@@ -1759,6 +1883,8 @@ func reset_run(new_mode: String = "normal") -> void:
 	hero_level = 1
 	hero_xp = 0
 	xp_to_next_level = _calc_xp_to_next_level(hero_level)
+	run_xp_earned = 0
+	enemy_level = 1
 	hero_level_multiplier = 1.0
 	enemy_level_multiplier = 1.0
 	_upgrade_level_map.clear()

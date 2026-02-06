@@ -21,6 +21,7 @@ var current_card_type: String = ""
 var is_obtained: bool = false
 var owned_count: int = 0
 var show_count_on_hover: bool = false
+var count_text_override: String = ""
 var _base_modulate: Color = Color(1, 1, 1, 1)
 var _overlay_enabled: bool = false
 var _overlay_text: String = ""
@@ -67,9 +68,10 @@ func set_empty() -> void:
 	owned_count = 0
 	_hide_count_overlay()
 
-func set_owned_count(count: int, enable_hover: bool) -> void:
+func set_owned_count(count: int, enable_hover: bool, override_text: String = "") -> void:
 	owned_count = max(0, count)
 	show_count_on_hover = enable_hover
+	count_text_override = override_text
 
 func _clear_card() -> void:
 	if card_view != null:
@@ -175,7 +177,10 @@ func _on_mouse_exited() -> void:
 func _show_count_overlay() -> void:
 	if count_overlay == null or count_label == null:
 		return
-	count_label.text = "%d" % owned_count
+	if count_text_override != "":
+		count_label.text = count_text_override
+	else:
+		count_label.text = "%d" % owned_count
 	count_overlay.visible = true
 
 func _hide_count_overlay() -> void:

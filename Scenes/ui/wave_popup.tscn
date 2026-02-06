@@ -1,0 +1,53 @@
+[gd_scene load_steps=2 format=3 uid="uid://d3p1l4g1xk5p0"]
+
+[ext_resource type="Script" uid="uid://bq2q8p7k4h8x1" path="res://scripts/UI/wave_popup.gd" id="1_wave_script"]
+
+[node name="WavePopup" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("1_wave_script")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.55)
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -140.0
+offset_right = 200.0
+offset_bottom = 140.0
+
+[node name="Content" type="VBoxContainer" parent="Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="Panel/Content"]
+custom_minimum_size = Vector2(0, 28)
+text = "Wave 1"
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="Panel/Content"]
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="RetreatButton" type="Button" parent="Panel/Content/Buttons"]
+custom_minimum_size = Vector2(0, 36)
+text = "Retreat"
+
+[node name="ContinueButton" type="Button" parent="Panel/Content/Buttons"]
+custom_minimum_size = Vector2(0, 36)
+text = "Continue"

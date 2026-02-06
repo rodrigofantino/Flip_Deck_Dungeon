@@ -56,3 +56,9 @@ func _refresh_equipped() -> void:
 
 func _on_equip_changed(_equipped: Array[String]) -> void:
 	_refresh_equipped()
+
+func get_slot_global_center(slot_id: String) -> Vector2:
+	var view: EquipmentSlotView = slot_views.get(slot_id, null)
+	if view == null:
+		return Vector2.ZERO
+	return view.get_global_rect().get_center()

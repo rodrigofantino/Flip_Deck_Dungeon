@@ -1,0 +1,74 @@
+[gd_scene load_steps=2 format=3 uid="uid://dxe6u75y1a2r6"]
+
+[ext_resource type="Script" uid="uid://clc5m1pwh5d7g" path="res://scripts/UI/hero_upgrades_window.gd" id="1_bvff0"]
+
+[node name="HeroUpgradesWindow" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_bvff0")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+
+[node name="HBox" type="HBoxContainer" parent="Panel"]
+offset_right = 1232.0
+offset_bottom = 672.0
+theme_override_constants/separation = 24
+
+[node name="Left" type="VBoxContainer" parent="Panel/HBox"]
+size_flags_horizontal = 3
+
+[node name="HeroListLabel" type="Label" parent="Panel/HBox/Left"]
+text = "Owned Heroes"
+
+[node name="HeroList" type="ItemList" parent="Panel/HBox/Left"]
+size_flags_vertical = 3
+select_mode = 0
+
+[node name="Right" type="VBoxContainer" parent="Panel/HBox"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Header" type="HBoxContainer" parent="Panel/HBox/Right"]
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Panel/HBox/Right/Header"]
+text = "Hero Upgrades"
+
+[node name="HeroNameLabel" type="Label" parent="Panel/HBox/Right/Header"]
+text = "-"
+
+[node name="CloseButton" type="Button" parent="Panel/HBox/Right/Header"]
+custom_minimum_size = Vector2(80, 0)
+text = "Close"
+
+[node name="Details" type="HBoxContainer" parent="Panel/HBox/Right"]
+theme_override_constants/separation = 18
+
+[node name="LevelLabel" type="Label" parent="Panel/HBox/Right/Details"]
+text = "Level: 1"
+
+[node name="XpLabel" type="Label" parent="Panel/HBox/Right/Details"]
+text = "XP: 0 / 0"
+
+[node name="PointsLabel" type="Label" parent="Panel/HBox/Right/Details"]
+text = "Unspent: 0"
+
+[node name="Stats" type="VBoxContainer" parent="Panel/HBox/Right"]
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="StatsLabel" type="Label" parent="Panel/HBox/Right/Stats"]
+text = "Stats"
+
+[node name="StatsScroll" type="ScrollContainer" parent="Panel/HBox/Right/Stats"]
+size_flags_vertical = 3
+
+[node name="StatsList" type="VBoxContainer" parent="Panel/HBox/Right/Stats/StatsScroll"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 6

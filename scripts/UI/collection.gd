@@ -7,6 +7,7 @@ extends Control
 @onready var next_button: Button = $TopBar/NextButton
 @onready var title_label: Label = $TopBar/TitleLabel
 @onready var page_label: Label = $TopBar/PageLabel
+@onready var upgrades_button: Button = $TopBar/UpgradesButton
 @onready var selection_panel: VBoxContainer = $SelectionPanel
 @onready var select_hero_label: Label = $SelectionPanel/SelectHeroLabel
 @onready var select_enemies_label: Label = $SelectionPanel/SelectEnemiesLabel
@@ -65,6 +66,7 @@ const OPEN_CARD_FLY_MAX_WAIT: float = 1.2
 const BIOME_FOREST: String = "Forest"
 const BIOME_DARK_FOREST: String = "Dark Forest"
 const CARD_VIEW_SCENE: PackedScene = preload("res://Scenes/cards/card_view.tscn")
+const HERO_UPGRADES_SCENE: PackedScene = preload("res://Scenes/ui/hero_upgrades_window.tscn")
 
 class PackView:
 	var pack_type: String
@@ -81,6 +83,7 @@ var open_collection: PlayerCollection = null
 var _pending_book_refresh: bool = false
 var _popup_def: CardDefinition = null
 var _selection_error_override: String = ""
+var hero_upgrades_window: HeroUpgradesWindow = null
 
 const MIN_ENEMY_SELECTION: int = 2
 const MAX_ENEMY_SELECTION: int = 5
@@ -137,6 +140,9 @@ func _wire_ui() -> void:
 		next_button.pressed.connect(_on_next_pressed)
 	if page_label:
 		_update_page_label()
+	if upgrades_button:
+		upgrades_button.text = "Upgrades"
+		upgrades_button.pressed.connect(_on_upgrades_pressed)
 	if back_button:
 		back_button.pressed.connect(func() -> void:
 			SceneTransition.change_scene("res://Scenes/ui/main_menu.tscn")
@@ -317,7 +323,10 @@ func _on_page_slot_clicked(slot: CollectionSlot) -> void:
 		if RunState.selection_pending:
 			selection_mode = true
 		else:
-			_open_card_popup(slot)
+			if slot.current_card_type == "hero":
+				_open_hero_upgrades()
+			else:
+				_open_card_popup(slot)
 			return
 	if not slot.is_obtained:
 		return
@@ -595,6 +604,21 @@ func _on_prev_pressed() -> void:
 
 func _on_next_pressed() -> void:
 	_change_book_page(true)
+
+func _on_upgrades_pressed() -> void:
+	_open_hero_upgrades()
+
+func _open_hero_upgrades() -> void:
+	if hero_upgrades_window == null:
+		if HERO_UPGRADES_SCENE == null:
+			return
+		hero_upgrades_window = HERO_UPGRADES_SCENE.instantiate() as HeroUpgradesWindow
+		if hero_upgrades_window == null:
+			return
+		add_child(hero_upgrades_window)
+		hero_upgrades_window.z_index = 300
+	hero_upgrades_window.visible = true
+	hero_upgrades_window.refresh_window()
 
 func _change_book_page(go_next: bool) -> void:
 	var book: PageFlip2D = _get_book() as PageFlip2D

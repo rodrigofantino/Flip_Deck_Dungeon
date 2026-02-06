@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://buf3cc7nbc5w4" path="res://Scenes/ui/xp_hud.tscn" id="6_j8cen"]
 [ext_resource type="PackedScene" uid="uid://dbv8f10a2jvwh" path="res://Scenes/ui/level_up_popup.tscn" id="7_x57qr"]
 [ext_resource type="PackedScene" uid="uid://c2p2m7p4y3w1q" path="res://Scenes/ui/pause_popup.tscn" id="8_p9p7r"]
+[ext_resource type="PackedScene" uid="uid://d3p1l4g1xk5p0" path="res://Scenes/ui/wave_popup.tscn" id="15_wave_popup"]
 [ext_resource type="PackedScene" uid="uid://b7r1m5m8f0k2a" path="res://Scenes/ui/crossroads_popup_fixed.tscn" id="9_cxrs"]
 [ext_resource type="PackedScene" uid="uid://c5bbf25qofvfd" path="res://Scenes/cards/item_card.tscn" id="10_item_card"]
 [ext_resource type="Script" uid="uid://bw4hb1qx2c5sr" path="res://scripts/UI/hand_ui.gd" id="11_hand_ui_script"]
@@ -30,6 +31,7 @@ victory_popup_scene = ExtResource("6_4h7lb")
 crossroads_popup_scene = ExtResource("9_cxrs")
 level_up_popup_scene = ExtResource("7_x57qr")
 pause_popup_scene = ExtResource("8_p9p7r")
+wave_popup_scene = ExtResource("15_wave_popup")
 card_view_scene = ExtResource("2_udct1")
 
 [node name="TextureRect" type="TextureRect" parent="."]

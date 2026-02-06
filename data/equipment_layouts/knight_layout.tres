@@ -23,9 +23,14 @@ script = ExtResource("2_slot")
 slot_id = "boots"
 accepts_item_type = 3
 
-[sub_resource type="Resource" id="slot_one_hand"]
+[sub_resource type="Resource" id="slot_one_hand_main"]
 script = ExtResource("2_slot")
-slot_id = "one_hand"
+slot_id = "one_hand_main"
+accepts_item_type = 4
+
+[sub_resource type="Resource" id="slot_one_hand_off"]
+script = ExtResource("2_slot")
+slot_id = "one_hand_off"
 accepts_item_type = 4
 
 [sub_resource type="Resource" id="slot_two_hands"]
@@ -41,6 +46,7 @@ slots = [
 	SubResource("slot_armour"),
 	SubResource("slot_gloves"),
 	SubResource("slot_boots"),
-	SubResource("slot_one_hand"),
+	SubResource("slot_one_hand_main"),
+	SubResource("slot_one_hand_off"),
 	SubResource("slot_two_hands")
 ]

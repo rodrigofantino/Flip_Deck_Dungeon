@@ -29,6 +29,10 @@ var end_of_wave_pending: bool = false
 # =========================
 @export var victory_popup_scene: PackedScene
 var victory_popup: VictoryPopup = null
+@export var wave_popup_scene: PackedScene
+var wave_popup: WavePopup = null
+var wave_popup_open: bool = false
+var suppress_wave_popup_once: bool = false
 
 # ==========================================
 # REGISTRO DE CARD VIEWS (UI)
@@ -157,6 +161,7 @@ func _ready() -> void:
 	RunState.enemy_stats_changed.connect(_on_enemy_stats_changed)
 	RunState.hero_stats_changed.connect(_on_enemy_stats_changed)
 	RunState.wave_started.connect(_on_wave_started)
+	RunState.wave_completed.connect(_on_wave_completed)
 	_setup_equipment_slots_view()
 	
 	
@@ -335,6 +340,7 @@ func _handle_enemy_defeated(card_id: String) -> void:
 	if card_id == "":
 		return
 	var enemy_data: Dictionary = RunState.get_card(card_id)
+	suppress_wave_popup_once = _is_final_boss_enemy(enemy_data)
 	RunState.active_enemy_ids = _get_active_enemy_ids()
 	var victory_after_defeat: bool = not RunState.has_remaining_enemies(card_id)
 	suppress_level_up_popup = victory_after_defeat
@@ -361,6 +367,8 @@ func _handle_enemy_defeated(card_id: String) -> void:
 	if run_completed:
 		_show_victory()
 		return
+	if wave_popup_open:
+		return
 	if _get_active_enemy_ids().size() > 0:
 		current_phase = BattlePhase.ENEMY_ACTIVE
 		_update_hud_state()
@@ -374,7 +382,7 @@ func _handle_enemy_defeated(card_id: String) -> void:
 		_update_hud_state()
 		return
 	# Si no hay enemigos y no hay encrucijada, asegurar inicio de nueva oleada.
-	if RunState.current_wave <= RunState.waves_per_run:
+	if RunState.current_wave <= RunState.waves_per_run and not wave_popup_open:
 		RunState.start_wave_encounter()
 		setup_enemy_deck()
 	current_phase = BattlePhase.IDLE
@@ -396,6 +404,57 @@ func _on_wave_started(_wave_index: int, _waves_total: int) -> void:
 	setup_enemy_deck()
 	current_phase = BattlePhase.IDLE
 	_update_hud_state()
+
+func _on_wave_completed(_wave_index: int) -> void:
+	if suppress_wave_popup_once:
+		suppress_wave_popup_once = false
+		return
+	if RunState.current_wave >= RunState.waves_per_run and RunState.is_current_wave_boss():
+		return
+	_show_wave_popup()
+
+func _show_wave_popup() -> void:
+	if wave_popup_open:
+		return
+	if wave_popup_scene == null:
+		push_error("WavePopup scene not assigned")
+		return
+	if wave_popup == null:
+		wave_popup = wave_popup_scene.instantiate()
+		add_child(wave_popup)
+		wave_popup.process_mode = Node.PROCESS_MODE_ALWAYS
+		wave_popup.z_index = 220
+		wave_popup.continue_pressed.connect(_on_wave_continue)
+		wave_popup.retreat_pressed.connect(_on_wave_retreat)
+	wave_popup_open = true
+	current_phase = BattlePhase.UI_LOCKED
+	_update_hud_state()
+	get_tree().paused = true
+	wave_popup.show_popup(RunState.current_wave)
+
+func _on_wave_continue() -> void:
+	if wave_popup == null:
+		return
+	wave_popup.hide_popup()
+	wave_popup_open = false
+	get_tree().paused = false
+	if RunState.current_wave <= RunState.waves_per_run:
+		RunState.start_wave_encounter()
+		setup_enemy_deck()
+	current_phase = BattlePhase.IDLE
+	_update_hud_state()
+
+func _on_wave_retreat() -> void:
+	if wave_popup != null:
+		wave_popup.hide_popup()
+	wave_popup_open = false
+	RunState.apply_withdraw_25_cost_75()
+	SaveSystem.clear_run_save()
+	RunState.reset_run()
+	get_tree().paused = false
+	if MusicManager:
+		MusicManager.play_menu()
+	SceneTransition.change_scene("res://Scenes/ui/main_menu.tscn")
 
 func _on_pause_pressed() -> void:
 	_toggle_pause()
@@ -906,6 +965,15 @@ func _show_victory() -> void:
 		victory_popup.back_to_menu_pressed.connect(_on_back_to_menu)
 
 	victory_popup.show_victory(RunState.gold)
+
+func _is_final_boss_enemy(enemy_data: Dictionary) -> bool:
+	if enemy_data.is_empty():
+		return false
+	var is_boss: bool = bool(enemy_data.get("is_boss", false)) or enemy_data.has("boss_id")
+	if not is_boss:
+		return false
+	var boss_kind := int(enemy_data.get("boss_kind", BossDefinition.BossKind.MINI_BOSS))
+	return boss_kind == BossDefinition.BossKind.FINAL_BOSS
 
 
 ######################################

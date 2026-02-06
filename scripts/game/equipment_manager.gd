@@ -41,6 +41,9 @@ func can_equip(slot_id: String, item: ItemInstance) -> bool:
 		return false
 	if not _passes_two_hand_block_rules(slot_id, item.archetype.item_type):
 		return false
+	if item.archetype.item_type == CardDefinition.ItemType.ONE_HAND:
+		if not _passes_one_hand_tag_rules(slot_id, item):
+			return false
 	return true
 
 func equip(slot_id: String, item: ItemInstance) -> EquipResult:
@@ -73,11 +76,43 @@ func _passes_two_hand_block_rules(target_slot_id: String, item_type: int) -> boo
 	if run_manager == null:
 		return false
 	if item_type == CardDefinition.ItemType.TWO_HANDS:
-		var one_hand_id := run_manager.get_equipped_item_id_for_slot("one_hand")
-		if not one_hand_id.is_empty():
+		var one_hands: Array[String] = run_manager.get_equipped_item_ids_for_item_type(CardDefinition.ItemType.ONE_HAND)
+		if not one_hands.is_empty():
 			return false
 	if item_type == CardDefinition.ItemType.ONE_HAND:
-		var two_hands_id := run_manager.get_equipped_item_id_for_slot("two_hands")
-		if not two_hands_id.is_empty():
+		var two_hands: Array[String] = run_manager.get_equipped_item_ids_for_item_type(CardDefinition.ItemType.TWO_HANDS)
+		if not two_hands.is_empty():
 			return false
 	return true
+
+func _passes_one_hand_tag_rules(target_slot_id: String, item: ItemInstance) -> bool:
+	if run_manager == null or layout == null:
+		return false
+	if layout.class_id != "knight":
+		return true
+	var item_tag := _get_one_hand_tag(item.archetype)
+	if item_tag == "":
+		return true
+	var slot_ids: Array[String] = run_manager.get_slot_ids_for_item_type(CardDefinition.ItemType.ONE_HAND)
+	for slot_id in slot_ids:
+		if slot_id == target_slot_id:
+			continue
+		var equipped_id := run_manager.get_equipped_item_id_for_slot(slot_id)
+		if equipped_id.is_empty():
+			continue
+		var equipped_instance := run_manager.get_item_instance(equipped_id)
+		if equipped_instance == null or equipped_instance.archetype == null:
+			continue
+		var equipped_tag := _get_one_hand_tag(equipped_instance.archetype)
+		if equipped_tag == item_tag:
+			return false
+	return true
+
+func _get_one_hand_tag(archetype: ItemArchetype) -> String:
+	if archetype == null:
+		return ""
+	for tag in archetype.item_type_tags:
+		var tag_str := String(tag).to_lower()
+		if tag_str == "sword" or tag_str == "shield":
+			return tag_str
+	return ""

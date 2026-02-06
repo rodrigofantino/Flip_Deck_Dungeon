@@ -14,11 +14,15 @@ const STATE_IN_HAND: int = 0
 var _cards: Array[Control] = []
 var _base_pose: Dictionary = {}
 var _current_items: Array[String] = []
+var _hero_area: Control = null
+var _equipment_slots_view: EquipmentSlotsView = null
+var _drag_card: Control = null
 
 func _ready() -> void:
 	if RunState:
 		RunState.hand_changed.connect(_on_hand_changed)
 		_on_hand_changed(RunState.get_hand_items())
+	_resolve_hero_nodes()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
@@ -118,6 +122,10 @@ func _create_card_for_item(item_id: String) -> Control:
 		card.connect("hover_entered", Callable(self, "_on_card_hover_entered"))
 	if card.has_signal("hover_exited"):
 		card.connect("hover_exited", Callable(self, "_on_card_hover_exited"))
+	if card.has_signal("drag_started"):
+		card.connect("drag_started", Callable(self, "_on_card_drag_started"))
+	if card.has_signal("drag_released"):
+		card.connect("drag_released", Callable(self, "_on_card_drag_released"))
 
 	return card
 
@@ -204,6 +212,9 @@ func _on_card_hover_exited(card: Control) -> void:
 	_return_card_to_hand(card)
 	_reflow_existing_cards()
 
+func _on_card_drag_started(card: Control) -> void:
+	_drag_card = card
+
 func _return_card_to_hand(card: Control) -> void:
 	if card == null:
 		return
@@ -216,4 +227,75 @@ func _return_card_to_hand(card: Control) -> void:
 	_tween_card_to(card, base_pos, base_rot, Vector2.ONE * HAND_SCALE)
 
 func _is_point_over_hero(_global_pos: Vector2) -> bool:
-	return false
+	if _hero_area == null:
+		_resolve_hero_nodes()
+	if _hero_area == null:
+		return false
+	return _hero_area.get_global_rect().has_point(_global_pos)
+
+func _resolve_hero_nodes() -> void:
+	var root := get_parent()
+	if root == null:
+		return
+	_hero_area = root.get_node_or_null("HeroArea") as Control
+	_equipment_slots_view = root.get_node_or_null("HeroArea/EquipmentSlotsView") as EquipmentSlotsView
+
+func _on_card_drag_released(card: Control, global_pos: Vector2) -> void:
+	if card == null:
+		return
+	if _drag_card != card:
+		return
+	_drag_card = null
+	if not _is_point_over_hero(global_pos):
+		return
+	var item_id := String(card.get("item_id"))
+	if item_id.is_empty():
+		return
+	if RunState == null:
+		return
+	if not RunState.get_hand_items().has(item_id):
+		return
+	var slot_id := RunState.get_slot_id_for_item(item_id)
+	if slot_id.is_empty():
+		return
+	var result := RunState.equip_item_to_slot(slot_id, item_id)
+	if result != EquipmentManager.EquipResult.OK:
+		return
+	_play_fly_to_slot(item_id, global_pos, slot_id)
+
+func _play_fly_to_slot(item_id: String, start_global: Vector2, slot_id: String) -> void:
+	if item_card_scene == null:
+		return
+	if _equipment_slots_view == null:
+		_resolve_hero_nodes()
+	if _equipment_slots_view == null:
+		return
+	var dest := _equipment_slots_view.get_slot_global_center(slot_id)
+	if dest == Vector2.ZERO:
+		return
+	var instance: ItemInstance = RunState.get_item_instance(item_id)
+	if instance == null:
+		return
+	var fly := item_card_scene.instantiate() as Control
+	if fly == null:
+		return
+	var root := get_tree().current_scene
+	if root == null:
+		return
+	root.add_child(fly)
+	fly.z_index = 4000
+	fly.size = fly.custom_minimum_size
+	fly.scale = Vector2.ONE * HAND_SCALE
+	fly.set("item_id", item_id)
+	if fly.has_method("set_state"):
+		fly.call("set_state", 0)
+	if fly.has_method("setup"):
+		fly.call("setup", instance)
+	fly.global_position = start_global - (fly.size * fly.scale * 0.5)
+	var tween := fly.create_tween()
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
+	var end_pos := dest - (fly.size * fly.scale * 0.5)
+	tween.tween_property(fly, "global_position", end_pos, 0.25)
+	tween.parallel().tween_property(fly, "scale", fly.scale * 0.9, 0.25)
+	tween.tween_callback(Callable(fly, "queue_free"))
