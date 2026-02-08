@@ -35,6 +35,7 @@ enum DisplayMode {
 }
 
 var _resolution_values: Array[Vector2i] = []
+var _syncing_sliders: bool = false
 
 func _ready() -> void:
 	_refresh_texts()
@@ -44,6 +45,7 @@ func _ready() -> void:
 	master_slider.value_changed.connect(_on_master_volume_changed)
 	sfx_slider.value_changed.connect(_on_sfx_volume_changed)
 	music_slider.value_changed.connect(_on_music_volume_changed)
+	_ensure_audio_busses()
 	_sync_sliders_from_buses()
 	if MusicManager and MusicManager.has_method("refresh_bus"):
 		MusicManager.call("refresh_bus")
@@ -77,17 +79,25 @@ func _on_back_pressed() -> void:
 	SceneTransition.change_scene("res://Scenes/ui/main_menu.tscn")
 
 func _sync_sliders_from_buses() -> void:
+	_syncing_sliders = true
 	master_slider.value = _get_bus_volume_linear("Master")
 	sfx_slider.value = _get_bus_volume_linear("SFX")
 	music_slider.value = _get_bus_volume_linear("Music")
+	_syncing_sliders = false
 
 func _on_master_volume_changed(value: float) -> void:
+	if _syncing_sliders:
+		return
 	_set_bus_volume_linear("Master", value)
 
 func _on_sfx_volume_changed(value: float) -> void:
+	if _syncing_sliders:
+		return
 	_set_bus_volume_linear("SFX", value)
 
 func _on_music_volume_changed(value: float) -> void:
+	if _syncing_sliders:
+		return
 	_set_bus_volume_linear("Music", value)
 
 func _get_bus_index(name: String) -> int:
@@ -120,6 +130,21 @@ func _set_bus_volume_linear(name: String, linear: float) -> void:
 		AudioServer.set_bus_volume_db(idx, linear_to_db(0.001))
 	else:
 		AudioServer.set_bus_volume_db(idx, linear_to_db(clamped))
+
+func _ensure_audio_busses() -> void:
+	_ensure_bus_exists("Music", "Master")
+	_ensure_bus_exists("SFX", "Master")
+
+func _ensure_bus_exists(name: String, send_to: String) -> void:
+	if _get_bus_index(name) >= 0:
+		return
+	var new_idx := AudioServer.get_bus_count()
+	AudioServer.add_bus(new_idx)
+	AudioServer.set_bus_name(new_idx, name)
+	var send_idx := _get_bus_index(send_to)
+	if send_idx >= 0:
+		AudioServer.set_bus_send(new_idx, AudioServer.get_bus_name(send_idx))
+	AudioServer.set_bus_volume_db(new_idx, 0.0)
 
 func _setup_video_options() -> void:
 	if display_mode_option:

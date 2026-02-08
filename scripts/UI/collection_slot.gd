@@ -7,6 +7,8 @@ class_name CollectionSlot
 @onready var background: ColorRect = $Background
 @onready var card_container: Control = $CardContainer
 @onready var selection_outline: Panel = $SelectionOutline
+@onready var weight_badge: ColorRect = $WeightBadge
+@onready var weight_label: Label = $WeightBadge/WeightLabel
 @onready var count_overlay: ColorRect = $CountOverlay
 @onready var count_label: Label = $CountOverlay/CountLabel
 @onready var run_controls: HBoxContainer = $RunControls
@@ -25,8 +27,25 @@ var count_text_override: String = ""
 var _base_modulate: Color = Color(1, 1, 1, 1)
 var _overlay_enabled: bool = false
 var _overlay_text: String = ""
+var _current_weight: int = 0
+
+const WEIGHT_LABELS := {
+	1: "LOW",
+	2: "MED",
+	3: "HIGH"
+}
+
+const WEIGHT_COLORS := {
+	1: Color(0.2, 0.9, 0.3, 1.0),
+	2: Color(0.95, 0.82, 0.25, 1.0),
+	3: Color(0.98, 0.55, 0.2, 1.0)
+}
+
+const WEIGHT_BADGE_SIZE: Vector2 = Vector2(52, 20)
+const WEIGHT_BADGE_PADDING: Vector2 = Vector2(6, 6)
 
 signal slot_clicked(slot: CollectionSlot)
+signal slot_right_clicked(slot: CollectionSlot)
 signal enemy_selected_toggled(slot: CollectionSlot, selected: bool)
 signal enemy_weight_changed(slot: CollectionSlot, weight: int)
 
@@ -34,6 +53,7 @@ var _suppress_run_signals: bool = false
 
 func set_occupied(definition: CardDefinition, obtained: bool = true, upgrade_level: int = 0) -> void:
 	_clear_card()
+	_set_weight_badge(0)
 	is_obtained = obtained
 	background.color = Color(0.2, 0.2, 0.2, 0.85) if obtained else Color(0.1, 0.1, 0.1, 0.7)
 	if card_view_scene == null or definition == null:
@@ -52,6 +72,8 @@ func set_occupied(definition: CardDefinition, obtained: bool = true, upgrade_lev
 	card_view.offset_bottom = card_base_size.y
 	card_view.setup_from_definition(definition, upgrade_level)
 	card_view.show_front()
+	if card_view.has_method("set_holo_enabled"):
+		card_view.call("set_holo_enabled", obtained)
 	card_view.modulate = Color(1, 1, 1, 1) if obtained else Color(0.35, 0.35, 0.35, 0.65)
 	_base_modulate = card_view.modulate
 	_set_mouse_filter_recursive(card_view, Control.MOUSE_FILTER_IGNORE)
@@ -66,6 +88,7 @@ func set_empty() -> void:
 	current_card_type = ""
 	is_obtained = false
 	owned_count = 0
+	_set_weight_badge(0)
 	_hide_count_overlay()
 
 func set_owned_count(count: int, enable_hover: bool, override_text: String = "") -> void:
@@ -90,6 +113,10 @@ func _ready() -> void:
 	add_to_group("collection_slots")
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if weight_badge:
+		weight_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if weight_label:
+		weight_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if count_overlay:
 		count_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if count_label:
@@ -117,10 +144,14 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		print("[CollectionSlot] Click:", name, "def:", current_def_id)
 		slot_clicked.emit(self)
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		slot_right_clicked.emit(self)
 
 func set_selected(selected: bool) -> void:
 	if selection_outline:
 		selection_outline.visible = selected and is_obtained
+	if not selected:
+		_set_weight_badge(0)
 
 func configure_run_controls(
 	visible: bool,
@@ -129,19 +160,17 @@ func configure_run_controls(
 	weight: int
 ) -> void:
 	if run_controls:
-		run_controls.visible = visible
+		run_controls.visible = false
 	if include_check:
-		include_check.visible = visible
+		include_check.visible = false
 		include_check.disabled = not enabled
 	if weight_spin:
-		weight_spin.visible = visible
-		weight_spin.editable = enabled and selected
-	_suppress_run_signals = true
-	if include_check:
-		include_check.button_pressed = selected
-	if weight_spin:
-		weight_spin.value = clampi(weight, 1, 3)
-	_suppress_run_signals = false
+		weight_spin.visible = false
+		weight_spin.editable = false
+	if not visible:
+		_set_weight_badge(0)
+	else:
+		_set_weight_badge(weight if selected else 0)
 
 func _fit_card() -> void:
 	if card_view == null:
@@ -154,6 +183,8 @@ func _fit_card() -> void:
 	var final_scale: float = min(scale_w, scale_h)
 	card_view.scale = Vector2(final_scale, final_scale)
 	card_view.position = (target_size * 0.5) - (card_base_size * final_scale * 0.5)
+	_update_item_overlay_rect()
+	_update_weight_badge_rect()
 
 func _on_mouse_entered() -> void:
 	if card_view == null:
@@ -161,8 +192,6 @@ func _on_mouse_entered() -> void:
 	if show_count_on_hover:
 		_show_count_overlay()
 		card_view.modulate = _base_modulate * Color(0.8, 0.8, 0.8, 1.0)
-	if _overlay_enabled:
-		_show_item_overlay()
 	if _overlay_enabled:
 		_show_item_overlay()
 
@@ -193,6 +222,7 @@ func configure_item_type_overlay(enabled: bool, text: String) -> void:
 	_overlay_text = text
 	if item_overlay_label:
 		item_overlay_label.text = text
+	_update_item_overlay_rect()
 	if not enabled:
 		_hide_item_overlay()
 
@@ -205,6 +235,45 @@ func _hide_item_overlay() -> void:
 	if item_overlay == null:
 		return
 	item_overlay.visible = false
+
+func _set_weight_badge(weight: int) -> void:
+	_current_weight = weight
+	if weight_badge == null or weight_label == null:
+		return
+	if weight <= 0:
+		weight_badge.visible = false
+		return
+	weight_badge.visible = true
+	weight_label.text = WEIGHT_LABELS.get(weight, "LOW")
+	weight_label.add_theme_color_override("font_color", WEIGHT_COLORS.get(weight, Color(1, 1, 1, 1)))
+	_update_weight_badge_rect()
+
+func _update_item_overlay_rect() -> void:
+	if item_overlay == null:
+		return
+	var card_rect := _get_card_rect()
+	if card_rect.size == Vector2.ZERO:
+		return
+	item_overlay.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	item_overlay.position = card_rect.position
+	item_overlay.size = card_rect.size
+
+func _update_weight_badge_rect() -> void:
+	if weight_badge == null:
+		return
+	var card_rect := _get_card_rect()
+	if card_rect.size == Vector2.ZERO:
+		return
+	var badge_size := WEIGHT_BADGE_SIZE
+	var pos := card_rect.position + Vector2(WEIGHT_BADGE_PADDING.x, card_rect.size.y - badge_size.y - WEIGHT_BADGE_PADDING.y)
+	weight_badge.position = pos
+	weight_badge.size = badge_size
+
+func _get_card_rect() -> Rect2:
+	if card_view == null:
+		return Rect2(Vector2.ZERO, Vector2.ZERO)
+	var scaled_size := card_base_size * card_view.scale
+	return Rect2(card_view.position, scaled_size)
 
 func _on_include_toggled(pressed: bool) -> void:
 	if _suppress_run_signals:

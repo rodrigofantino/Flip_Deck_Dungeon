@@ -109,6 +109,7 @@ func _ready() -> void:
 	_init_selection_ui()
 	_set_booster_interactivity(true)
 	_refresh_book_content()
+	_update_book_input_block()
 
 func _configure_design_layout() -> void:
 	size = design_resolution
@@ -128,6 +129,8 @@ func _apply_design_layout() -> void:
 	scale = Vector2.ONE * ratio
 	size = design_resolution
 	position = (view - design_resolution * ratio) * 0.5
+	if book_view and book_view.has_method("refresh_layout"):
+		book_view.call_deferred("refresh_layout")
 
 func _wire_ui() -> void:
 	if title_label:
@@ -139,7 +142,7 @@ func _wire_ui() -> void:
 		next_button.text = tr("COLLECTION_NEXT")
 		next_button.pressed.connect(_on_next_pressed)
 	if page_label:
-		_update_page_label()
+		page_label.visible = false
 	if upgrades_button:
 		upgrades_button.text = tr("COLLECTION_UPGRADES_BUTTON")
 		upgrades_button.pressed.connect(_on_upgrades_pressed)
@@ -211,6 +214,28 @@ func _is_click_blocked_by_ui(global_pos: Vector2) -> bool:
 		if ctrl and ctrl.is_visible_in_tree() and ctrl.get_global_rect().has_point(global_pos):
 			return true
 	return false
+
+func _is_modal_popup_visible() -> bool:
+	return (
+		(booster_popup and booster_popup.visible)
+		or (open_popup and open_popup.visible)
+		or (card_popup and card_popup.visible)
+		or (hero_upgrades_window and hero_upgrades_window.visible)
+	)
+
+func _update_book_input_block() -> void:
+	if book_view == null:
+		return
+	var modal := _is_modal_popup_visible()
+	if book_view.has_method("set_input_blocked"):
+		book_view.call("set_input_blocked", modal)
+	_set_slots_input_enabled(not modal)
+
+func _set_slots_input_enabled(enabled: bool) -> void:
+	var filter := Control.MOUSE_FILTER_PASS if enabled else Control.MOUSE_FILTER_IGNORE
+	for node in get_tree().get_nodes_in_group("collection_slots"):
+		if node is Control:
+			(node as Control).mouse_filter = filter
 
 func _on_popup_dimmer_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
@@ -350,8 +375,19 @@ func _on_page_slot_clicked(slot: CollectionSlot) -> void:
 		else:
 			selected_hero_def_id = slot.current_def_id
 	elif slot.current_card_type == "enemy":
-		var currently_selected := selected_enemy_weights.has(slot.current_def_id)
-		_set_enemy_selected(slot.current_def_id, not currently_selected)
+		_cycle_enemy_weight(slot.current_def_id, 1)
+	_update_selection_state()
+
+func _on_page_slot_right_clicked(slot: CollectionSlot) -> void:
+	if not selection_mode or slot == null:
+		return
+	if not slot.is_obtained:
+		return
+	if slot.current_def_id == "":
+		return
+	if slot.current_card_type != "enemy":
+		return
+	_cycle_enemy_weight(slot.current_def_id, -1)
 	_update_selection_state()
 
 func _on_page_enemy_selected(slot: CollectionSlot, selected: bool) -> void:
@@ -381,7 +417,7 @@ func _update_slot_selection(slot: CollectionSlot) -> void:
 	print("[Collection] slot select:", slot.current_def_id, " type=", slot.current_card_type, " selected=", selected)
 	slot.set_selected(selected)
 	var show_controls := selection_mode and slot.current_card_type == "enemy" and slot.is_obtained
-	var weight := int(selected_enemy_weights.get(slot.current_def_id, MIN_ENEMY_WEIGHT))
+	var weight := int(selected_enemy_weights.get(slot.current_def_id, 0))
 	slot.configure_run_controls(show_controls, selection_mode, selected, weight)
 	if show_controls:
 		var spawn_weight := int(selected_enemy_weights.get(slot.current_def_id, 0))
@@ -442,6 +478,34 @@ func _set_enemy_weight(enemy_id: String, weight: int) -> void:
 		return
 	var clamped := clampi(weight, MIN_ENEMY_WEIGHT, MAX_ENEMY_WEIGHT)
 	selected_enemy_weights[enemy_id] = clamped
+
+func _cycle_enemy_weight(enemy_id: String, direction: int) -> void:
+	if enemy_id == "":
+		return
+	var current := int(selected_enemy_weights.get(enemy_id, 0))
+	var next := current
+	if current == 0:
+		if selected_enemy_weights.size() >= MAX_ENEMY_SELECTION:
+			_selection_error_override = tr("COLLECTION_ERROR_MAX_ENEMIES").format({
+				"value": MAX_ENEMY_SELECTION
+			})
+			return
+		next = MAX_ENEMY_WEIGHT if direction < 0 else MIN_ENEMY_WEIGHT
+		selected_enemy_weights[enemy_id] = next
+		_selection_error_override = ""
+		return
+
+	if direction > 0:
+		if current >= MAX_ENEMY_WEIGHT:
+			selected_enemy_weights.erase(enemy_id)
+		else:
+			selected_enemy_weights[enemy_id] = current + 1
+	else:
+		if current <= MIN_ENEMY_WEIGHT:
+			selected_enemy_weights.erase(enemy_id)
+		else:
+			selected_enemy_weights[enemy_id] = current - 1
+	_selection_error_override = ""
 
 func _get_selection_error() -> String:
 	if _selection_error_override != "":
@@ -637,8 +701,13 @@ func _open_hero_upgrades() -> void:
 			return
 		add_child(hero_upgrades_window)
 		hero_upgrades_window.z_index = 300
+		hero_upgrades_window.closed.connect(_on_hero_upgrades_closed)
 	hero_upgrades_window.visible = true
 	hero_upgrades_window.refresh_window()
+	_update_book_input_block()
+
+func _on_hero_upgrades_closed() -> void:
+	_update_book_input_block()
 
 func _change_book_page(go_next: bool) -> void:
 	var book: PageFlip2D = _get_book() as PageFlip2D
@@ -660,6 +729,7 @@ func _open_booster_popup(pack: PackView) -> void:
 	selected_pack = pack
 	booster_popup.visible = true
 	booster_popup.z_index = 150
+	_update_book_input_block()
 	if booster_popup_name:
 		var display_name := pack.pack_type
 		if pack.name_key != "":
@@ -676,6 +746,7 @@ func _close_booster_popup() -> void:
 	tween.tween_callback(func():
 		booster_popup.visible = false
 		booster_popup.modulate.a = 1.0
+		_update_book_input_block()
 	)
 
 func _on_booster_open_pressed() -> void:
@@ -700,6 +771,7 @@ func _close_booster_popup_and_open(pack: PackView) -> void:
 	tween.tween_callback(func():
 		booster_popup.visible = false
 		booster_popup.modulate.a = 1.0
+		_update_book_input_block()
 		_open_pack_popup(pack)
 	)
 
@@ -710,6 +782,7 @@ func _open_pack_popup(pack: PackView) -> void:
 	open_popup.z_index = 200
 	open_popup.modulate.a = 0.0
 	open_popup.scale = Vector2(0.95, 0.95)
+	_update_book_input_block()
 	open_collection = SaveSystem.load_collection()
 	if open_collection == null:
 		open_collection = SaveSystem.ensure_collection()
@@ -773,7 +846,7 @@ func _on_open_card_clicked(card: CardView) -> void:
 		return
 	var card_def := open_defs[index]
 	var start_global := card.global_position
-	var start_scale := card.scale
+	var start_scale := _get_canvas_global_scale(card)
 	_add_card_to_collection(card_def)
 	open_cards.remove_at(index)
 	open_defs.remove_at(index)
@@ -872,20 +945,58 @@ func _find_visible_slot_for_def(def_id: String) -> CollectionSlot:
 func _get_slot_target(slot: CollectionSlot) -> Dictionary:
 	if slot == null:
 		return {}
+	var book: PageFlip2D = _get_book() as PageFlip2D
+	var poly: Polygon2D = null
+	if book != null:
+		var slot_vp := slot.get_viewport()
+		var left_vp := book.get_node_or_null("Viewports/Slots/Slot1")
+		var right_vp := book.get_node_or_null("Viewports/Slots/Slot2")
+		if slot_vp != null and left_vp != null and slot_vp == left_vp:
+			poly = book.static_left
+		elif slot_vp != null and right_vp != null and slot_vp == right_vp:
+			poly = book.static_right
+
+	var card_pos := slot.global_position
+	var card_scale := Vector2.ONE
 	if slot.card_view != null and slot.card_view.is_visible_in_tree():
+		card_pos = slot.card_view.global_position
+		card_scale = slot.card_view.scale
+
+	var size_scaled := OPEN_CARD_BASE * card_scale
+	if poly != null and book != null:
+		var page_h := book.target_page_size.y
+		var local_top_left := Vector2(card_pos.x, card_pos.y - (page_h * 0.5))
+		var global_top_left := poly.to_global(local_top_left)
+		var page_scale := _get_page_global_scale(book, poly)
 		return {
-			"global_pos": slot.card_view.global_position,
-			"scale": slot.card_view.scale,
+			"global_pos": global_top_left,
+			"scale": Vector2(card_scale.x * page_scale.x, card_scale.y * page_scale.y),
 		}
-	var scale_w := slot.size.x / OPEN_CARD_BASE.x
-	var scale_h := slot.size.y / OPEN_CARD_BASE.y
-	var final_scale := minf(scale_w, scale_h)
-	var size_scaled := OPEN_CARD_BASE * final_scale
-	var target_pos := slot.global_position + (slot.size * 0.5) - (size_scaled * 0.5)
+
 	return {
-		"global_pos": target_pos,
-		"scale": Vector2(final_scale, final_scale),
+		"global_pos": card_pos,
+		"scale": card_scale,
 	}
+
+func _get_page_global_scale(book: PageFlip2D, poly: Polygon2D) -> Vector2:
+	if book == null or poly == null:
+		return Vector2.ONE
+	var page_w := book.target_page_size.x
+	var page_h := book.target_page_size.y
+	if page_w <= 0.0 or page_h <= 0.0:
+		return Vector2.ONE
+	var p0 := poly.to_global(Vector2(0.0, -page_h * 0.5))
+	var p1 := poly.to_global(Vector2(page_w, -page_h * 0.5))
+	var p2 := poly.to_global(Vector2(0.0, page_h * 0.5))
+	var scale_x := p0.distance_to(p1) / page_w
+	var scale_y := p0.distance_to(p2) / page_h
+	return Vector2(scale_x, scale_y)
+
+func _get_canvas_global_scale(item: CanvasItem) -> Vector2:
+	if item == null:
+		return Vector2.ONE
+	var xform := item.get_global_transform()
+	return Vector2(xform.x.length(), xform.y.length())
 
 func _open_card_popup(slot: CollectionSlot) -> void:
 	if slot == null:
@@ -904,6 +1015,7 @@ func _open_card_popup(slot: CollectionSlot) -> void:
 	_build_card_popup(def)
 	card_popup.visible = true
 	card_popup.z_index = 220
+	_update_book_input_block()
 
 func _build_card_popup(def: CardDefinition) -> void:
 	if card_popup_container == null:
@@ -968,6 +1080,7 @@ func _close_card_popup() -> void:
 	tween.tween_callback(func():
 		card_popup.visible = false
 		card_popup.modulate.a = 1.0
+		_update_book_input_block()
 	)
 
 func _on_add_all_pressed() -> void:
@@ -997,6 +1110,7 @@ func _close_open_popup() -> void:
 		open_popup.scale = Vector2.ONE
 		_refresh_boosters()
 		_refresh_book_content()
+		_update_book_input_block()
 	)
 
 func _set_mouse_filter_recursive(node: Node, filter: int) -> void:
@@ -1109,9 +1223,85 @@ func _get_display_upgrade_level(def: CardDefinition, base_upgrade: int) -> int:
 	var progression: HeroProgression = profile.get_or_create_progression(StringName(def.definition_id))
 	return base_upgrade + max(0, progression.level - 1)
 
+func _get_ordered_def_ids(is_play_mode: bool) -> Array[String]:
+	var hero_ids: Array[String] = []
+	var forest_ids: Array[String] = []
+	var dark_forest_ids: Array[String] = []
+	var other_ids: Array[String] = []
+	var seen_ids: Dictionary = {}
+
+	for def_id in CardDatabase.definitions.keys():
+		var def: CardDefinition = CardDatabase.get_definition(String(def_id))
+		if def == null:
+			continue
+		if def.definition_id == "" or seen_ids.has(def.definition_id):
+			continue
+		seen_ids[def.definition_id] = true
+		if def.card_type == "hero":
+			hero_ids.append(def.definition_id)
+		elif def.biome_modifier == BIOME_FOREST:
+			forest_ids.append(def.definition_id)
+		elif def.biome_modifier == BIOME_DARK_FOREST:
+			dark_forest_ids.append(def.definition_id)
+		else:
+			other_ids.append(def.definition_id)
+
+	hero_ids.sort_custom(func(a: String, b: String) -> bool:
+		return _compare_by_power_then_id(a, b)
+	)
+	forest_ids.sort_custom(func(a: String, b: String) -> bool:
+		return _compare_by_power_then_id(a, b)
+	)
+	dark_forest_ids.sort_custom(func(a: String, b: String) -> bool:
+		return _compare_by_power_then_id(a, b)
+	)
+	other_ids.sort_custom(func(a: String, b: String) -> bool:
+		return _compare_by_power_then_id(a, b)
+	)
+
+	var ordered: Array[String] = []
+	ordered.append_array(hero_ids)
+	ordered.append_array(forest_ids)
+	ordered.append_array(dark_forest_ids)
+	ordered.append_array(other_ids)
+	return ordered
+
+func _compare_by_power_then_id(a: String, b: String) -> bool:
+	var pa := _get_definition_power(a)
+	var pb := _get_definition_power(b)
+	if pa == pb:
+		return a < b
+	return pa < pb
+
+func _get_definition_power(def_id: String) -> int:
+	var def: CardDefinition = CardDatabase.get_definition(def_id)
+	if def == null:
+		return 0
+	if def.power > 0:
+		return def.power
+	return int(def.max_hp + def.damage)
+
+func _sort_ids_by_order(ids: Array[String], order: Array[String]) -> Array[String]:
+	if order.is_empty():
+		ids.sort()
+		return ids
+	var index_map: Dictionary = {}
+	for i in range(order.size()):
+		index_map[order[i]] = i
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		var ia := int(index_map.get(a, 999999))
+		var ib := int(index_map.get(b, 999999))
+		if ia == ib:
+			return a < b
+		return ia < ib
+	)
+	return ids
+
 func _go_to_card_page(definition_id: String) -> void:
 	if definition_id == "":
 		return
+	if CardDatabase.definitions.is_empty():
+		CardDatabase.load_definitions()
 	var book_node := _get_book()
 	if book_node == null:
 		return
@@ -1122,12 +1312,25 @@ func _go_to_card_page(definition_id: String) -> void:
 	if collection == null:
 		collection = SaveSystem.ensure_collection()
 	var types: Array[String] = []
+	var order := _get_ordered_def_ids(RunState.selection_pending)
 	if RunState.selection_pending:
-		types = collection.get_all_types()
+		var ids: Array[String] = []
+		for def_id in collection.get_all_types():
+			ids.append(String(def_id))
+		types = _sort_ids_by_order(ids, order)
 	else:
-		for def_id in CardDatabase.definitions.keys():
-			types.append(String(def_id))
-		types.sort()
+		var all_ids: Array[String] = []
+		var seen_ids: Dictionary = {}
+		for def_key in CardDatabase.definitions.keys():
+			var def: CardDefinition = CardDatabase.get_definition(String(def_key))
+			if def == null:
+				continue
+			var def_id := String(def.definition_id)
+			if def_id == "" or seen_ids.has(def_id):
+				continue
+			seen_ids[def_id] = true
+			all_ids.append(def_id)
+		types = _sort_ids_by_order(all_ids, order)
 	if types.is_empty():
 		return
 	var slots_per_page: int = 9

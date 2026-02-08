@@ -61,6 +61,27 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="WeightBadge" type="ColorRect" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 66.0
+offset_bottom = 28.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="WeightLabel" type="Label" parent="WeightBadge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="RunControls" type="HBoxContainer" parent="."]
 visible = false
 layout_mode = 1
@@ -100,7 +121,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0, 0, 0, 0.6)
+color = Color(0, 0, 0, 0.75)
 
 [node name="OverlayLabel" type="Label" parent="ItemTypeOverlay"]
 layout_mode = 1
@@ -113,4 +134,5 @@ offset_right = -6.0
 offset_bottom = -6.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_font_sizes/font_size = 12
 autowrap_mode = 3

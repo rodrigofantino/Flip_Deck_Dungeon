@@ -21,6 +21,8 @@ class_name CardView
 @onready var holo_light: PointLight2D = $Front/Node2D/PointLight2D
 @onready var holo_light_2: PointLight2D = get_node_or_null("Front/Node2D/PointLight2D2")
 @onready var holo_light_3: PointLight2D = get_node_or_null("Front/Node2D/PointLight2D3")
+@onready var foil_layer: Control = $FoilLayer
+@onready var motion_tilt: Control = $MotionTiltDriver
 
 @export var display_name: String
 @export var description: String
@@ -47,6 +49,14 @@ var trait_overlay: TraitOverlayView = null
 var _is_boss_card: bool = false
 var _holo_states: Array[HoloState] = []
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _holo_enabled: bool = true
+var _holo_light_mask: int = 0
+
+const MAX_HOLO_LIGHT_MASK_BITS: int = 20
+static var _light_mask_pool: Array[int] = []
+static var _next_light_mask_bit: int = 0
+static var _light_cull_property: String = ""
+static var _light_cull_property_checked: bool = false
 
 class HoloState:
 	var light: PointLight2D = null
@@ -67,8 +77,13 @@ func _ready() -> void:
 	set_process(true)
 	_rng.seed = Time.get_ticks_usec() + int(get_instance_id())
 	_holo_init()
+	_assign_holo_light_mask()
+	_apply_holo_enabled()
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
+
+func _exit_tree() -> void:
+	_release_holo_light_mask()
 
 func _process(delta: float) -> void:
 	if _holo_states.is_empty():
@@ -83,6 +98,76 @@ func _setup_flip_sfx() -> void:
 	flip_sfx.stream = load(FLIP_SFX_PATH)
 	flip_sfx.bus = FLIP_SFX_BUS
 	add_child(flip_sfx)
+
+func _apply_holo_enabled() -> void:
+	var enabled := _holo_enabled
+	if foil_layer:
+		foil_layer.visible = enabled
+	if motion_tilt:
+		motion_tilt.visible = enabled
+	_set_holo_lights_visible(enabled)
+	set_process(enabled and not _holo_states.is_empty())
+
+func _set_holo_lights_visible(enabled: bool) -> void:
+	if holo_light:
+		holo_light.visible = enabled
+	if holo_light_2:
+		holo_light_2.visible = enabled
+	if holo_light_3:
+		holo_light_3.visible = enabled
+
+func _assign_holo_light_mask() -> void:
+	if _holo_light_mask != 0:
+		return
+	if _get_light_cull_property(holo_light) == "":
+		return
+	if _light_mask_pool.is_empty():
+		if _next_light_mask_bit < MAX_HOLO_LIGHT_MASK_BITS:
+			_holo_light_mask = 1 << _next_light_mask_bit
+			_next_light_mask_bit += 1
+	else:
+		_holo_light_mask = _light_mask_pool.pop_back()
+	if _holo_light_mask != 0:
+		_set_light_mask_recursive(self, _holo_light_mask)
+		_apply_light_cull_mask(_holo_light_mask)
+	else:
+		_apply_light_cull_mask(0)
+
+func _release_holo_light_mask() -> void:
+	if _holo_light_mask == 0:
+		return
+	_light_mask_pool.append(_holo_light_mask)
+	_holo_light_mask = 0
+
+func _apply_light_cull_mask(mask: int) -> void:
+	var prop := _get_light_cull_property(holo_light)
+	if prop == "":
+		return
+	if holo_light:
+		holo_light.set(prop, mask)
+	if holo_light_2:
+		holo_light_2.set(prop, mask)
+	if holo_light_3:
+		holo_light_3.set(prop, mask)
+
+func _get_light_cull_property(light: Light2D) -> String:
+	if _light_cull_property_checked:
+		return _light_cull_property
+	_light_cull_property_checked = true
+	if light == null:
+		return ""
+	for info in light.get_property_list():
+		var name := String(info.get("name", ""))
+		if name == "item_cull_mask" or name == "range_item_cull_mask":
+			_light_cull_property = name
+			break
+	return _light_cull_property
+
+func _set_light_mask_recursive(node: Node, mask: int) -> void:
+	if node is CanvasItem and not (node is Light2D):
+		(node as CanvasItem).light_mask = mask
+	for child in node.get_children():
+		_set_light_mask_recursive(child, mask)
 
 # =========================
 # SETUP (ESTÃTICO)
@@ -113,6 +198,10 @@ func setup_from_boss_definition(definition: BossDefinition) -> void:
 		art.texture = definition.art
 	if definition.frame_texture and front_frame:
 		front_frame.texture = definition.frame_texture
+
+func set_holo_enabled(enabled: bool) -> void:
+	_holo_enabled = enabled
+	_apply_holo_enabled()
 
 # =========================
 # REFRESH DESDE RUNTIME (TRAITS / COMBATE)

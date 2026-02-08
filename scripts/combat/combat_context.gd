@@ -329,7 +329,7 @@ func _apply_damage(attacker_id: String, target_id: String, amount: int) -> void:
 				heal_amount = _apply_healing_power(attacker, heal_amount)
 				if heal_amount > 0:
 					var max_hp: int = int(attacker.get("max_hp", 0))
-					var new_hp := min(int(attacker.get("current_hp", 0)) + heal_amount, max_hp)
+					var new_hp: int = min(int(attacker.get("current_hp", 0)) + heal_amount, max_hp)
 					if new_hp != int(attacker.get("current_hp", 0)):
 						attacker["current_hp"] = new_hp
 						damage_applied.emit(attacker_id, 0)
@@ -429,7 +429,7 @@ func _apply_end_of_round_regen() -> void:
 	if heal <= 0:
 		return
 	var max_hp: int = int(hero.get("max_hp", 0))
-	var new_hp := min(int(hero.get("current_hp", 0)) + heal, max_hp)
+	var new_hp: int = min(int(hero.get("current_hp", 0)) + heal, max_hp)
 	if new_hp != int(hero.get("current_hp", 0)):
 		hero["current_hp"] = new_hp
 		damage_applied.emit(hero_id, 0)

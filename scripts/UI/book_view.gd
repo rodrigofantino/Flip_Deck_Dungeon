@@ -30,6 +30,7 @@ var _resize_version: int = 0
 var _center_tween: Tween = null
 var _pending_open: bool = false
 var _base_scale: Vector2 = Vector2.ONE
+var _input_blocked: bool = false
 
 enum BookPerspectiveState {
 	CLOSED,
@@ -257,6 +258,8 @@ func _recenter_book_internal() -> void:
 	_dbg("recenter_internal")
 
 func _handle_page_click(event: InputEventMouseButton, source: String) -> bool:
+	if _input_blocked:
+		return false
 	if book == null:
 		return false
 	var in_book := _is_point_over_book(event.global_position)
@@ -361,6 +364,8 @@ func _gui_input(event: InputEvent) -> void:
 			accept_event()
 
 func try_open_from_click(global_pos: Vector2) -> bool:
+	if _input_blocked:
+		return false
 	if book == null or book.is_book_open:
 		return false
 	if _is_point_over_book(global_pos) or _is_point_over_closed_cover(global_pos):
@@ -628,6 +633,12 @@ func _dbg(tag: String) -> void:
 
 func _get_local_center() -> Vector2:
 	return size * 0.5
+
+func set_input_blocked(blocked: bool) -> void:
+	_input_blocked = blocked
+
+func refresh_layout() -> void:
+	_on_viewport_resized()
 
 func _on_viewport_resized() -> void:
 	_resize_version += 1
