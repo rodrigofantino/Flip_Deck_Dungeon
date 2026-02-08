@@ -6,6 +6,7 @@ var archetype: ItemArchetype = null
 var item_level: int = 1
 var rarity: int = 1
 var mods: Array[ItemMod] = []
+const ITEM_LEVEL_MULT: float = 1.2
 
 func get_total_armour_flat() -> int:
 	var total: int = 0
@@ -13,7 +14,7 @@ func get_total_armour_flat() -> int:
 		total += archetype.armour_flat
 	for mod in mods:
 		total += mod.armour_flat
-	return total
+	return _apply_level_multiplier(total)
 
 func get_total_damage_flat() -> int:
 	var total: int = 0
@@ -21,7 +22,7 @@ func get_total_damage_flat() -> int:
 		total += archetype.damage_flat
 	for mod in mods:
 		total += mod.damage_flat
-	return total
+	return _apply_level_multiplier(total)
 
 func get_total_life_flat() -> int:
 	var total: int = 0
@@ -29,7 +30,7 @@ func get_total_life_flat() -> int:
 		total += archetype.life_flat
 	for mod in mods:
 		total += mod.life_flat
-	return total
+	return _apply_level_multiplier(total)
 
 func get_total_initiative_flat() -> int:
 	var total: int = 0
@@ -37,7 +38,14 @@ func get_total_initiative_flat() -> int:
 		total += archetype.initiative_flat
 	for mod in mods:
 		total += mod.initiative_flat
-	return total
+	return _apply_level_multiplier(total)
+
+func _apply_level_multiplier(value: int) -> int:
+	if value == 0:
+		return 0
+	var level: int = int(max(0, item_level))
+	var mult: float = pow(ITEM_LEVEL_MULT, float(level))
+	return int(round(float(value) * mult))
 
 func to_dict() -> Dictionary:
 	var mods_data: Array = []

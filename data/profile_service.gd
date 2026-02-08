@@ -1,7 +1,7 @@
 extends Node
 
 const PROFILE_PATH: String = "user://profile.tres"
-const XP_BASE: int = 1000
+const XP_BASE: int = 16
 const XP_GROWTH: float = 1.35
 
 var _cached_profile: PlayerProfile = null

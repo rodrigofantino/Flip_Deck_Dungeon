@@ -54,6 +54,8 @@ var crossroads_open: bool = false
 # =========================
 @export var level_up_popup_scene: PackedScene
 var level_up_popup: LevelUpPopup
+@export var hero_upgrades_window_scene: PackedScene
+var hero_upgrades_window: HeroUpgradesWindow = null
 
 # =========================
 # PAUSE POPUP
@@ -77,6 +79,10 @@ var pending_enemy_moves: int = 0
 # COMBAT MANAGER
 # ==========================================
 var combat_manager: CombatManager
+const CARD_ZONE_META := "battle_zone"
+const CARD_ZONE_DECK := "enemy_deck"
+const CARD_ZONE_ACTIVE := "enemy_active"
+const CARD_ZONE_HERO := "hero"
 
 # ==========================================
 # CONFIGURACIÃƒÆ’Ã¢â‚¬Å“N
@@ -89,6 +95,7 @@ var combat_manager: CombatManager
 @export var debug_card_positions: bool = true
 
 const DECK_OFFSET_Y := -2.0
+const BATTLE_LIGHT_MASK: int = 4
 
 # ==========================================
 # ESTADOS DE LA BATALLA
@@ -116,9 +123,15 @@ var auto_combat_enabled: bool = false
 func _process(_delta: float) -> void:
 	_process_battle_flow()
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_toggle_pause()
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if current_phase == BattlePhase.UI_LOCKED:
+			return
+		var mouse_event := event as InputEventMouseButton
+		_try_handle_card_click_at(mouse_event.global_position)
 
 func _process_battle_flow() -> void:
 	match current_phase:
@@ -140,6 +153,7 @@ func _process_battle_flow() -> void:
 func _ready() -> void:
 	if MusicManager:
 		MusicManager.play_battle()
+	_apply_battle_light_mask()
 	# --- Combat Manager ---
 	combat_manager = CombatManager.new()
 	add_child(combat_manager)
@@ -163,6 +177,21 @@ func _ready() -> void:
 	RunState.wave_started.connect(_on_wave_started)
 	RunState.wave_completed.connect(_on_wave_completed)
 	_setup_equipment_slots_view()
+
+# ==========================================
+# LIGHT MASK (BATTLE TABLE)
+# ==========================================
+
+func _apply_battle_light_mask() -> void:
+	_set_light_mask_recursive(self, BATTLE_LIGHT_MASK)
+
+func _set_light_mask_recursive(node: Node, mask: int) -> void:
+	if node is CardView:
+		return
+	if node is CanvasItem:
+		(node as CanvasItem).light_mask = mask
+	for child in node.get_children():
+		_set_light_mask_recursive(child, mask)
 	
 	
 # ==========================================
@@ -216,6 +245,7 @@ func spawn_hero() -> void:
 	var hero_card := _create_and_fit_card(hero_anchor, hero_data)
 	if hero_card:
 		hero_card_view = hero_card
+		hero_card_view.set_meta(CARD_ZONE_META, CARD_ZONE_HERO)
 		if RunState.run_loaded:
 			hero_card.show_front()
 		else:
@@ -253,6 +283,7 @@ func setup_enemy_deck() -> void:
 				continue
 			card.global_position.y += current_y_offset
 			card.show_back()
+			card.set_meta(CARD_ZONE_META, CARD_ZONE_DECK)
 			current_y_offset += DECK_OFFSET_Y
 
 
@@ -284,6 +315,7 @@ func spawn_enemies_from_decks() -> void:
 			push_error("No CardView found for enemy: " + enemy_data.id)
 			continue
 		card.reparent(slot, true)
+		card.set_meta(CARD_ZONE_META, CARD_ZONE_ACTIVE)
 		card.show_back()
 		var slot_rect := slot.get_global_rect()
 		var scaled_size := card_base_size * card.scale
@@ -305,6 +337,8 @@ func _register_enemy_active(card: CardView, deck_index: int) -> void:
 	enemy_card_views_by_deck[deck_index] = card
 	_rebuild_enemy_card_views()
 	RunState.active_enemy_ids = _get_active_enemy_ids()
+	if card:
+		card.set_meta(CARD_ZONE_META, CARD_ZONE_ACTIVE)
 
 	var enemy_data: Variant = RunState.get_card(card.card_id)
 	if enemy_data != null:
@@ -339,6 +373,8 @@ func on_enemy_defeated() -> void:
 func _handle_enemy_defeated(card_id: String) -> void:
 	if card_id == "":
 		return
+	if combat_manager != null and combat_manager.preferred_target_id == card_id:
+		combat_manager.clear_preferred_target()
 	var enemy_data: Dictionary = RunState.get_card(card_id)
 	suppress_wave_popup_once = _is_final_boss_enemy(enemy_data)
 	RunState.active_enemy_ids = _get_active_enemy_ids()
@@ -367,6 +403,8 @@ func _handle_enemy_defeated(card_id: String) -> void:
 	if run_completed:
 		_show_victory()
 		return
+	if _is_mini_boss_enemy(enemy_data):
+		_show_level_up_popup(RunState.hero_level)
 	if wave_popup_open:
 		return
 	if _get_active_enemy_ids().size() > 0:
@@ -468,8 +506,7 @@ func _on_hero_level_up(new_level: int) -> void:
 	RunState.save_run()
 	if hero_card_view != null:
 		hero_card_view.play_heal_effect()
-
-	_show_level_up_popup(new_level)
+	_show_hero_upgrades_popup()
 
 # ==========================================
 # CREAR + POSICIONAR + ESCALAR
@@ -494,6 +531,7 @@ func _create_and_fit_card(slot: Control, card_data: Dictionary) -> CardView:
 	card.pivot_offset = card_base_size * 0.5
 	card.run_manager = RunState
 	card.trait_overlay = trait_overlay_view
+	_connect_card_input(card)
 
 	# =========================
 	# ID + REGISTRO UI
@@ -595,6 +633,27 @@ func _show_level_up_popup(new_level: int) -> void:
 		new_level,
 		hero_traits
 	)
+
+func _show_hero_upgrades_popup() -> void:
+	if hero_upgrades_window_scene == null:
+		push_error("[BattleTable] HeroUpgradesWindow scene not assigned")
+		return
+	if hero_upgrades_window == null:
+		hero_upgrades_window = hero_upgrades_window_scene.instantiate()
+		add_child(hero_upgrades_window)
+		hero_upgrades_window.z_index = 240
+		hero_upgrades_window.closed.connect(_on_hero_upgrades_closed)
+	current_phase = BattlePhase.UI_LOCKED
+	_update_hud_state()
+	get_tree().paused = true
+	hero_upgrades_window.visible = true
+	hero_upgrades_window.show_for_hero(StringName(RunState.selected_hero_def_id))
+
+func _on_hero_upgrades_closed() -> void:
+	get_tree().paused = false
+	if current_phase == BattlePhase.UI_LOCKED:
+		current_phase = BattlePhase.IDLE
+	_update_hud_state()
 func _on_trait_selected(hero_trait_res: TraitResource) -> void:
 	print("ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Âª CONFIRMED TRAIT")
 	print("   hero:", hero_trait_res)
@@ -736,6 +795,68 @@ func _on_ready_for_next_round() -> void:
 	# Si hay enemigo vivo, seguimos combatiendo
 	if _get_active_enemy_ids().size() > 0:
 		_start_combat()
+
+func _on_card_gui_input(event: InputEvent, card: CardView) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	if not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if current_phase == BattlePhase.UI_LOCKED:
+		return
+	if card == null or card.card_id == "":
+		return
+	if card.card_id == "th":
+		return
+	card.accept_event()
+	_handle_card_click(card)
+
+func _try_handle_card_click_at(global_pos: Vector2) -> void:
+	var card := _get_card_at_global_pos(global_pos)
+	if card == null:
+		return
+	_handle_card_click(card)
+
+func _get_card_at_global_pos(global_pos: Vector2) -> CardView:
+	var hovered := get_viewport().gui_get_hovered_control()
+	var node: Node = hovered
+	while node != null and not (node is CardView):
+		node = node.get_parent()
+	if node is CardView:
+		return node as CardView
+	# Fallback manual hit test (top-most by z_index, then by insertion)
+	var best: CardView = null
+	var best_z := -999999
+	for card_view in card_views.values():
+		if not (card_view is CardView):
+			continue
+		var card := card_view as CardView
+		if not card.is_visible_in_tree():
+			continue
+		var rect := Rect2(card.global_position, card.size * card.scale)
+		if rect.has_point(global_pos):
+			if card.z_index >= best_z:
+				best_z = card.z_index
+				best = card
+	return best
+
+func _handle_card_click(card: CardView) -> void:
+	var zone := ""
+	if card.has_meta(CARD_ZONE_META):
+		zone = String(card.get_meta(CARD_ZONE_META))
+	if zone == CARD_ZONE_DECK:
+		_on_draw_pressed()
+		return
+	if zone == CARD_ZONE_ACTIVE:
+		_on_enemy_card_clicked(card.card_id)
+
+func _on_enemy_card_clicked(enemy_id: String) -> void:
+	if enemy_id == "":
+		return
+	if current_phase != BattlePhase.ENEMY_ACTIVE:
+		return
+	if combat_manager != null:
+		combat_manager.set_preferred_target(enemy_id)
+	_start_combat()
 # ==========================================
 # UTILIDADES
 # ==========================================
@@ -975,6 +1096,15 @@ func _is_final_boss_enemy(enemy_data: Dictionary) -> bool:
 	var boss_kind := int(enemy_data.get("boss_kind", BossDefinition.BossKind.MINI_BOSS))
 	return boss_kind == BossDefinition.BossKind.FINAL_BOSS
 
+func _is_mini_boss_enemy(enemy_data: Dictionary) -> bool:
+	if enemy_data.is_empty():
+		return false
+	var is_boss: bool = bool(enemy_data.get("is_boss", false)) or enemy_data.has("boss_id")
+	if not is_boss:
+		return false
+	var boss_kind := int(enemy_data.get("boss_kind", BossDefinition.BossKind.MINI_BOSS))
+	return boss_kind == BossDefinition.BossKind.MINI_BOSS
+
 
 ######################################
 #EFECTOS VISUALES
@@ -987,6 +1117,8 @@ func _is_final_boss_enemy(enemy_data: Dictionary) -> bool:
 func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 	if attacker == null or target == null:
 		return
+	var original_z := attacker.z_index
+	attacker.z_index = max(attacker.z_index, target.z_index) + 1
 
 	# Posiciones base
 	var start_pos: Vector2 = attacker.global_position
@@ -1077,6 +1209,8 @@ func _play_attack_animation(attacker: CardView, target: CardView) -> void:
 	)
 
 	await tween.finished
+	if attacker != null and is_instance_valid(attacker):
+		attacker.z_index = original_z
 
 # ==========================================
 # COMBAT MANAGER ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ VISUAL
@@ -1165,6 +1299,7 @@ func _restore_active_enemies_if_needed() -> void:
 		if card == null:
 			continue
 		card.reparent(slot, true)
+		card.set_meta(CARD_ZONE_META, CARD_ZONE_ACTIVE)
 		card.show_front()
 		card.refresh(enemy_data)
 		enemy_card_views_by_deck[deck_index] = card
@@ -1208,6 +1343,14 @@ func _has_remaining_enemies() -> bool:
 
 func _has_remaining_enemies_after_defeat(defeated_id: String) -> bool:
 	return RunState.has_remaining_enemies(defeated_id)
+
+func _connect_card_input(card: CardView) -> void:
+	if card == null:
+		return
+	var callable := Callable(self, "_on_card_gui_input").bind(card)
+	if card.gui_input.is_connected(callable):
+		return
+	card.gui_input.connect(callable)
 
 # ==========================================
 # PAUSE

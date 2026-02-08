@@ -260,6 +260,7 @@ func set_run_selection(hero_def_id: String, weights: Dictionary) -> void:
 			hero_level = progression.level
 			hero_xp = progression.xp
 	xp_to_next_level = _calc_xp_to_next_level(hero_level)
+	hero_level_multiplier = _get_hero_level_multiplier_from_level()
 	run_xp_earned = 0
 	enemy_level = 1
 	item_instances.clear()
@@ -465,6 +466,12 @@ func create_boss_instance(
 	for trait_res in boss_def.boss_traits:
 		if trait_res != null and not trait_res.trait_id.strip_edges().is_empty():
 			trait_ids.append(trait_res.trait_id)
+	var level_mult: float = _get_enemy_level_multiplier_from_level()
+	var scaled_hp: int = int(round(float(boss_def.base_max_hp) * level_mult))
+	var scaled_damage: int = int(round(float(boss_def.base_damage) * level_mult))
+	var scaled_initiative: int = int(round(float(boss_def.base_initiative) * level_mult))
+	var scaled_armour: int = int(round(float(boss_def.base_armour) * level_mult))
+	var scaled_level: int = boss_def.base_level + max(0, enemy_level - 1)
 
 	var card: Dictionary = {
 		"id": id,
@@ -476,19 +483,19 @@ func create_boss_instance(
 		"deck_index": deck_index,
 
 		# BASE
-		"base_hp": boss_def.base_max_hp,
-		"base_damage": boss_def.base_damage,
-		"base_initiative": boss_def.base_initiative,
-		"base_armour": boss_def.base_armour,
+		"base_hp": scaled_hp,
+		"base_damage": scaled_damage,
+		"base_initiative": scaled_initiative,
+		"base_armour": scaled_armour,
 
 		# RUNTIME
-		"max_hp": boss_def.base_max_hp,
-		"current_hp": boss_def.base_max_hp,
-		"damage": boss_def.base_damage,
-		"initiative": boss_def.base_initiative,
-		"armour": boss_def.base_armour,
+		"max_hp": scaled_hp,
+		"current_hp": scaled_hp,
+		"damage": scaled_damage,
+		"initiative": scaled_initiative,
+		"armour": scaled_armour,
 
-		"level": boss_def.base_level,
+		"level": scaled_level,
 		"upgrade_level": 0
 	}
 
@@ -759,9 +766,10 @@ func _create_item_instance(archetype: ItemArchetype, enemy_level: int) -> ItemIn
 	item_instance_counter += 1
 	instance.instance_id = "it_%s_%d" % [archetype.item_id, item_instance_counter]
 	instance.archetype = archetype
-	instance.item_level = max(1, enemy_level)
-	instance.rarity = _roll_item_rarity()
-	instance.mods = _roll_item_mods(instance.rarity, archetype.item_class)
+	instance.item_level = _roll_item_level(enemy_level)
+	var desired_mods := _roll_item_rarity()
+	instance.mods = _roll_item_mods(desired_mods, archetype.item_class)
+	instance.rarity = max(1, instance.mods.size())
 	item_instances[instance.instance_id] = instance
 	return instance
 
@@ -771,6 +779,12 @@ func _create_random_item_instance_for_debug() -> ItemInstance:
 	var idx := item_drop_rng.randi_range(0, item_archetype_catalog.archetypes.size() - 1)
 	var archetype: ItemArchetype = item_archetype_catalog.archetypes[idx]
 	return _create_item_instance(archetype, 1)
+
+func _roll_item_level(enemy_level: int) -> int:
+	var base: int = max(1, enemy_level)
+	var min_level: int = max(0, base - 1)
+	var max_level: int = base + 1
+	return item_drop_rng.randi_range(min_level, max_level)
 
 func _roll_item_rarity() -> int:
 	var roll := item_drop_rng.randi_range(1, 100)
@@ -1164,7 +1178,7 @@ func _apply_equipment_to_hero() -> void:
 	hero["regen"] = add_regen
 	hero["crit_chance"] = add_crit
 
-	if old_max_hp > 0 and new_max_hp > 0:
+	if new_max_hp > old_max_hp and old_max_hp > 0:
 		var ratio := float(old_current_hp) / float(old_max_hp)
 		hero["current_hp"] = min(int(round(float(new_max_hp) * ratio)), new_max_hp)
 	else:
@@ -1207,6 +1221,7 @@ func _level_up() -> void:
 
 func _apply_hero_level_up_effects() -> void:
 	hero_level_multiplier *= HERO_LEVEL_UP_STAT_MULT
+	_clear_active_traits_on_level_up()
 	_rescale_all_cards_from_definitions()
 	_sync_hero_card_level(true)
 	_apply_equipment_to_hero()
@@ -1239,6 +1254,12 @@ func _calc_xp_to_next_level(level: int) -> int:
 func _get_upgrade_multiplier(is_hero: bool) -> float:
 	return HERO_LEVEL_UP_STAT_MULT if is_hero else ENEMY_LEVEL_UP_STAT_MULT
 
+func _get_enemy_level_multiplier_from_level() -> float:
+	return pow(ENEMY_LEVEL_UP_STAT_MULT, float(max(0, enemy_level - 1)))
+
+func _get_hero_level_multiplier_from_level() -> float:
+	return pow(HERO_LEVEL_UP_STAT_MULT, float(max(0, hero_level - 1)))
+
 func _rescale_all_cards_from_definitions() -> void:
 	for card in cards.values():
 		_rescale_card_from_definition(card)
@@ -1255,6 +1276,25 @@ func _rescale_all_cards_from_definitions() -> void:
 
 func _rescale_card_from_definition(card: Dictionary) -> void:
 	if card.is_empty():
+		return
+	if bool(card.get("is_boss", false)) or card.has("boss_id"):
+		var boss_id: String = String(card.get("boss_id", ""))
+		if boss_id.is_empty():
+			boss_id = String(card.get("definition", ""))
+		if boss_id.is_empty():
+			return
+		var boss_def: BossDefinition = get_boss_definition(boss_id)
+		if boss_def == null:
+			return
+		var level_mult: float = _get_enemy_level_multiplier_from_level()
+		var scaled_hp: int = int(round(float(boss_def.base_max_hp) * level_mult))
+		var scaled_damage: int = int(round(float(boss_def.base_damage) * level_mult))
+		var scaled_initiative: int = int(round(float(boss_def.base_initiative) * level_mult))
+		var scaled_armour: int = int(round(float(boss_def.base_armour) * level_mult))
+		card["base_hp"] = scaled_hp
+		card["base_damage"] = scaled_damage
+		card["base_initiative"] = scaled_initiative
+		card["base_armour"] = scaled_armour
 		return
 	var def_id: String = String(card.get("definition", ""))
 	if def_id.is_empty():
@@ -1275,6 +1315,17 @@ func _rescale_card_from_definition(card: Dictionary) -> void:
 
 func _update_card_level_from_definition(card: Dictionary) -> void:
 	if card.is_empty():
+		return
+	if bool(card.get("is_boss", false)) or card.has("boss_id"):
+		var boss_id: String = String(card.get("boss_id", ""))
+		if boss_id.is_empty():
+			boss_id = String(card.get("definition", ""))
+		if boss_id.is_empty():
+			return
+		var boss_def: BossDefinition = get_boss_definition(boss_id)
+		if boss_def == null:
+			return
+		card["level"] = boss_def.base_level + max(0, enemy_level - 1)
 		return
 	var def_id: String = String(card.get("definition", ""))
 	if def_id.is_empty():
@@ -1751,20 +1802,24 @@ func start_wave_encounter() -> void:
 	wave_started.emit(current_wave, waves_per_run)
 
 	if _is_mini_boss_wave(current_wave):
-		var mini_id := _pick_mini_boss_id()
-		if not mini_id.is_empty():
-			_spawn_boss_by_id(mini_id)
-			mini_boss_started.emit(mini_id)
-		prepare_progressive_deck()
-		wave_progress_changed.emit(current_wave, 0, 0)
-		return
+		var mini_def := _pick_mini_boss_def()
+		if mini_def != null:
+			create_boss_instance(mini_def, 0)
+			mini_boss_started.emit(mini_def.boss_id)
+			prepare_progressive_deck()
+			wave_progress_changed.emit(current_wave, 0, 0)
+			return
+		push_warning("[RunManager] Mini boss wave sin boss disponible. Continuando con enemigos normales.")
 
 	if _is_final_boss_wave(current_wave):
-		_spawn_boss_by_id(FINAL_BOSS_ID)
-		final_boss_started.emit(FINAL_BOSS_ID)
-		prepare_progressive_deck()
-		wave_progress_changed.emit(current_wave, 0, 0)
-		return
+		var final_def := _pick_final_boss_def()
+		if final_def != null:
+			create_boss_instance(final_def, 0)
+			final_boss_started.emit(final_def.boss_id)
+			prepare_progressive_deck()
+			wave_progress_changed.emit(current_wave, 0, 0)
+			return
+		push_warning("[RunManager] Final boss wave sin boss disponible. Continuando con enemigos normales.")
 
 	if selected_enemy_types.is_empty():
 		return
@@ -1857,6 +1912,38 @@ func _pick_mini_boss_id() -> String:
 	rng.seed = run_seed + (current_wave * 911) + 17
 	var idx := rng.randi_range(0, MINI_BOSS_IDS.size() - 1)
 	return MINI_BOSS_IDS[idx]
+
+func _pick_mini_boss_def() -> BossDefinition:
+	_ensure_boss_catalog()
+	# 1) Prefer configured IDs.
+	var mini_id := _pick_mini_boss_id()
+	if mini_id != "":
+		var def := get_boss_definition(mini_id)
+		if def != null:
+			return def
+	# 2) Fallback to any mini boss in catalog.
+	if boss_catalog == null:
+		return null
+	var minis := boss_catalog.get_by_kind(BossDefinition.BossKind.MINI_BOSS)
+	if minis.is_empty():
+		return null
+	var rng := RandomNumberGenerator.new()
+	rng.seed = run_seed + (current_wave * 911) + 31
+	return minis[rng.randi_range(0, minis.size() - 1)]
+
+func _pick_final_boss_def() -> BossDefinition:
+	_ensure_boss_catalog()
+	var def := get_boss_definition(FINAL_BOSS_ID)
+	if def != null:
+		return def
+	if boss_catalog == null:
+		return null
+	var finals := boss_catalog.get_by_kind(BossDefinition.BossKind.FINAL_BOSS)
+	if finals.is_empty():
+		return null
+	var rng := RandomNumberGenerator.new()
+	rng.seed = run_seed + (current_wave * 911) + 47
+	return finals[rng.randi_range(0, finals.size() - 1)]
 
 func reset_run(new_mode: String = "normal") -> void:
 	run_mode = new_mode

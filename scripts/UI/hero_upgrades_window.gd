@@ -1,6 +1,8 @@
 extends Control
 class_name HeroUpgradesWindow
 
+signal closed
+
 @onready var hero_list: ItemList = $Panel/HBox/Left/HeroList
 @onready var hero_name_label: Label = $Panel/HBox/Right/Header/HeroNameLabel
 @onready var close_button: Button = $Panel/HBox/Right/Header/CloseButton
@@ -35,6 +37,15 @@ func refresh_window() -> void:
 		else:
 			var idx: int = hero_list.get_selected_items()[0]
 			_on_hero_selected(idx)
+
+func show_for_hero(hero_id: StringName) -> void:
+	refresh_window()
+	if hero_id == &"":
+		return
+	var idx := _get_hero_index(hero_id)
+	if idx >= 0:
+		hero_list.select(idx)
+		_on_hero_selected(idx)
 
 func _refresh_hero_list() -> void:
 	_hero_ids.clear()
@@ -86,6 +97,12 @@ func _build_stats_rows() -> void:
 		points_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		row.add_child(points_label)
 
+		var minus_button: Button = Button.new()
+		minus_button.text = "-"
+		minus_button.custom_minimum_size = Vector2(28.0, 0.0)
+		minus_button.pressed.connect(_on_stat_minus_pressed.bind(stat))
+		row.add_child(minus_button)
+
 		var plus_button: Button = Button.new()
 		plus_button.text = "+"
 		plus_button.custom_minimum_size = Vector2(28.0, 0.0)
@@ -95,6 +112,7 @@ func _build_stats_rows() -> void:
 		_stat_rows[stat] = {
 			"value_label": value_label,
 			"points_label": points_label,
+			"minus_button": minus_button,
 			"plus_button": plus_button
 		}
 
@@ -125,8 +143,9 @@ func _refresh_selected_hero() -> void:
 			continue
 		var value_label: Label = row_data.get("value_label", null)
 		var points_label_row: Label = row_data.get("points_label", null)
+		var minus_button: Button = row_data.get("minus_button", null)
 		var plus_button: Button = row_data.get("plus_button", null)
-		if value_label == null or points_label_row == null or plus_button == null:
+		if value_label == null or points_label_row == null or plus_button == null or minus_button == null:
 			continue
 		var points: int = progression.get_points_in_stat(stat)
 		points_label_row.text = "Pts: %d" % points
@@ -141,6 +160,7 @@ func _refresh_selected_hero() -> void:
 			var flat: int = points * HeroUpgradeStats.get_per_point_flat(stat)
 			value_label.text = "%d" % flat
 		plus_button.disabled = not can_spend
+		minus_button.disabled = not progression.can_refund_point(stat)
 
 func _on_stat_plus_pressed(stat: int) -> void:
 	if _selected_hero_id == &"":
@@ -154,8 +174,21 @@ func _on_stat_plus_pressed(stat: int) -> void:
 		_refresh_selected_hero()
 		_refresh_hero_list()
 
+func _on_stat_minus_pressed(stat: int) -> void:
+	if _selected_hero_id == &"":
+		return
+	var profile: PlayerProfile = ProfileService.get_profile()
+	if profile == null:
+		return
+	var progression: HeroProgression = profile.get_or_create_progression(_selected_hero_id)
+	if progression.refund_point(stat):
+		ProfileService.save_profile(profile)
+		_refresh_selected_hero()
+		_refresh_hero_list()
+
 func _on_close_pressed() -> void:
 	visible = false
+	closed.emit()
 
 func _get_hero_display_name(hero_id: StringName) -> String:
 	var id_str: String = String(hero_id)
@@ -163,3 +196,9 @@ func _get_hero_display_name(hero_id: StringName) -> String:
 	if def != null and not def.display_name.is_empty():
 		return def.display_name
 	return id_str
+
+func _get_hero_index(hero_id: StringName) -> int:
+	for i in range(_hero_ids.size()):
+		if _hero_ids[i] == hero_id:
+			return i
+	return -1

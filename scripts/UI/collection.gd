@@ -805,7 +805,7 @@ func _fly_open_card_to_book_deferred(def: CardDefinition, start_global: Vector2,
 	var upgrade_level := 0
 	if open_collection != null:
 		upgrade_level = int(open_collection.upgrade_level.get(def.definition_id, 0))
-	fly.setup_from_definition(def, upgrade_level)
+	fly.setup_from_definition(def, _get_display_upgrade_level(def, upgrade_level))
 	fly.show_front()
 	fly.scale = start_scale
 	fly.global_position = start_global
@@ -904,7 +904,7 @@ func _build_card_popup(def: CardDefinition) -> void:
 	var upgrade_level := 0
 	if open_collection != null:
 		upgrade_level = int(open_collection.upgrade_level.get(def.definition_id, 0))
-	card.setup_from_definition(def, upgrade_level)
+	card.setup_from_definition(def, _get_display_upgrade_level(def, upgrade_level))
 	card.show_front()
 	_set_mouse_filter_recursive(card, Control.MOUSE_FILTER_IGNORE)
 	var scale_w := 220.0 / OPEN_CARD_BASE.x
@@ -1077,6 +1077,17 @@ func _get_pack_pool(pack_type: String) -> Array[CardDefinition]:
 			continue
 		pool.append(card_def)
 	return pool
+
+func _get_display_upgrade_level(def: CardDefinition, base_upgrade: int) -> int:
+	if def == null:
+		return base_upgrade
+	if def.card_type != "hero":
+		return base_upgrade
+	var profile: PlayerProfile = ProfileService.get_profile()
+	if profile == null:
+		return base_upgrade
+	var progression: HeroProgression = profile.get_or_create_progression(StringName(def.definition_id))
+	return base_upgrade + max(0, progression.level - 1)
 
 func _go_to_card_page(definition_id: String) -> void:
 	if definition_id == "":

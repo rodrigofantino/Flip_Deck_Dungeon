@@ -24,6 +24,7 @@ var current_phase: CombatPhase = CombatPhase.IDLE
 var run_manager: RunManager
 var hero_id: String = "th"
 var enemy_ids: Array[String] = []
+var preferred_target_id: String = ""
 @export var initiative_debug: bool = false
 
 # ==========================================
@@ -119,6 +120,12 @@ func start_combat(enemy_card_ids: Array[String]) -> void:
 	phase_changed.emit(current_phase)
 
 	_resolve_initiative_turn()
+
+func set_preferred_target(target_id: String) -> void:
+	preferred_target_id = target_id
+
+func clear_preferred_target() -> void:
+	preferred_target_id = ""
 
 # ==========================================
 # TURNOS
@@ -258,6 +265,14 @@ func _sort_enemies_by_initiative(ids: Array[String]) -> void:
 	)
 
 func _pick_hero_target(enemies: Array[String]) -> String:
+	if preferred_target_id != "":
+		if not enemies.has(preferred_target_id):
+			preferred_target_id = ""
+		else:
+			var preferred: Dictionary = run_manager.get_card(preferred_target_id)
+			if not preferred.is_empty() and int(preferred.get("current_hp", 0)) > 0:
+				return preferred_target_id
+			preferred_target_id = ""
 	for enemy_id in enemies:
 		var enemy: Dictionary = run_manager.get_card(enemy_id)
 		if enemy.is_empty():
