@@ -22,7 +22,7 @@ extends Control
 @export var supported_transition_duration: float = 0.35
 @export var supported: bool = true
 @export var perspective_debug_print: bool = false
-@export var permitir_flip: bool = false
+@export var permitir_flip: bool = true
 
 @onready var book: PageFlip2D = $Book
 @onready var click_catcher: Control = $ClickCatcher
@@ -256,81 +256,76 @@ func _recenter_book_internal() -> void:
 	_update_click_catcher()
 	_dbg("recenter_internal")
 
+func _handle_page_click(event: InputEventMouseButton, source: String) -> bool:
+	if book == null:
+		return false
+	var in_book := _is_point_over_book(event.global_position)
+	if debug_book:
+		print("[BookView] input ", source, " open=", book.is_book_open, " in_book=", in_book, " pos=", event.global_position)
+	if not book.is_book_open and in_book:
+		_animate_to_open(open_center_duration)
+		return true
+	if not permitir_flip:
+		if debug_book:
+			print("[BookView] flip disabled")
+		return false
+	var vc := book.visuals_container
+	if vc == null:
+		return false
+	var local_x := _get_local_x_over_book(event.global_position)
+	if book.is_book_open:
+		if not in_book:
+			_dbg("click_outside")
+			return false
+		if _is_point_over_card_view(event.global_position):
+			return true
+		if local_x >= 0.0:
+			_dbg("click_open_right_page")
+			if _will_close_to_back():
+				_animate_to_center(close_center_duration, false, true)
+			book.next_page()
+			return true
+		_dbg("click_open_left_page")
+		if _will_close_to_front():
+			_animate_to_center(close_center_duration, false, false)
+		book.prev_page()
+		return true
+	var page_w := _get_page_width_scaled()
+	var scale := _get_book_global_scale()
+	var edge_band := maxf(page_w * edge_click_ratio, edge_click_band_px / scale.x)
+	var in_edge_any := _is_in_edge_band(local_x, event.global_position, page_w, edge_band)
+	if not in_edge_any and not in_book:
+		_dbg("click_outside")
+		return false
+	# Ensure the open animation starts from center.
+	_animate_to_open(open_center_duration)
+	_dbg("click_open_center")
+	# Closed: click right side to open forward, left side to open backward.
+	var in_edge := _is_in_edge_band(local_x, event.global_position, page_w, edge_band)
+	if not in_edge:
+		if book.has_method("is_pointer_over_page_control_with_event") and book.call("is_pointer_over_page_control_with_event", event):
+			return true
+	var is_back := _is_back_closed()
+	if is_back:
+		# Back cover visible: cover spans [-page_w, 0], outer edge is at -page_w.
+		if local_x <= -page_w + edge_band:
+			_dbg("click_closed_back_edge")
+			_start_open_after_centering(false)
+			_dbg("click_prev")
+	else:
+		# Front cover visible: cover spans [0, page_w], outer edge is at page_w.
+		if local_x >= page_w - edge_band:
+			_dbg("click_closed_front_edge")
+			_start_open_after_centering(true)
+			_dbg("click_next")
+	return true
+
 func _unhandled_input(event: InputEvent) -> void:
 	if book == null:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if not book.is_book_open and _is_point_over_book(event.global_position):
-			_animate_to_open(open_center_duration)
+		if _handle_page_click(event, "unhandled"):
 			get_viewport().set_input_as_handled()
-			return
-		if not permitir_flip:
-			return
-		var vc := book.visuals_container
-		if vc == null:
-			return
-		var local_x := _get_local_x_over_book(event.global_position)
-		var page_w := _get_page_width_scaled()
-		var edge_band := maxf(page_w * edge_click_ratio, edge_click_band_px)
-		var in_edge_any := _is_in_edge_band(local_x, event.global_position, page_w, edge_band)
-		if not in_edge_any and not _is_point_over_book(event.global_position):
-			_dbg("click_outside")
-			return
-		if book.is_book_open:
-			var left_edge := -page_w
-			var right_edge := page_w
-			var in_edge := _is_in_edge_band(local_x, event.global_position, page_w, edge_band)
-			if not in_edge:
-				if book.has_method("is_pointer_over_page_control_with_event") and book.call("is_pointer_over_page_control_with_event", event):
-					# Let CardViews handle clicks when not on edge.
-					get_viewport().set_input_as_handled()
-					return
-			if _is_point_over_card_view(event.global_position):
-				get_viewport().set_input_as_handled()
-				return
-			if local_x >= right_edge - edge_band:
-				_dbg("click_open_right_edge")
-				if _will_close_to_back():
-					_animate_to_center(close_center_duration, false, true)
-				book.next_page()
-				get_viewport().set_input_as_handled()
-			elif local_x <= left_edge + edge_band:
-				_dbg("click_open_left_edge")
-				if _will_close_to_front():
-					_animate_to_center(close_center_duration, false, false)
-				book.prev_page()
-				get_viewport().set_input_as_handled()
-			else:
-				_dbg("click_open_center")
-		else:
-			# Ensure the open animation starts from center.
-			_animate_to_open(open_center_duration)
-			_dbg("click_open_center")
-			# Closed: click right side to open forward, left side to open backward.
-			var in_edge := _is_in_edge_band(local_x, event.global_position, page_w, edge_band)
-			if not in_edge:
-				if book.has_method("is_pointer_over_page_control_with_event") and book.call("is_pointer_over_page_control_with_event", event):
-					get_viewport().set_input_as_handled()
-					return
-			var is_back := _is_back_closed()
-			if is_back:
-				# Back cover visible: cover spans [-page_w, 0], outer edge is at -page_w.
-				if local_x <= -page_w + edge_band:
-					_dbg("click_closed_back_edge")
-					_start_open_after_centering(false)
-					get_viewport().set_input_as_handled()
-					_dbg("click_prev")
-				else:
-					_dbg("click_closed_back_center")
-			else:
-				# Front cover visible: cover spans [0, page_w], outer edge is at page_w.
-				if local_x >= page_w - edge_band:
-					_dbg("click_closed_front_edge")
-					_start_open_after_centering(true)
-					get_viewport().set_input_as_handled()
-					_dbg("click_next")
-				else:
-					_dbg("click_closed_front_center")
 
 func _input(event: InputEvent) -> void:
 	if book == null:
@@ -344,10 +339,8 @@ func _input(event: InputEvent) -> void:
 func _gui_input(event: InputEvent) -> void:
 	if book == null:
 		return
-	if book.is_book_open:
-		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if try_open_from_click(event.global_position):
+		if _handle_page_click(event, "gui"):
 			accept_event()
 
 func try_open_from_click(global_pos: Vector2) -> bool:
@@ -380,28 +373,60 @@ func _get_open_center(view: Vector2) -> Vector2:
 	return Vector2(view.x * 0.5, view.y * 0.5)
 
 func _get_page_width_scaled() -> float:
-	var vc := book.visuals_container
-	if vc == null:
-		return book.target_page_size.x
-	var container_scale := vc.scale
-	if container_scale == Vector2.ZERO:
-		container_scale = Vector2.ONE
-	return book.target_page_size.x * book.scale.x * container_scale.x
+	return book.target_page_size.x
 
 func _get_page_height_scaled() -> float:
+	return book.target_page_size.y
+
+func _get_book_global_scale() -> Vector2:
 	var vc := book.visuals_container
 	if vc == null:
-		return book.target_page_size.y
-	var container_scale := vc.scale
-	if container_scale == Vector2.ZERO:
-		container_scale = Vector2.ONE
-	return book.target_page_size.y * book.scale.y * container_scale.y
+		return Vector2.ONE
+	var scale := vc.global_scale
+	var sx := scale.x
+	var sy := scale.y
+	if sx <= 0.001:
+		sx = 1.0
+	if sy <= 0.001:
+		sy = 1.0
+	return Vector2(sx, sy)
 
 func _get_local_x_over_book(global_pos: Vector2) -> float:
 	var vc := book.visuals_container
 	if vc == null:
 		return 0.0
 	return vc.to_local(global_pos).x
+
+func _get_page_slot(is_left: bool) -> SubViewport:
+	if book == null:
+		return null
+	var path := "Viewports/Slots/Slot1" if is_left else "Viewports/Slots/Slot2"
+	var node := book.get_node_or_null(path)
+	if node is SubViewport:
+		return node as SubViewport
+	return null
+
+func _get_page_polygon(is_left: bool) -> Polygon2D:
+	if book == null:
+		return null
+	var poly: Polygon2D = book.static_left if is_left else book.static_right
+	if poly != null:
+		return poly
+	var visual := book.get_node_or_null("Visual")
+	if visual == null:
+		return null
+	var name := "StaticPageLeft" if is_left else "StaticPageRight"
+	var node := visual.get_node_or_null(name)
+	if node is Polygon2D:
+		return node as Polygon2D
+	return null
+
+func _map_global_to_page_coords(global_pos: Vector2, poly: Polygon2D) -> Vector2:
+	if poly == null or book == null:
+		return Vector2.INF
+	var local := poly.to_local(global_pos)
+	local.y += book.target_page_size.y * 0.5
+	return local
 
 func _is_in_edge_band(local_x: float, global_pos: Vector2, page_w: float, edge_band: float) -> bool:
 	var vc := book.visuals_container
@@ -410,7 +435,9 @@ func _is_in_edge_band(local_x: float, global_pos: Vector2, page_w: float, edge_b
 	var local := vc.to_local(global_pos)
 	var page_h := _get_page_height_scaled()
 	var half_h := page_h * 0.5
-	var in_y := local.y >= (-half_h + edge_click_vertical_margin_px) and local.y <= (half_h - edge_click_vertical_margin_px)
+	var scale := _get_book_global_scale()
+	var margin_y := edge_click_vertical_margin_px / scale.y
+	var in_y := local.y >= (-half_h + margin_y) and local.y <= (half_h - margin_y)
 	if not in_y:
 		return false
 	return (local_x >= page_w - edge_band) or (local_x <= -page_w + edge_band)
@@ -441,13 +468,31 @@ func _is_point_over_book(global_pos: Vector2) -> bool:
 	return local.x >= min_x and local.x <= max_x and local.y >= min_y and local.y <= max_y
 
 func _is_point_over_card_view(global_pos: Vector2) -> bool:
+	var slot_left := _get_page_slot(true)
+	var slot_right := _get_page_slot(false)
+	if slot_left == null and slot_right == null:
+		return false
+	var left_poly := _get_page_polygon(true)
+	var right_poly := _get_page_polygon(false)
+	var left_pos := _map_global_to_page_coords(global_pos, left_poly)
+	var right_pos := _map_global_to_page_coords(global_pos, right_poly)
 	for node in get_tree().get_nodes_in_group("card_view"):
 		if not node is CardView:
 			continue
 		var ctrl := node as CardView
 		if not ctrl.is_visible_in_tree():
 			continue
-		if ctrl.get_global_rect().has_point(global_pos):
+		if book != null and not book.is_ancestor_of(ctrl):
+			continue
+		var viewport := ctrl.get_viewport()
+		var page_pos := Vector2.INF
+		if viewport == slot_left:
+			page_pos = left_pos
+		elif viewport == slot_right:
+			page_pos = right_pos
+		if page_pos == Vector2.INF:
+			continue
+		if ctrl.get_global_rect().has_point(page_pos):
 			return true
 	return false
 
@@ -848,13 +893,26 @@ func _update_click_catcher() -> void:
 	click_catcher.size = rect.size
 
 func _get_closed_cover_global_rect() -> Rect2:
-	var size := _get_closed_page_size()
-	var half_h := size.y * 0.5
+	var vc := book.visuals_container
+	if vc == null:
+		var size := _get_closed_page_size()
+		var half_h := size.y * 0.5
+		var is_back := _is_back_closed()
+		var min_x := -size.x if is_back else 0.0
+		var max_x := 0.0 if is_back else size.x
+		var top_left := book.to_global(Vector2(min_x, -half_h))
+		var bottom_right := book.to_global(Vector2(max_x, half_h))
+		var min_pos := Vector2(min(top_left.x, bottom_right.x), min(top_left.y, bottom_right.y))
+		var max_pos := Vector2(max(top_left.x, bottom_right.x), max(top_left.y, bottom_right.y))
+		return Rect2(min_pos, max_pos - min_pos)
+	var page_w := _get_page_width_scaled()
+	var page_h := _get_page_height_scaled()
+	var half_h := page_h * 0.5
 	var is_back := _is_back_closed()
-	var min_x := -size.x if is_back else 0.0
-	var max_x := 0.0 if is_back else size.x
-	var top_left := book.to_global(Vector2(min_x, -half_h))
-	var bottom_right := book.to_global(Vector2(max_x, half_h))
+	var min_x := -page_w if is_back else 0.0
+	var max_x := 0.0 if is_back else page_w
+	var top_left := vc.to_global(Vector2(min_x, -half_h))
+	var bottom_right := vc.to_global(Vector2(max_x, half_h))
 	var min_pos := Vector2(min(top_left.x, bottom_right.x), min(top_left.y, bottom_right.y))
 	var max_pos := Vector2(max(top_left.x, bottom_right.x), max(top_left.y, bottom_right.y))
 	return Rect2(min_pos, max_pos - min_pos)
