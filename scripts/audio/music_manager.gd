@@ -34,8 +34,7 @@ func _ready() -> void:
 	add_child(_battle_player)
 	_menu_player.process_mode = Node.PROCESS_MODE_ALWAYS
 	_battle_player.process_mode = Node.PROCESS_MODE_ALWAYS
-	_menu_player.bus = _get_music_bus()
-	_battle_player.bus = _get_music_bus()
+	refresh_bus()
 	_menu_player.volume_db = menu_volume_db
 	_battle_player.volume_db = -80.0
 	_rng.randomize()
@@ -58,6 +57,13 @@ func _ready() -> void:
 			_play_next_battle()
 	)
 	_play_menu_immediate()
+
+func refresh_bus() -> void:
+	var bus_name := _get_music_bus()
+	if _menu_player:
+		_menu_player.bus = bus_name
+	if _battle_player:
+		_battle_player.bus = bus_name
 
 func play_menu() -> void:
 	if _state == "menu":

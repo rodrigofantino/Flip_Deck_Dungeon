@@ -57,7 +57,7 @@ func _ready() -> void:
 	_ensure_input_enabled()
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_process_unhandled_input(true)
-	set_process_input(true)
+	set_process_input(false)
 	_setup_click_catcher()
 	_hide_visuals_until_ready()
 	call_deferred("_initial_layout")

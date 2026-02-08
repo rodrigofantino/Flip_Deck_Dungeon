@@ -302,6 +302,14 @@ func _apply_damage(attacker_id: String, target_id: String, amount: int) -> void:
 		return
 
 	var final_amount := _get_modified_attack_damage(attacker_id, amount)
+	var evasion: float = float(card.get("evasion", 0.0))
+	if evasion > 0.0 and _roll_chance(evasion):
+		damage_applied.emit(target_id, 0)
+		return
+	var block_chance: float = float(card.get("block_chance", 0.0))
+	if block_chance > 0.0 and bool(card.get("has_shield", false)) and _roll_chance(block_chance):
+		damage_applied.emit(target_id, 0)
+		return
 	var armour: int = int(card.get("armour", 0))
 	var mitigated: int = max(final_amount - armour, 0)
 
@@ -311,14 +319,20 @@ func _apply_damage(attacker_id: String, target_id: String, amount: int) -> void:
 	damage_applied.emit(target_id, mitigated)
 	_handle_rage_tusk_trigger(target_id, card)
 
-	var lifesteal: int = 0
 	if attacker_id != "":
 		var attacker: Dictionary = run_manager.get_card(attacker_id)
 		if not attacker.is_empty():
-			lifesteal = int(attacker.get("lifesteal", 0))
-			if lifesteal > 0 and mitigated > 0:
-				var max_hp: int = int(attacker.get("max_hp", 0))
-				attacker["current_hp"] = min(int(attacker.get("current_hp", 0)) + lifesteal, max_hp)
+			var lifesteal_flat: int = int(attacker.get("lifesteal", 0))
+			var lifesteal_pct: float = float(attacker.get("lifesteal_pct", 0.0))
+			if mitigated > 0 and (lifesteal_flat > 0 or lifesteal_pct > 0.0):
+				var heal_amount := lifesteal_flat + int(round(float(mitigated) * lifesteal_pct))
+				heal_amount = _apply_healing_power(attacker, heal_amount)
+				if heal_amount > 0:
+					var max_hp: int = int(attacker.get("max_hp", 0))
+					var new_hp := min(int(attacker.get("current_hp", 0)) + heal_amount, max_hp)
+					if new_hp != int(attacker.get("current_hp", 0)):
+						attacker["current_hp"] = new_hp
+						damage_applied.emit(attacker_id, 0)
 
 	var thorns: int = int(card.get("thorns", 0))
 	if thorns > 0 and attacker_id != "" and mitigated > 0:
@@ -389,6 +403,37 @@ func _get_trait_state(card_id: String) -> Dictionary:
 		_trait_state[card_id] = {}
 	return _trait_state[card_id]
 
+func _roll_chance(chance: float) -> bool:
+	if chance <= 0.0:
+		return false
+	return randf() < clampf(chance, 0.0, 1.0)
+
+func _apply_healing_power(card: Dictionary, amount: int) -> int:
+	if amount <= 0:
+		return 0
+	var power: float = float(card.get("healing_power", 0.0))
+	if power <= 0.0:
+		return amount
+	return int(round(float(amount) * (1.0 + power)))
+
+func _apply_end_of_round_regen() -> void:
+	var hero: Dictionary = run_manager.get_card(hero_id)
+	if hero.is_empty():
+		return
+	if int(hero.get("current_hp", 0)) <= 0:
+		return
+	var regen: int = int(hero.get("regen", 0))
+	if regen <= 0:
+		return
+	var heal := _apply_healing_power(hero, regen)
+	if heal <= 0:
+		return
+	var max_hp: int = int(hero.get("max_hp", 0))
+	var new_hp := min(int(hero.get("current_hp", 0)) + heal, max_hp)
+	if new_hp != int(hero.get("current_hp", 0)):
+		hero["current_hp"] = new_hp
+		damage_applied.emit(hero_id, 0)
+
 
 func _handle_death(card_id: String) -> void:
 	card_died.emit(card_id)
@@ -397,7 +442,7 @@ func _handle_death(card_id: String) -> void:
 # FIN DE COMBATE
 # ==========================================
 func _finish_combat(victory: bool) -> void:
-
+	_apply_end_of_round_regen()
 	combat_finished.emit(victory)
 
 	# RESET limpio para proximo combate

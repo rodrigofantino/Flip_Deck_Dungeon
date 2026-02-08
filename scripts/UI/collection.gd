@@ -174,10 +174,13 @@ func _wire_ui() -> void:
 		booster_popup.mouse_filter = Control.MOUSE_FILTER_STOP
 	if booster_popup_dimmer:
 		booster_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+		booster_popup_dimmer.gui_input.connect(_on_popup_dimmer_gui_input)
 	if open_popup_dimmer:
 		open_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+		open_popup_dimmer.gui_input.connect(_on_popup_dimmer_gui_input)
 	if card_popup_dimmer:
 		card_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+		card_popup_dimmer.gui_input.connect(_on_popup_dimmer_gui_input)
 	if card_popup:
 		card_popup.mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -202,10 +205,19 @@ func _is_click_blocked_by_ui(global_pos: Vector2) -> bool:
 		blockers.append(open_popup)
 	if card_popup and card_popup.visible:
 		blockers.append(card_popup)
+	if hero_upgrades_window and hero_upgrades_window.visible:
+		blockers.append(hero_upgrades_window)
 	for ctrl in blockers:
 		if ctrl and ctrl.is_visible_in_tree() and ctrl.get_global_rect().has_point(global_pos):
 			return true
 	return false
+
+func _on_popup_dimmer_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		accept_event()
+		var vp := get_viewport()
+		if vp:
+			vp.set_input_as_handled()
 
 func _setup_book_view() -> void:
 	if book_view == null:

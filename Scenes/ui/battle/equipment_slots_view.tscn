@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://opdt6nk4y6fm"]
 
 [ext_resource type="Script" uid="uid://dwqfoanlx3a35" path="res://scripts/UI/equipment_slots_view.gd" id="1_slots_script"]
-[ext_resource type="PackedScene" path="res://Scenes/ui/battle/equipment_slot_view.tscn" id="2_slot_view"]
+[ext_resource type="PackedScene" uid="uid://b6qbjibwmbn1u" path="res://Scenes/ui/battle/equipment_slot_view.tscn" id="2_slot_view"]
 
 [node name="EquipmentSlotsView" type="Control"]
 custom_minimum_size = Vector2(180, 260)

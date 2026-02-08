@@ -11,7 +11,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_ctrl")
-permitir_flip = true
 
 [node name="Book" parent="." instance=ExtResource("1_book")]
 

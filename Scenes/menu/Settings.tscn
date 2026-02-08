@@ -64,5 +64,52 @@ max_value = 1.0
 step = 0.01
 value = 0.8
 
+[node name="VideoLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="DisplayModeRow" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="DisplayModeLabel" type="Label" parent="VBoxContainer/DisplayModeRow"]
+layout_mode = 2
+text = "Display"
+
+[node name="DisplayModeOption" type="OptionButton" parent="VBoxContainer/DisplayModeRow"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+
+[node name="ResolutionRow" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ResolutionLabel" type="Label" parent="VBoxContainer/ResolutionRow"]
+layout_mode = 2
+text = "Resolution"
+
+[node name="ResolutionOption" type="OptionButton" parent="VBoxContainer/ResolutionRow"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+
+[node name="VsyncRow" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="VsyncLabel" type="Label" parent="VBoxContainer/VsyncRow"]
+layout_mode = 2
+text = "VSync"
+
+[node name="VsyncCheck" type="CheckBox" parent="VBoxContainer/VsyncRow"]
+layout_mode = 2
+text = "On"
+
+[node name="FpsRow" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="FpsLabel" type="Label" parent="VBoxContainer/FpsRow"]
+layout_mode = 2
+text = "Max FPS"
+
+[node name="FpsOption" type="OptionButton" parent="VBoxContainer/FpsRow"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+
 [node name="BackButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2

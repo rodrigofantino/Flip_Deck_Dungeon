@@ -689,7 +689,12 @@ func try_drop_item_from_enemy(enemy_data: Dictionary) -> void:
 		return
 	if enemy_data.is_empty():
 		return
-	if item_drop_rng.randf() > ITEM_DROP_CHANCE:
+	var drop_chance := ITEM_DROP_CHANCE
+	var hero: Dictionary = cards.get("th", {})
+	if not hero.is_empty():
+		drop_chance += float(hero.get("loot_chance", 0.0))
+	drop_chance = clampf(drop_chance, 0.0, 1.0)
+	if item_drop_rng.randf() > drop_chance:
 		return
 
 	var def_id := String(enemy_data.get("definition", ""))
@@ -788,6 +793,12 @@ func _roll_item_level(enemy_level: int) -> int:
 
 func _roll_item_rarity() -> int:
 	var roll := item_drop_rng.randi_range(1, 100)
+	var hero: Dictionary = cards.get("th", {})
+	if not hero.is_empty():
+		var bonus := float(hero.get("rarity_chance", 0.0))
+		if bonus != 0.0:
+			roll += int(round(bonus * 100.0))
+			roll = clampi(roll, 1, 100)
 	if roll <= 70:
 		return 1
 	if roll <= 90:
@@ -845,7 +856,13 @@ func register_enemy_defeated(has_remaining_enemies: bool) -> void:
 
 
 func _add_gold(amount: int) -> void:
-	gold += amount
+	var final_amount := amount
+	var hero: Dictionary = cards.get("th", {})
+	if not hero.is_empty():
+		var bonus := float(hero.get("gold_gain", 0.0))
+		if bonus != 0.0:
+			final_amount = int(round(float(amount) * (1.0 + bonus)))
+	gold += max(0, final_amount)
 	gold_changed.emit(gold)
 
 func get_run_gold() -> int:
@@ -1144,6 +1161,24 @@ func _apply_equipment_to_hero() -> void:
 	var add_thorns: int = 0
 	var add_regen: int = 0
 	var add_crit: int = 0
+	var has_shield: bool = false
+
+	var upgrade_mods := _get_hero_upgrade_modifiers()
+	var flat_mods: Dictionary = upgrade_mods.get("flat_int_mods", {})
+	var percent_mods: Dictionary = upgrade_mods.get("percent_float_mods", {})
+	var upgrade_hp: int = int(flat_mods.get(HeroUpgradeStats.UpgradeStat.MAX_HP, 0))
+	var upgrade_damage: int = int(flat_mods.get(HeroUpgradeStats.UpgradeStat.DAMAGE, 0))
+	var upgrade_armour: int = int(flat_mods.get(HeroUpgradeStats.UpgradeStat.ARMOUR, 0))
+	var upgrade_regen: int = int(flat_mods.get(HeroUpgradeStats.UpgradeStat.HP_REGEN, 0))
+	var upgrade_initiative: int = int(flat_mods.get(HeroUpgradeStats.UpgradeStat.INITIATIVE, 0))
+	var upgrade_block: float = float(percent_mods.get(HeroUpgradeStats.UpgradeStat.BLOCK_CHANCE, 0.0))
+	var upgrade_lifesteal: float = float(percent_mods.get(HeroUpgradeStats.UpgradeStat.LIFE_STEAL, 0.0))
+	var upgrade_evasion: float = float(percent_mods.get(HeroUpgradeStats.UpgradeStat.EVASION, 0.0))
+	var upgrade_healing: float = float(percent_mods.get(HeroUpgradeStats.UpgradeStat.HEALING_POWER, 0.0))
+	var upgrade_status: float = float(percent_mods.get(HeroUpgradeStats.UpgradeStat.RESIST_STATUS, 0.0))
+	var upgrade_gold: float = float(percent_mods.get(HeroUpgradeStats.UpgradeStat.GOLD_GAIN, 0.0))
+	var upgrade_loot: float = float(percent_mods.get(HeroUpgradeStats.UpgradeStat.LOOT_CHANCE, 0.0))
+	var upgrade_rarity: float = float(percent_mods.get(HeroUpgradeStats.UpgradeStat.RARITY_CHANCE, 0.0))
 
 	for item_id in equipped_items:
 		if item_id.is_empty():
@@ -1151,6 +1186,8 @@ func _apply_equipment_to_hero() -> void:
 		var instance := get_item_instance(item_id)
 		if instance == null:
 			continue
+		if instance.archetype != null and _get_one_hand_tag(instance.archetype) == "shield":
+			has_shield = true
 		add_hp += instance.get_total_life_flat()
 		add_damage += instance.get_total_damage_flat()
 		add_initiative += instance.get_total_initiative_flat()
@@ -1164,6 +1201,11 @@ func _apply_equipment_to_hero() -> void:
 	add_thorns += set_bonus_thorns
 	add_regen += set_bonus_regen
 	add_crit += set_bonus_crit
+	add_hp += upgrade_hp
+	add_damage += upgrade_damage
+	add_initiative += upgrade_initiative
+	add_armour += upgrade_armour
+	add_regen += upgrade_regen
 
 	var new_max_hp := base_hp + add_hp
 	var new_damage := base_damage + add_damage
@@ -1177,6 +1219,15 @@ func _apply_equipment_to_hero() -> void:
 	hero["thorns"] = add_thorns
 	hero["regen"] = add_regen
 	hero["crit_chance"] = add_crit
+	hero["lifesteal_pct"] = clampf(upgrade_lifesteal, 0.0, 1.0)
+	hero["block_chance"] = clampf(upgrade_block, 0.0, 1.0)
+	hero["evasion"] = clampf(upgrade_evasion, 0.0, 1.0)
+	hero["healing_power"] = clampf(upgrade_healing, 0.0, 1.0)
+	hero["status_resist"] = clampf(upgrade_status, 0.0, 1.0)
+	hero["gold_gain"] = clampf(upgrade_gold, 0.0, 1.0)
+	hero["loot_chance"] = clampf(upgrade_loot, 0.0, 1.0)
+	hero["rarity_chance"] = clampf(upgrade_rarity, 0.0, 1.0)
+	hero["has_shield"] = has_shield
 
 	if new_max_hp > old_max_hp and old_max_hp > 0:
 		var ratio := float(old_current_hp) / float(old_max_hp)
@@ -1185,6 +1236,22 @@ func _apply_equipment_to_hero() -> void:
 		hero["current_hp"] = min(old_current_hp, new_max_hp)
 
 	hero_stats_changed.emit()
+
+func refresh_hero_upgrades() -> void:
+	_apply_equipment_to_hero()
+
+func _get_hero_upgrade_modifiers() -> Dictionary:
+	var hero_id := StringName(selected_hero_def_id)
+	if hero_id == &"":
+		var hero: Dictionary = cards.get("th", {})
+		if not hero.is_empty():
+			hero_id = StringName(String(hero.get("definition", "")))
+	if hero_id == &"":
+		return {
+			"flat_int_mods": {},
+			"percent_float_mods": {}
+		}
+	return ProfileService.get_hero_upgrade_modifiers(hero_id)
 
 
 

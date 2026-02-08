@@ -13,12 +13,17 @@ signal closed
 @onready var points_label: Label = $Panel/HBox/Right/Details/PointsLabel
 @onready var stats_label: Label = $Panel/HBox/Right/Stats/StatsLabel
 @onready var stats_list: VBoxContainer = $Panel/HBox/Right/Stats/StatsScroll/StatsList
+@onready var dimmer: ColorRect = $Dimmer
 
 var _hero_ids: Array[StringName] = []
 var _selected_hero_id: StringName = &""
 var _stat_rows: Dictionary = {}
 
 func _ready() -> void:
+	if dimmer:
+		dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+		dimmer.gui_input.connect(_on_dimmer_gui_input)
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	if hero_list == null:
 		return
 	_refresh_static_texts()
@@ -104,7 +109,7 @@ func _build_stats_rows() -> void:
 
 		var value_label: Label = Label.new()
 		value_label.custom_minimum_size = Vector2(90.0, 0.0)
-		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		row.add_child(value_label)
 
 		var points_label: Label = Label.new()
@@ -135,6 +140,7 @@ func _on_hero_selected(index: int) -> void:
 	if index < 0 or index >= _hero_ids.size():
 		return
 	_selected_hero_id = _hero_ids[index]
+	_apply_upgrades_to_run_if_active()
 	_refresh_selected_hero()
 
 func _refresh_selected_hero() -> void:
@@ -158,6 +164,7 @@ func _refresh_selected_hero() -> void:
 		"value": progression.unspent_points
 	})
 
+	var display_stats := _get_display_stats(_selected_hero_id, progression)
 	var can_spend: bool = progression.can_spend_point()
 	for stat: int in HeroUpgradeStats.get_all_stats():
 		var row_data: Dictionary = _stat_rows.get(stat, {})
@@ -173,16 +180,11 @@ func _refresh_selected_hero() -> void:
 		points_label_row.text = tr("HERO_UPGRADES_POINTS").format({
 			"value": points
 		})
+		var display_value := _get_display_stat_value(stat, display_stats)
 		if HeroUpgradeStats.is_percent_stat(stat):
-			var bonus: float = float(points) * HeroUpgradeStats.get_per_point_percent(stat)
-			var cap: float = HeroUpgradeStats.get_percent_cap(stat)
-			if cap >= 0.0:
-				bonus = min(bonus, cap)
-			var display_percent: int = int(round(bonus * 100.0))
-			value_label.text = "%d%%" % display_percent
+			value_label.text = "%d%%" % int(round(display_value * 100.0))
 		else:
-			var flat: int = points * HeroUpgradeStats.get_per_point_flat(stat)
-			value_label.text = "%d" % flat
+			value_label.text = "%d" % int(round(display_value))
 		plus_button.disabled = not can_spend
 		minus_button.disabled = not progression.can_refund_point(stat)
 
@@ -195,6 +197,7 @@ func _on_stat_plus_pressed(stat: int) -> void:
 	var progression: HeroProgression = profile.get_or_create_progression(_selected_hero_id)
 	if progression.spend_point(stat):
 		ProfileService.save_profile(profile)
+		_apply_upgrades_to_run_if_active()
 		_refresh_selected_hero()
 		_refresh_hero_list()
 
@@ -207,12 +210,149 @@ func _on_stat_minus_pressed(stat: int) -> void:
 	var progression: HeroProgression = profile.get_or_create_progression(_selected_hero_id)
 	if progression.refund_point(stat):
 		ProfileService.save_profile(profile)
+		_apply_upgrades_to_run_if_active()
 		_refresh_selected_hero()
 		_refresh_hero_list()
 
 func _on_close_pressed() -> void:
 	visible = false
 	closed.emit()
+
+func _on_dimmer_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		accept_event()
+		var vp := get_viewport()
+		if vp:
+			vp.set_input_as_handled()
+
+func _apply_upgrades_to_run_if_active() -> void:
+	if _selected_hero_id == &"":
+		return
+	if RunState == null:
+		return
+	var hero := RunState.get_card("th")
+	if hero.is_empty():
+		return
+	var def_id := String(hero.get("definition", ""))
+	if def_id != String(_selected_hero_id):
+		return
+	if RunState.has_method("refresh_hero_upgrades"):
+		RunState.call("refresh_hero_upgrades")
+
+func _get_display_stats(hero_id: StringName, progression: HeroProgression) -> Dictionary:
+	var run_stats := _get_run_display_stats(hero_id)
+	if not run_stats.is_empty():
+		return run_stats
+	return _get_definition_display_stats(hero_id, progression)
+
+func _get_run_display_stats(hero_id: StringName) -> Dictionary:
+	if RunState == null:
+		return {}
+	var hero := RunState.get_card("th")
+	if hero.is_empty():
+		return {}
+	var def_id := String(hero.get("definition", ""))
+	if def_id != String(hero_id):
+		return {}
+	return {
+		"max_hp": int(hero.get("max_hp", 0)),
+		"damage": int(hero.get("damage", 0)),
+		"armour": int(hero.get("armour", 0)),
+		"initiative": int(hero.get("initiative", 0)),
+		"regen": int(hero.get("regen", 0)),
+		"block_chance": float(hero.get("block_chance", 0.0)),
+		"lifesteal_pct": float(hero.get("lifesteal_pct", 0.0)),
+		"evasion": float(hero.get("evasion", 0.0)),
+		"healing_power": float(hero.get("healing_power", 0.0)),
+		"status_resist": float(hero.get("status_resist", 0.0)),
+		"gold_gain": float(hero.get("gold_gain", 0.0)),
+		"loot_chance": float(hero.get("loot_chance", 0.0)),
+		"rarity_chance": float(hero.get("rarity_chance", 0.0))
+	}
+
+func _get_definition_display_stats(hero_id: StringName, progression: HeroProgression) -> Dictionary:
+	var def: CardDefinition = CardDatabase.get_definition(String(hero_id)) as CardDefinition
+	if def == null:
+		return {}
+	var level := 1
+	if progression != null:
+		level = max(1, progression.level)
+	var upgrade_level := _get_collection_upgrade_level(hero_id)
+	var mult := _get_level_multiplier(level, upgrade_level)
+	var base_hp := int(round(float(def.max_hp) * mult))
+	var base_damage := int(round(float(def.damage) * mult))
+	var base_initiative := int(round(float(def.initiative) * mult))
+	var mods := _get_upgrade_mods(hero_id)
+	var flat: Dictionary = mods.get("flat", {})
+	var percent: Dictionary = mods.get("percent", {})
+	return {
+		"max_hp": base_hp + int(flat.get(HeroUpgradeStats.UpgradeStat.MAX_HP, 0)),
+		"damage": base_damage + int(flat.get(HeroUpgradeStats.UpgradeStat.DAMAGE, 0)),
+		"armour": int(flat.get(HeroUpgradeStats.UpgradeStat.ARMOUR, 0)),
+		"initiative": base_initiative + int(flat.get(HeroUpgradeStats.UpgradeStat.INITIATIVE, 0)),
+		"regen": int(flat.get(HeroUpgradeStats.UpgradeStat.HP_REGEN, 0)),
+		"block_chance": float(percent.get(HeroUpgradeStats.UpgradeStat.BLOCK_CHANCE, 0.0)),
+		"lifesteal_pct": float(percent.get(HeroUpgradeStats.UpgradeStat.LIFE_STEAL, 0.0)),
+		"evasion": float(percent.get(HeroUpgradeStats.UpgradeStat.EVASION, 0.0)),
+		"healing_power": float(percent.get(HeroUpgradeStats.UpgradeStat.HEALING_POWER, 0.0)),
+		"status_resist": float(percent.get(HeroUpgradeStats.UpgradeStat.RESIST_STATUS, 0.0)),
+		"gold_gain": float(percent.get(HeroUpgradeStats.UpgradeStat.GOLD_GAIN, 0.0)),
+		"loot_chance": float(percent.get(HeroUpgradeStats.UpgradeStat.LOOT_CHANCE, 0.0)),
+		"rarity_chance": float(percent.get(HeroUpgradeStats.UpgradeStat.RARITY_CHANCE, 0.0))
+	}
+
+func _get_upgrade_mods(hero_id: StringName) -> Dictionary:
+	var mods := ProfileService.get_hero_upgrade_modifiers(hero_id)
+	return {
+		"flat": mods.get("flat_int_mods", {}),
+		"percent": mods.get("percent_float_mods", {})
+	}
+
+func _get_collection_upgrade_level(hero_id: StringName) -> int:
+	var collection := SaveSystem.load_collection()
+	if collection == null:
+		collection = SaveSystem.ensure_collection()
+	if collection == null:
+		return 0
+	return int(collection.upgrade_level.get(String(hero_id), 0))
+
+func _get_level_multiplier(level: int, upgrade_level: int) -> float:
+	var base_mult: float = 1.2
+	if RunState != null:
+		base_mult = float(RunState.HERO_LEVEL_UP_STAT_MULT)
+	var total_levels: int = max(0, level - 1 + upgrade_level)
+	return pow(base_mult, float(total_levels))
+
+func _get_display_stat_value(stat: int, stats: Dictionary) -> float:
+	match stat:
+		HeroUpgradeStats.UpgradeStat.MAX_HP:
+			return float(stats.get("max_hp", 0))
+		HeroUpgradeStats.UpgradeStat.DAMAGE:
+			return float(stats.get("damage", 0))
+		HeroUpgradeStats.UpgradeStat.ARMOUR:
+			return float(stats.get("armour", 0))
+		HeroUpgradeStats.UpgradeStat.BLOCK_CHANCE:
+			return float(stats.get("block_chance", 0.0))
+		HeroUpgradeStats.UpgradeStat.HP_REGEN:
+			return float(stats.get("regen", 0))
+		HeroUpgradeStats.UpgradeStat.LIFE_STEAL:
+			return float(stats.get("lifesteal_pct", 0.0))
+		HeroUpgradeStats.UpgradeStat.EVASION:
+			return float(stats.get("evasion", 0.0))
+		HeroUpgradeStats.UpgradeStat.INITIATIVE:
+			return float(stats.get("initiative", 0))
+		HeroUpgradeStats.UpgradeStat.HEALING_POWER:
+			return float(stats.get("healing_power", 0.0))
+		HeroUpgradeStats.UpgradeStat.RESIST_STATUS:
+			return float(stats.get("status_resist", 0.0))
+		HeroUpgradeStats.UpgradeStat.GOLD_GAIN:
+			return float(stats.get("gold_gain", 0.0))
+		HeroUpgradeStats.UpgradeStat.LOOT_CHANCE:
+			return float(stats.get("loot_chance", 0.0))
+		HeroUpgradeStats.UpgradeStat.RARITY_CHANCE:
+			return float(stats.get("rarity_chance", 0.0))
+		_:
+			return 0.0
 
 func _get_hero_display_name(hero_id: StringName) -> String:
 	var id_str: String = String(hero_id)
