@@ -200,7 +200,7 @@ static func _is_valid_starter_collection(collection: PlayerCollection) -> bool:
 		return false
 
 	for def_id in DEFAULT_STARTER_COUNTS.keys():
-		if collection.get_owned_count(def_id) != int(DEFAULT_STARTER_COUNTS[def_id]):
+		if collection.get_owned_count(def_id) < int(DEFAULT_STARTER_COUNTS[def_id]):
 			return false
 	return true
 

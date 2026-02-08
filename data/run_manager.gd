@@ -349,9 +349,27 @@ func _build_single_run_deck_types(deck_index: int) -> Array[String]:
 		return result
 	var rng := RandomNumberGenerator.new()
 	rng.seed = run_seed + ((deck_index + 1) * 7919) + (current_wave * 104729)
+	var ids := selected_enemy_types.duplicate()
+	var weights: Array[int] = []
+	var total_weight: int = 0
+	for enemy_id in ids:
+		var weight := int(enemy_weights.get(enemy_id, 1))
+		weight = clampi(weight, 1, 3)
+		weights.append(weight)
+		total_weight += weight
+	if total_weight <= 0:
+		for i in range(RUN_DECK_SIZE):
+			var idx := rng.randi_range(0, ids.size() - 1)
+			result.append(ids[idx])
+		return result
 	for i in range(RUN_DECK_SIZE):
-		var idx := rng.randi_range(0, selected_enemy_types.size() - 1)
-		result.append(selected_enemy_types[idx])
+		var roll := rng.randi_range(1, total_weight)
+		var acc: int = 0
+		for j in range(ids.size()):
+			acc += weights[j]
+			if roll <= acc:
+				result.append(ids[j])
+				break
 	return result
 
 func _ensure_deck_arrays(deck_count: int) -> void:

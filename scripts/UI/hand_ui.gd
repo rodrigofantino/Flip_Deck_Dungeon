@@ -17,6 +17,7 @@ var _current_items: Array[String] = []
 var _hero_area: Control = null
 var _equipment_slots_view: EquipmentSlotsView = null
 var _drag_card: Control = null
+var _card_tweens: Dictionary = {}
 
 func _ready() -> void:
 	if RunState:
@@ -53,9 +54,11 @@ func _sync_hand(items: Array[String]) -> void:
 func _rebuild_cards(items: Array[String]) -> void:
 	for card in _cards:
 		if card != null:
+			_kill_card_tween(card)
 			card.queue_free()
 	_cards.clear()
 	_base_pose.clear()
+	_card_tweens.clear()
 	_current_items = items.duplicate()
 
 	if item_card_scene == null:
@@ -155,6 +158,7 @@ func _remove_first_card() -> void:
 	var first := _cards[0]
 	_cards.remove_at(0)
 	if first != null:
+		_kill_card_tween(first)
 		_base_pose.erase(first)
 		first.queue_free()
 	_reflow_existing_cards()
@@ -178,7 +182,9 @@ func _is_fifo_replace(items: Array[String]) -> bool:
 	return true
 
 func _tween_card_to(card: Control, pos: Vector2, rot: float, scale: Vector2) -> void:
+	_kill_card_tween(card)
 	var tween := create_tween()
+	_card_tweens[card] = tween
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(card, "position", pos, LAYOUT_TWEEN_TIME)
@@ -189,6 +195,14 @@ func _apply_card_pose(card: Control, pos: Vector2, rot: float, scale: Vector2) -
 	card.position = pos
 	card.rotation = rot
 	card.scale = scale
+
+func _kill_card_tween(card: Control) -> void:
+	if not _card_tweens.has(card):
+		return
+	var tween: Tween = _card_tweens[card]
+	if tween != null and tween.is_valid():
+		tween.kill()
+	_card_tweens.erase(card)
 
 func _on_card_hover_entered(card: Control) -> void:
 	if card == null:
@@ -214,6 +228,7 @@ func _on_card_hover_exited(card: Control) -> void:
 
 func _on_card_drag_started(card: Control) -> void:
 	_drag_card = card
+	_kill_card_tween(card)
 
 func _return_card_to_hand(card: Control) -> void:
 	if card == null:
@@ -246,22 +261,32 @@ func _on_card_drag_released(card: Control, global_pos: Vector2) -> void:
 	if _drag_card != card:
 		return
 	_drag_card = null
-	if not _is_point_over_hero(global_pos):
-		return
 	var item_id := String(card.get("item_id"))
 	if item_id.is_empty():
+		_return_card_to_hand(card)
 		return
 	if RunState == null:
+		_return_card_to_hand(card)
 		return
 	if not RunState.get_hand_items().has(item_id):
+		_return_card_to_hand(card)
 		return
-	var slot_id := RunState.get_slot_id_for_item(item_id)
+	var slot_id := ""
+	if _equipment_slots_view == null:
+		_resolve_hero_nodes()
+	if _equipment_slots_view != null:
+		slot_id = _equipment_slots_view.get_slot_id_at_global_pos(global_pos)
+	if slot_id.is_empty() and _is_point_over_hero(global_pos):
+		slot_id = RunState.get_slot_id_for_item(item_id)
 	if slot_id.is_empty():
+		_return_card_to_hand(card)
 		return
+	var start_center := card.global_position + (card.size * card.scale * 0.5)
 	var result := RunState.equip_item_to_slot(slot_id, item_id)
 	if result != EquipmentManager.EquipResult.OK:
+		_return_card_to_hand(card)
 		return
-	_play_fly_to_slot(item_id, global_pos, slot_id)
+	_play_fly_to_slot(item_id, start_center, slot_id)
 
 func _play_fly_to_slot(item_id: String, start_global: Vector2, slot_id: String) -> void:
 	if item_card_scene == null:

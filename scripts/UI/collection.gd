@@ -724,12 +724,22 @@ func _open_hero_upgrades() -> void:
 		add_child(hero_upgrades_window)
 		hero_upgrades_window.z_index = 300
 		hero_upgrades_window.closed.connect(_on_hero_upgrades_closed)
+		hero_upgrades_window.upgrades_changed.connect(_on_hero_upgrades_changed)
 	hero_upgrades_window.visible = true
 	hero_upgrades_window.refresh_window()
 	_update_book_input_block()
 
 func _on_hero_upgrades_closed() -> void:
+	_refresh_hero_slots()
 	_update_book_input_block()
+
+func _on_hero_upgrades_changed(_hero_id: StringName) -> void:
+	_refresh_hero_slots()
+
+func _refresh_hero_slots() -> void:
+	for slot in get_tree().get_nodes_in_group("collection_slots"):
+		if slot is CollectionSlot:
+			(slot as CollectionSlot).refresh_hero_display()
 
 func _change_book_page(go_next: bool) -> void:
 	var book: PageFlip2D = _get_book() as PageFlip2D

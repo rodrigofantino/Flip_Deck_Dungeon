@@ -34,6 +34,7 @@ func _ready() -> void:
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	set_process_input(true)
+	set_process(false)
 	# Font sizes are configured in the scene/inspector.
 
 func set_state(new_state: CardState) -> void:
@@ -66,6 +67,40 @@ func _notification(what: int) -> void:
 			set_state(CardState.IN_HAND)
 		drag_released.emit(self, get_global_mouse_position())
 
+func _process(_delta: float) -> void:
+	if state != CardState.DRAGGING:
+		return
+	global_position = get_global_mouse_position() - _drag_offset
+	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_end_drag(get_global_mouse_position())
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if mouse_event.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if mouse_event.pressed:
+			_begin_drag()
+		elif state == CardState.DRAGGING:
+			_end_drag(get_global_mouse_position())
+
+func _begin_drag() -> void:
+	if state != CardState.IN_HAND:
+		return
+	set_state(CardState.DRAGGING)
+	_drag_offset = get_global_mouse_position() - global_position
+	z_index = 2000
+	set_process(true)
+	drag_started.emit(self)
+
+func _end_drag(global_pos: Vector2) -> void:
+	if state != CardState.DRAGGING:
+		return
+	set_state(CardState.IN_HAND)
+	z_index = 0
+	set_process(false)
+	drag_released.emit(self, global_pos)
+
 func _request_text_fit() -> void:
 	pass
 
@@ -88,14 +123,7 @@ func _append_stat(parts: Array[String], label: String, value: int) -> void:
 	parts.append("%s %s%d" % [label, sign, value])
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
-	if state != CardState.IN_HAND:
-		return null
-	set_state(CardState.DRAGGING)
-	drag_started.emit(self)
-	var preview := _build_drag_preview()
-	if preview != null:
-		set_drag_preview(preview)
-	return {"item_id": item_id}
+	return null
 
 func _build_drag_preview() -> Control:
 	var preview := Control.new()

@@ -203,6 +203,36 @@ func set_holo_enabled(enabled: bool) -> void:
 	_holo_enabled = enabled
 	_apply_holo_enabled()
 
+func apply_display_overrides(
+	display_level: int,
+	display_hp: int,
+	display_damage: int,
+	display_initiative: int
+) -> void:
+	_fit_label_text(
+		level_label,
+		"%d" % display_level,
+		10
+	)
+
+	_fit_label_text(
+		initiative_label,
+		"%s %d" % [tr("CARD_VIEW_STATS_POWER"), display_initiative],
+		10
+	)
+
+	_fit_label_text(
+		hp_label,
+		"%s %d" % [tr("CARD_VIEW_STATS_HP"), display_hp],
+		10
+	)
+
+	_fit_label_text(
+		damage_label,
+		"%s %d" % [tr("CARD_VIEW_STATS_DAMAGE"), display_damage],
+		10
+	)
+
 # =========================
 # REFRESH DESDE RUNTIME (TRAITS / COMBATE)
 # =========================

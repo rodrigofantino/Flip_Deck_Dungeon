@@ -2,6 +2,7 @@ extends Control
 class_name HeroUpgradesWindow
 
 signal closed
+signal upgrades_changed(hero_id: StringName)
 
 @onready var hero_list_label: Label = $Panel/HBox/Left/HeroListLabel
 @onready var hero_list: ItemList = $Panel/HBox/Left/HeroList
@@ -200,6 +201,7 @@ func _on_stat_plus_pressed(stat: int) -> void:
 		_apply_upgrades_to_run_if_active()
 		_refresh_selected_hero()
 		_refresh_hero_list()
+		upgrades_changed.emit(_selected_hero_id)
 
 func _on_stat_minus_pressed(stat: int) -> void:
 	if _selected_hero_id == &"":
@@ -213,6 +215,7 @@ func _on_stat_minus_pressed(stat: int) -> void:
 		_apply_upgrades_to_run_if_active()
 		_refresh_selected_hero()
 		_refresh_hero_list()
+		upgrades_changed.emit(_selected_hero_id)
 
 func _on_close_pressed() -> void:
 	visible = false

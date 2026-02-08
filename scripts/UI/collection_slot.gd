@@ -22,6 +22,7 @@ var current_def_id: String = ""
 var current_card_type: String = ""
 var is_obtained: bool = false
 var owned_count: int = 0
+var current_upgrade_level: int = 0
 var show_count_on_hover: bool = false
 var count_text_override: String = ""
 var _base_modulate: Color = Color(1, 1, 1, 1)
@@ -55,6 +56,7 @@ func set_occupied(definition: CardDefinition, obtained: bool = true, upgrade_lev
 	_clear_card()
 	_set_weight_badge(0)
 	is_obtained = obtained
+	current_upgrade_level = upgrade_level
 	background.color = Color(0.2, 0.2, 0.2, 0.85) if obtained else Color(0.1, 0.1, 0.1, 0.7)
 	if card_view_scene == null or definition == null:
 		return
@@ -72,6 +74,8 @@ func set_occupied(definition: CardDefinition, obtained: bool = true, upgrade_lev
 	card_view.offset_bottom = card_base_size.y
 	card_view.setup_from_definition(definition, upgrade_level)
 	card_view.show_front()
+	if definition.card_type == "hero":
+		_apply_hero_upgrade_display(definition, upgrade_level)
 	if card_view.has_method("set_holo_enabled"):
 		card_view.call("set_holo_enabled", obtained)
 	card_view.modulate = Color(1, 1, 1, 1) if obtained else Color(0.35, 0.35, 0.35, 0.65)
@@ -88,6 +92,7 @@ func set_empty() -> void:
 	current_card_type = ""
 	is_obtained = false
 	owned_count = 0
+	current_upgrade_level = 0
 	_set_weight_badge(0)
 	_hide_count_overlay()
 
@@ -100,6 +105,40 @@ func _clear_card() -> void:
 	if card_view != null:
 		card_view.queue_free()
 		card_view = null
+
+func refresh_hero_display() -> void:
+	if current_card_type != "hero":
+		return
+	if card_view == null:
+		return
+	if current_def_id == "":
+		return
+	var def: CardDefinition = CardDatabase.get_definition(current_def_id)
+	if def == null:
+		return
+	_apply_hero_upgrade_display(def, current_upgrade_level)
+
+func _apply_hero_upgrade_display(definition: CardDefinition, upgrade_level: int) -> void:
+	if card_view == null or definition == null:
+		return
+	if definition.card_type != "hero":
+		return
+	var mods: Dictionary = ProfileService.get_hero_upgrade_modifiers(StringName(definition.definition_id))
+	var flat_mods: Dictionary = mods.get("flat_int_mods", {})
+	var base_mult: float = 1.2
+	if RunState != null:
+		base_mult = float(RunState.HERO_LEVEL_UP_STAT_MULT)
+	var level_bonus: int = int(max(0, upgrade_level))
+	var mult: float = pow(base_mult, float(level_bonus))
+	var display_hp: int = int(round(float(definition.max_hp) * mult))
+	display_hp += int(flat_mods.get(HeroUpgradeStats.UpgradeStat.MAX_HP, 0))
+	var display_damage: int = int(round(float(definition.damage) * mult))
+	display_damage += int(flat_mods.get(HeroUpgradeStats.UpgradeStat.DAMAGE, 0))
+	var display_initiative: int = int(round(float(definition.initiative) * mult))
+	display_initiative += int(flat_mods.get(HeroUpgradeStats.UpgradeStat.INITIATIVE, 0))
+	var display_level: int = definition.level + level_bonus
+	if card_view.has_method("apply_display_overrides"):
+		card_view.call("apply_display_overrides", display_level, display_hp, display_damage, display_initiative)
 
 func _set_mouse_filter_recursive(node: Node, filter: int) -> void:
 	if node is Control:

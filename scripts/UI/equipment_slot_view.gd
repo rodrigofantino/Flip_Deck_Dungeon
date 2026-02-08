@@ -111,14 +111,14 @@ func _show_hover_card(instance: ItemInstance) -> void:
 	root.add_child(card)
 	card.z_index = 5000
 	card.scale = Vector2.ONE * 0.22
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.set("item_id", instance.instance_id)
 	if card.has_method("set_state"):
 		card.call("set_state", 0)
 	if card.has_method("setup"):
 		card.call("setup", instance)
-	var global_rect := get_global_rect()
-	var offset := Vector2(10, -10)
-	card.global_position = global_rect.position + offset - (card.size * card.scale * 0.5)
+	var mouse_pos := get_global_mouse_position()
+	card.global_position = mouse_pos - (card.size * card.scale * 0.5)
 	_hover_card = card
 
 func _hide_hover_card() -> void:

@@ -62,3 +62,15 @@ func get_slot_global_center(slot_id: String) -> Vector2:
 	if view == null:
 		return Vector2.ZERO
 	return view.get_global_rect().get_center()
+
+func get_slot_id_at_global_pos(global_pos: Vector2) -> String:
+	for key in slot_views.keys():
+		var slot_id := String(key)
+		var view: EquipmentSlotView = slot_views.get(slot_id, null)
+		if view == null:
+			continue
+		if not view.visible:
+			continue
+		if view.get_global_rect().has_point(global_pos):
+			return slot_id
+	return ""
