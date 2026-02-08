@@ -261,24 +261,41 @@ func _handle_page_click(event: InputEventMouseButton, source: String) -> bool:
 		return false
 	var in_book := _is_point_over_book(event.global_position)
 	if debug_book:
-		print("[BookView] input ", source, " open=", book.is_book_open, " in_book=", in_book, " pos=", event.global_position)
+		print(
+			"[BookView] input ", source,
+			" open=", book.is_book_open,
+			" anim=", book.is_animating if book else false,
+			" spread=", book.current_spread if book else -999,
+			" total=", book.total_spreads if book else -999,
+			" in_book=", in_book,
+			" pos=", event.global_position
+		)
 	if not book.is_book_open and in_book:
-		_animate_to_open(open_center_duration)
-		return true
-	if not permitir_flip:
+		var is_back := _is_back_closed()
 		if debug_book:
-			print("[BookView] flip disabled")
+			print("[BookView] closed click -> open. is_back=", is_back)
+		_start_open_after_centering(not is_back)
+		return true
+	if not _is_flip_enabled():
+		if debug_book:
+			print("[BookView] flip disabled (permitir_flip=", permitir_flip, " type=", typeof(permitir_flip), ")")
 		return false
 	var vc := book.visuals_container
 	if vc == null:
 		return false
 	var local_x := _get_local_x_over_book(event.global_position)
+	var over_page_control := false
+	if book.has_method("is_pointer_over_page_control_with_event"):
+		over_page_control = bool(book.call("is_pointer_over_page_control_with_event", event))
 	if book.is_book_open:
 		if not in_book:
 			_dbg("click_outside")
 			return false
-		if _is_point_over_card_view(event.global_position):
-			return true
+		var over_card := _is_point_over_card_view(event.global_position) or over_page_control
+		if debug_book:
+			print("[BookView] open click local_x=", local_x, " over_card=", over_card, " over_ctrl=", over_page_control)
+		if over_card:
+			return false
 		if local_x >= 0.0:
 			_dbg("click_open_right_page")
 			if _will_close_to_back():
@@ -294,6 +311,8 @@ func _handle_page_click(event: InputEventMouseButton, source: String) -> bool:
 	var scale := _get_book_global_scale()
 	var edge_band := maxf(page_w * edge_click_ratio, edge_click_band_px / scale.x)
 	var in_edge_any := _is_in_edge_band(local_x, event.global_position, page_w, edge_band)
+	if debug_book:
+		print("[BookView] closed click local_x=", local_x, " edge_band=", edge_band, " in_edge_any=", in_edge_any)
 	if not in_edge_any and not in_book:
 		_dbg("click_outside")
 		return false
@@ -330,10 +349,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _input(event: InputEvent) -> void:
 	if book == null:
 		return
-	if book.is_book_open:
-		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if try_open_from_click(event.global_position):
+		if _handle_page_click(event, "input"):
 			get_viewport().set_input_as_handled()
 
 func _gui_input(event: InputEvent) -> void:
@@ -347,7 +364,8 @@ func try_open_from_click(global_pos: Vector2) -> bool:
 	if book == null or book.is_book_open:
 		return false
 	if _is_point_over_book(global_pos) or _is_point_over_closed_cover(global_pos):
-		_animate_to_open(open_center_duration)
+		var is_back := _is_back_closed()
+		_start_open_after_centering(not is_back)
 		return true
 	return false
 
@@ -374,6 +392,11 @@ func _get_open_center(view: Vector2) -> Vector2:
 
 func _get_page_width_scaled() -> float:
 	return book.target_page_size.x
+
+func _is_flip_enabled() -> bool:
+	if typeof(permitir_flip) == TYPE_NIL:
+		return true
+	return bool(permitir_flip)
 
 func _get_page_height_scaled() -> float:
 	return book.target_page_size.y
@@ -425,6 +448,7 @@ func _map_global_to_page_coords(global_pos: Vector2, poly: Polygon2D) -> Vector2
 	if poly == null or book == null:
 		return Vector2.INF
 	var local := poly.to_local(global_pos)
+	local.x += book.target_page_size.x * 0.5
 	local.y += book.target_page_size.y * 0.5
 	return local
 
@@ -493,6 +517,8 @@ func _is_point_over_card_view(global_pos: Vector2) -> bool:
 		if page_pos == Vector2.INF:
 			continue
 		if ctrl.get_global_rect().has_point(page_pos):
+			if debug_book:
+				print("[BookView] over card ", ctrl.name, " viewport=", viewport.name if viewport else "none", " page_pos=", page_pos, " rect=", ctrl.get_global_rect())
 			return true
 	return false
 
@@ -877,7 +903,8 @@ func _on_click_catcher_gui_input(event: InputEvent) -> void:
 		if book == null or book.is_book_open:
 			return
 		print("[BookView] click catcher pressed")
-		_animate_to_open(open_center_duration)
+		var is_back := _is_back_closed()
+		_start_open_after_centering(not is_back)
 		accept_event()
 
 func _update_click_catcher() -> void:
