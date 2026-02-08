@@ -84,11 +84,13 @@ var _pending_book_refresh: bool = false
 var _popup_def: CardDefinition = null
 var _selection_error_override: String = ""
 var hero_upgrades_window: HeroUpgradesWindow = null
+var _last_weight_click_ms: Dictionary = {}
 
 const MIN_ENEMY_SELECTION: int = 2
 const MAX_ENEMY_SELECTION: int = 5
 const MIN_ENEMY_WEIGHT: int = 1
 const MAX_ENEMY_WEIGHT: int = 3
+const WEIGHT_CLICK_DEBOUNCE_MS: int = 80
 
 const ITEM_TYPE_ORDER: Array[int] = [
 	CardDefinition.ItemType.HELMET,
@@ -319,7 +321,7 @@ func _init_selection_ui() -> void:
 	print("[Collection] selection_pending=", RunState.selection_pending)
 	if selection_panel:
 		selection_panel.visible = true
-		selection_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+		_configure_selection_panel_input()
 	if selection_mode:
 		_reset_selection_state()
 	_set_booster_interactivity(true)
@@ -342,6 +344,15 @@ func _init_selection_ui() -> void:
 	if not selection_mode:
 		_clear_selection_visuals()
 
+func _configure_selection_panel_input() -> void:
+	if selection_panel == null:
+		return
+	_set_mouse_filter_recursive(selection_panel, Control.MOUSE_FILTER_IGNORE)
+	if start_dungeon_button:
+		start_dungeon_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	if back_button:
+		back_button.mouse_filter = Control.MOUSE_FILTER_STOP
+
 func _clear_selection_visuals() -> void:
 	for slot in get_tree().get_nodes_in_group("collection_slots"):
 		if slot is CollectionSlot:
@@ -352,19 +363,21 @@ func _reset_selection_state() -> void:
 	selected_hero_def_id = ""
 	selected_enemy_weights.clear()
 	_selection_error_override = ""
+	_last_weight_click_ms.clear()
 	if selection_error_label:
 		selection_error_label.text = ""
 
 func _on_page_slot_clicked(slot: CollectionSlot) -> void:
+	if slot == null:
+		return
+	if RunState.selection_pending and not selection_mode:
+		selection_mode = true
 	if not selection_mode:
-		if RunState.selection_pending:
-			selection_mode = true
+		if slot.current_card_type == "hero":
+			_open_hero_upgrades()
 		else:
-			if slot.current_card_type == "hero":
-				_open_hero_upgrades()
-			else:
-				_open_card_popup(slot)
-			return
+			_open_card_popup(slot)
+		return
 	if not slot.is_obtained:
 		return
 	if slot.current_def_id == "":
@@ -379,7 +392,11 @@ func _on_page_slot_clicked(slot: CollectionSlot) -> void:
 	_update_selection_state()
 
 func _on_page_slot_right_clicked(slot: CollectionSlot) -> void:
-	if not selection_mode or slot == null:
+	if slot == null:
+		return
+	if RunState.selection_pending and not selection_mode:
+		selection_mode = true
+	if not selection_mode:
 		return
 	if not slot.is_obtained:
 		return
@@ -482,6 +499,11 @@ func _set_enemy_weight(enemy_id: String, weight: int) -> void:
 func _cycle_enemy_weight(enemy_id: String, direction: int) -> void:
 	if enemy_id == "":
 		return
+	var now := Time.get_ticks_msec()
+	var last := int(_last_weight_click_ms.get(enemy_id, -999999))
+	if (now - last) < WEIGHT_CLICK_DEBOUNCE_MS:
+		return
+	_last_weight_click_ms[enemy_id] = now
 	var current := int(selected_enemy_weights.get(enemy_id, 0))
 	var next := current
 	if current == 0:
