@@ -132,7 +132,10 @@ func update_gold(value: int) -> void:
 func update_dust(value: int, _delta: int) -> void:
 	if dust_label == null:
 		return
-	dust_label.text = "Dust: %d" % value
+	dust_label.text = "%s: %d" % [
+		tr("BATTLE_HUD_LABEL_DUST"),
+		value
+	]
 
 
 func _start_gold_gain_count(_delta: int, duration: float) -> void:
@@ -256,12 +259,17 @@ func update_initiative_chance(prob: float) -> void:
 	if initiative_label == null:
 		return
 	var percent: int = int(round(prob * 100.0))
-	initiative_label.text = "Chance to attack first: %d%%" % percent
+	initiative_label.text = tr("BATTLE_HUD_LABEL_INIT_CHANCE").format({
+		"value": percent
+	})
 
 func update_wave(wave_index: int, waves_total: int) -> void:
 	if wave_label == null:
 		return
-	wave_label.text = "Wave %d/%d" % [wave_index, waves_total]
+	wave_label.text = tr("BATTLE_HUD_LABEL_WAVE").format({
+		"current": wave_index,
+		"total": waves_total
+	})
 	_update_wave_progress_label(
 		wave_index,
 		RunState.enemies_defeated_in_wave,
@@ -275,9 +283,12 @@ func _update_wave_progress_label(wave_index: int, defeated: int, total: int) -> 
 	if wave_progress_label == null:
 		return
 	if RunState.is_wave_boss(wave_index):
-		wave_progress_label.text = "Boss Encounter"
+		wave_progress_label.text = tr("BATTLE_HUD_LABEL_BOSS_ENCOUNTER")
 	else:
-		wave_progress_label.text = "Kills %d/%d" % [defeated, total]
+		wave_progress_label.text = tr("BATTLE_HUD_LABEL_KILLS").format({
+			"current": defeated,
+			"total": total
+		})
 
 
 func set_draw_enabled(enabled: bool) -> void:

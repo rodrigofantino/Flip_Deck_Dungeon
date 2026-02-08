@@ -10,5 +10,5 @@ item_id = "mistwarden_knot_gauntlets"
 item_name = "ITEM_MISTWARDEN_KNOT_GAUNTLETS_NAME"
 item_description = "ITEM_MISTWARDEN_KNOT_GAUNTLETS_DESC"
 item_type = "gloves"
-damage_flat = 2
 set_theme = "mistwarden"
+damage_flat = 2

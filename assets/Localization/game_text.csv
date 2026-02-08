@@ -1,4 +1,4 @@
-id,en,es
+﻿id,en,es
 MAIN_MENU_BUTTON_CONTINUE,Continue,Continuar
 MAIN_MENU_BUTTON_PLAY,Play,Jugar
 MAIN_MENU_BUTTON_TUTORIAL,Tutorial,Tutorial
@@ -7,7 +7,7 @@ MAIN_MENU_BUTTON_SHOP,Shop,Tienda
 MAIN_MENU_BUTTON_SETTINGS,Settings,Opciones
 MAIN_MENU_BUTTON_COLLECTION,Collection,Colección
 MAIN_MENU_LABEL_GOLD,Gold,Oro
-MAIN_MENU_BUTTON_DEV_RESET,Development: Reset Progress,Desarrollo: Resetear progreso
+MAIN_MENU_BUTTON_DEV_RESET,Development: Reset Progress,Desarrollo: Reiniciar progreso
 MAIN_MENU_BUTTON_DEV_ADD_GOLD,Development: Add Gold,Desarrollo: Agregar oro
 MAIN_MENU_TITLE,FLIP DECK DUNGEON,FLIP DECK DUNGEON
 SHOP_TITLE,Shop,Tienda
@@ -16,44 +16,52 @@ SHOP_PACK_FOREST_PRICE,20g,20g
 SHOP_PACK_DARK_FOREST,Dark Forest Pack,Sobre Bosque Oscuro
 SHOP_PACK_DARK_FOREST_PRICE,50g,50g
 BOOSTER_PACK_FOREST_NAME,Forest Pack,Sobre Bosque
-BOOSTER_PACK_DARK_FOREST_NAME,Dark Forest Booster Pack,Sobre Dark Forest
+BOOSTER_PACK_DARK_FOREST_NAME,Dark Forest Booster Pack,Sobre Bosque Oscuro
 SHOP_BUY_BUTTON,Buy,Comprar
-SHOP_BUY_OPEN_BUTTON,Buy & Open,Comprar y Abrir
+SHOP_BUY_OPEN_BUTTON,Buy & Open,Comprar y abrir
 SHOP_PACK_OWNED,Owned (unopened): %d,En inventario (sin abrir): %d
 SHOP_PACKS_UNOPENED_HEADER,Unopened packs: %d,Sobres sin abrir: %d
 SHOP_FEEDBACK_NOT_ENOUGH_GOLD,Not enough gold,Oro insuficiente
-SHOP_FEEDBACK_PURCHASED,Purchased!,Comprado!
+SHOP_FEEDBACK_PURCHASED,Purchased!,¡Comprado!
 SHOP_BACK_BUTTON,Back,Volver
 PAUSE_POPUP_TITLE,Pause,Pausa
 PAUSE_POPUP_BUTTON_CONTINUE,Continue,Continuar
 PAUSE_POPUP_BUTTON_MENU,Back to Menu,Volver al Menú
-CARD_VIEW_STATS_LEVEL,Lv, Nv
-CARD_VIEW_STATS_POWER,Init, Ini
-CARD_VIEW_STATS_HP,HP, PV
-CARD_VIEW_STATS_DAMAGE,D, D
+CARD_VIEW_STATS_LEVEL,Lv,Nv
+CARD_VIEW_STATS_POWER,Init,Ini
+CARD_VIEW_STATS_HP,HP,PV
+CARD_VIEW_STATS_DAMAGE,D,D
 BATTLE_HUD_LABEL_DANGER,Danger,Peligro
 BATTLE_HUD_LABEL_GOLD,Gold,Oro
-BATTLE_HUD_BUTTON_DRAW,Draw Enemy,Robar Enemigo
-BATTLE_HUD_BUTTON_COMBAT,Start Combat,Iniciar Combate
+BATTLE_HUD_LABEL_DUST,Dust,Polvo
+BATTLE_HUD_LABEL_INIT_CHANCE,Chance to attack first: {value}%,Probabilidad de atacar primero: {value}%
+BATTLE_HUD_LABEL_WAVE,Wave {current}/{total},Oleada {current}/{total}
+BATTLE_HUD_LABEL_BOSS_ENCOUNTER,Boss Encounter,Encuentro con jefe
+BATTLE_HUD_LABEL_KILLS,Kills {current}/{total},Bajas {current}/{total}
+BATTLE_HUD_BUTTON_DRAW,Draw Enemy,Robar enemigo
+BATTLE_HUD_BUTTON_COMBAT,Start Combat,Iniciar combate
 BATTLE_HUD_BUTTON_PAUSE,Pause,Pausa
-BATTLE_HUD_CHECK_AUTO_DRAW,Auto Draw,Robar Automático
-BATTLE_HUD_CHECK_AUTO_COMBAT,Auto Combat,Combate Automático
+BATTLE_HUD_CHECK_AUTO_DRAW,Auto Draw,Robar automático
+BATTLE_HUD_CHECK_AUTO_COMBAT,Auto Combat,Combate automático
 DEFEAT_POPUP_BUTTON_BACK,Back to Menu,Volver al Menú
-DEFEAT_POPUP_LABEL,Your hero has fallen,Tu héroe ha caido
-VICTORY_POPUP_LABEL,Victory!,Victoria
+DEFEAT_POPUP_LABEL,Your hero has fallen,Tu héroe ha caído
+VICTORY_POPUP_LABEL,Victory!,¡Victoria!
 VICTORY_POPUP_GOLD_LINE,Gold earned: %d,Oro ganado: %d
 VICTORY_POPUP_BUTTON_BACK,Back to Menu,Volver al Menú
-LEVEL_UP_POPUP_TITLE_LEVEL_REACHED,Level %d reached, Nivel %d alcanzado
+LEVEL_UP_POPUP_TITLE_LEVEL_REACHED,Level %d reached,Nivel %d alcanzado
 LEVEL_UP_POPUP_BUTTON_CONFIRM,Confirm,Confirmar
-LEVEL_UP_POPUP_COLUMN_HERO,Hero Trait,Rasgo del Héroe
-LEVEL_UP_POPUP_COLUMN_ENEMY,Enemy Trait,Rasgo del Enemigo
+LEVEL_UP_POPUP_COLUMN_HERO,Hero Trait,Rasgo del héroe
+LEVEL_UP_POPUP_COLUMN_ENEMY,Enemy Trait,Rasgo del enemigo
 LEVEL_UP_POPUP_LABEL_LEVELUP,Level up!,¡Has subido de nivel!
 XP_HUD_HERO_LEVEL,Lvl {level},Nivel {level}
 XP_HUD_XP_CURRENT,{value} XP,{value} XP
 XP_HUD_XP_NEXT,{value} XP,{value} XP
 SETTINGS_LANGUAGE_LABEL,Language,Idioma
-SETTINGS_LANGUAGE_BUTTON,Change Language,Cambiar Idioma
+SETTINGS_LANGUAGE_BUTTON,Change Language,Cambiar idioma
 SETTINGS_BACK_BUTTON,Back,Volver
+SETTINGS_MASTER_LABEL,Master,General
+SETTINGS_SFX_LABEL,SFX,Efectos
+SETTINGS_MUSIC_LABEL,Music,Música
 COLLECTION_TITLE,Collection,Colección
 COLLECTION_BACK,Back,Volver
 COLLECTION_PREV,Prev,Anterior
@@ -68,20 +76,70 @@ COLLECTION_OPEN_POPUP_TITLE_NAME,Open Pack: %s,Abrir sobre: %s
 COLLECTION_OPEN_ADD_ALL,Add all,Agregar todas
 COLLECTION_SELECT_HERO,Choose a hero,Elige un héroe
 COLLECTION_SELECT_ENEMIES,Choose enemies,Elige enemigos
-COLLECTION_START_DUNGEON,Start Dungeon,Iniciar Dungeon
+COLLECTION_START_DUNGEON,Start Dungeon,Iniciar mazmorra
+COLLECTION_UPGRADES_BUTTON,Upgrades,Mejoras
+COLLECTION_UNSPENT_BADGE,UP {value},PTS {value}
+COLLECTION_ERROR_MAX_ENEMIES,Max {value} enemies.,Máximo {value} enemigos.
+COLLECTION_ERROR_MIN_ENEMIES,Select at least {value} enemies.,Selecciona al menos {value} enemigos.
+COLLECTION_ERROR_INVALID_WEIGHT,Invalid selection weight.,Peso inválido en selección.
 CROSSROADS_TITLE,Crossroads,Encrucijada
 CROSSROADS_ACTIVE_DECKS,Active decks: {value}/{max},Mazos activos: {value}/{max}
-CROSSROADS_RUN_GOLD,Run gold: {value},Oro de la run: {value}
+CROSSROADS_RUN_GOLD,Run gold: {value},Oro de la partida: {value}
 CROSSROADS_WITHDRAW_LABEL,Withdraw: +{value},Retirar: +{value}
 CROSSROADS_COST_LABEL,Cost: -{value},Costo: -{value}
 CROSSROADS_OPTION_ADD_DECK,Add deck,Agregar mazo
 CROSSROADS_OPTION_WITHDRAW,Withdraw,Retirar
 CROSSROADS_OPTION_TRAIT,Trait,Rasgo
 ITEM_STAT_ARMOUR,Armour,Armadura
-ITEM_STAT_DAMAGE,Damage,DaÃ±o
+ITEM_STAT_DAMAGE,Damage,Daño
 ITEM_STAT_LIFE,Life,Vida
 ITEM_STAT_INITIATIVE,Initiative,Iniciativa
 ITEM_STAT_LIFESTEAL,Lifesteal,Robo de vida
 ITEM_STAT_THORNS,Thorns,Espinas
-ITEM_STAT_REGEN,Regen,RegeneraciÃ³n
-ITEM_STAT_CRIT,Crit,CrÃ­tico
+ITEM_STAT_REGEN,Regen,Regeneración
+ITEM_STAT_CRIT,Crit,Crítico
+ITEM_TYPE_HELMET,Helmet,Casco
+ITEM_TYPE_ARMOUR,Armour,Armadura
+ITEM_TYPE_GLOVES,Gloves,Guantes
+ITEM_TYPE_BOOTS,Boots,Botas
+ITEM_TYPE_ONE_HAND,One-Hand,Una mano
+ITEM_TYPE_TWO_HANDS,Two-Hands,Dos manos
+HERO_UPGRADES_TITLE,Hero Upgrades,Mejoras de héroe
+HERO_UPGRADES_OWNED_HEROES,Owned Heroes,Héroes disponibles
+HERO_UPGRADES_CLOSE,Close,Cerrar
+HERO_UPGRADES_LEVEL,Level: {value},Nivel: {value}
+HERO_UPGRADES_XP,XP: {current} / {total},XP: {current} / {total}
+HERO_UPGRADES_UNSPENT,Unspent: {value},Sin gastar: {value}
+HERO_UPGRADES_STATS,Stats,Atributos
+HERO_UPGRADES_POINTS,Pts: {value},Pts: {value}
+HERO_UPGRADE_STAT_MAX_HP_NAME,Max HP,Vida máxima
+HERO_UPGRADE_STAT_DAMAGE_NAME,Damage,Daño
+HERO_UPGRADE_STAT_ARMOUR_NAME,Armour,Armadura
+HERO_UPGRADE_STAT_BLOCK_CHANCE_NAME,Block Chance,Prob. de bloqueo
+HERO_UPGRADE_STAT_HP_REGEN_NAME,HP Regen,Regeneración de vida
+HERO_UPGRADE_STAT_LIFE_STEAL_NAME,Life Steal,Robo de vida
+HERO_UPGRADE_STAT_EVASION_NAME,Evasion,Evasión
+HERO_UPGRADE_STAT_INITIATIVE_NAME,Initiative,Iniciativa
+HERO_UPGRADE_STAT_HEALING_POWER_NAME,Healing Power,Poder de curación
+HERO_UPGRADE_STAT_RESIST_STATUS_NAME,Status Resist,Resistencia a estados
+HERO_UPGRADE_STAT_GOLD_GAIN_NAME,Gold Gain,Bono de oro
+HERO_UPGRADE_STAT_LOOT_CHANCE_NAME,Loot Chance,Prob. de botín
+HERO_UPGRADE_STAT_RARITY_CHANCE_NAME,Rarity Chance,Prob. de rareza
+HERO_UPGRADE_STAT_MAX_HP_DESC,Adds flat max HP.,Suma vida máxima plana.
+HERO_UPGRADE_STAT_DAMAGE_DESC,Adds flat damage.,Suma daño plano.
+HERO_UPGRADE_STAT_ARMOUR_DESC,Adds flat armour.,Suma armadura plana.
+HERO_UPGRADE_STAT_BLOCK_CHANCE_DESC,Chance to block incoming attacks (no block amount stat).,Probabilidad de bloquear ataques entrantes (sin cantidad de bloqueo).
+HERO_UPGRADE_STAT_HP_REGEN_DESC,Flat regen applied per combat round.,Regeneración plana aplicada por ronda de combate.
+HERO_UPGRADE_STAT_LIFE_STEAL_DESC,Percent of damage returned as health.,Porcentaje del daño devuelto como vida.
+HERO_UPGRADE_STAT_EVASION_DESC,Chance to evade incoming attacks.,Probabilidad de evadir ataques entrantes.
+HERO_UPGRADE_STAT_INITIATIVE_DESC,Adds flat initiative.,Suma iniciativa plana.
+HERO_UPGRADE_STAT_HEALING_POWER_DESC,Increases healing done by percent.,Aumenta la curación hecha en porcentaje.
+HERO_UPGRADE_STAT_RESIST_STATUS_DESC,Chance to resist status effects.,Probabilidad de resistir efectos de estado.
+HERO_UPGRADE_STAT_GOLD_GAIN_DESC,Percent bonus to gold earned.,Bono porcentual al oro ganado.
+HERO_UPGRADE_STAT_LOOT_CHANCE_DESC,Chance that an item drops at all.,Probabilidad de que caiga un objeto.
+HERO_UPGRADE_STAT_RARITY_CHANCE_DESC,Shifts item rarity upward when a drop happens.,Desplaza la rareza del objeto hacia arriba cuando cae un objeto.
+TRAIT_OVERLAY_TITLE,Traits,Rasgos
+WAVE_POPUP_TITLE,Wave {value},Oleada {value}
+UNKNOWN,Unknown,Desconocido
+UNKNOWN,Unknown,Desconocido
+COLLECTION_SPAWN_WEIGHT,Spawn weight: {value},Peso (spawn): {value}

@@ -1,12 +1,11 @@
-[gd_resource type="Resource" script_class="EquipmentLayoutDefinition" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="EquipmentLayoutDefinition" load_steps=10 format=3 uid="uid://xubxe5l4ooeb"]
 
-[ext_resource type="Script" path="res://data/equipment_layout_definition.gd" id="1_layout"]
-[ext_resource type="Script" path="res://data/equipment_slot_definition.gd" id="2_slot"]
+[ext_resource type="Script" uid="uid://ccyxums57cpbv" path="res://data/equipment_layout_definition.gd" id="1_layout"]
+[ext_resource type="Script" uid="uid://csy4whggp7h7x" path="res://data/equipment_slot_definition.gd" id="2_slot"]
 
 [sub_resource type="Resource" id="slot_helmet"]
 script = ExtResource("2_slot")
 slot_id = "helmet"
-accepts_item_type = 0
 
 [sub_resource type="Resource" id="slot_armour"]
 script = ExtResource("2_slot")
@@ -40,13 +39,4 @@ accepts_item_type = 5
 
 [resource]
 script = ExtResource("1_layout")
-class_id = "knight"
-slots = [
-	SubResource("slot_helmet"),
-	SubResource("slot_armour"),
-	SubResource("slot_gloves"),
-	SubResource("slot_boots"),
-	SubResource("slot_one_hand_main"),
-	SubResource("slot_one_hand_off"),
-	SubResource("slot_two_hands")
-]
+slots = Array[ExtResource("2_slot")]([SubResource("slot_helmet"), SubResource("slot_armour"), SubResource("slot_gloves"), SubResource("slot_boots"), SubResource("slot_one_hand_main"), SubResource("slot_one_hand_off"), SubResource("slot_two_hands")])

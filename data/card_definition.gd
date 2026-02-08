@@ -82,17 +82,17 @@ func get_allowed_item_type_weights() -> Dictionary:
 static func get_item_type_name(item_type: int) -> String:
 	match item_type:
 		ItemType.HELMET:
-			return "HELMET"
+			return "ITEM_TYPE_HELMET"
 		ItemType.ARMOUR:
-			return "ARMOUR"
+			return "ITEM_TYPE_ARMOUR"
 		ItemType.GLOVES:
-			return "GLOVES"
+			return "ITEM_TYPE_GLOVES"
 		ItemType.BOOTS:
-			return "BOOTS"
+			return "ITEM_TYPE_BOOTS"
 		ItemType.ONE_HAND:
-			return "ONE_HAND"
+			return "ITEM_TYPE_ONE_HAND"
 		ItemType.TWO_HANDS:
-			return "TWO_HANDS"
+			return "ITEM_TYPE_TWO_HANDS"
 		_:
 			return "UNKNOWN"
 

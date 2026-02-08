@@ -1,9 +1,11 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://1xl73db8omen"]
 
-[ext_resource type="Script" path="res://scripts/UI/trait_overlay_view.gd" id="1_overlay_script"]
+[ext_resource type="Script" uid="uid://trf212212lr1" path="res://scripts/UI/trait_overlay_view.gd" id="1_overlay_script"]
 
 [node name="TraitOverlayView" type="Control"]
 visible = false
+layout_mode = 3
+anchors_preset = 0
 mouse_filter = 2
 script = ExtResource("1_overlay_script")
 
@@ -17,10 +19,5 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="VBox" type="VBoxContainer" parent="Panel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 mouse_filter = 2

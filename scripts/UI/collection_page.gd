@@ -228,7 +228,9 @@ func _refresh() -> void:
 					var override_text := ""
 					if def.card_type == "hero":
 						var unspent := int(_hero_unspent_map.get(def_id, 0))
-						override_text = "UP %d" % unspent
+						override_text = tr("COLLECTION_UNSPENT_BADGE").format({
+							"value": unspent
+						})
 					slot.set_owned_count(count, _show_counts, override_text)
 				else:
 					slot.set_empty()

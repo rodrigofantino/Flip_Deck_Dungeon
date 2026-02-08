@@ -135,7 +135,6 @@ horizontal_alignment = 2
 custom_minimum_size = Vector2(240, 28)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.6, 0.2, 1)
-text = ""
 horizontal_alignment = 2
 
 [node name="ItemTypeDistribution" type="VBoxContainer" parent="SelectionPanel"]
@@ -153,8 +152,6 @@ text = "HELMET"
 [node name="BarHelmet" type="ProgressBar" parent="SelectionPanel/ItemTypeDistribution/RowHelmet"]
 custom_minimum_size = Vector2(150, 18)
 layout_mode = 2
-max_value = 100.0
-value = 0.0
 
 [node name="RowArmour" type="HBoxContainer" parent="SelectionPanel/ItemTypeDistribution"]
 layout_mode = 2
@@ -167,8 +164,6 @@ text = "ARMOUR"
 [node name="BarArmour" type="ProgressBar" parent="SelectionPanel/ItemTypeDistribution/RowArmour"]
 custom_minimum_size = Vector2(150, 18)
 layout_mode = 2
-max_value = 100.0
-value = 0.0
 
 [node name="RowGloves" type="HBoxContainer" parent="SelectionPanel/ItemTypeDistribution"]
 layout_mode = 2
@@ -181,8 +176,6 @@ text = "GLOVES"
 [node name="BarGloves" type="ProgressBar" parent="SelectionPanel/ItemTypeDistribution/RowGloves"]
 custom_minimum_size = Vector2(150, 18)
 layout_mode = 2
-max_value = 100.0
-value = 0.0
 
 [node name="RowBoots" type="HBoxContainer" parent="SelectionPanel/ItemTypeDistribution"]
 layout_mode = 2
@@ -195,8 +188,6 @@ text = "BOOTS"
 [node name="BarBoots" type="ProgressBar" parent="SelectionPanel/ItemTypeDistribution/RowBoots"]
 custom_minimum_size = Vector2(150, 18)
 layout_mode = 2
-max_value = 100.0
-value = 0.0
 
 [node name="RowOneHand" type="HBoxContainer" parent="SelectionPanel/ItemTypeDistribution"]
 layout_mode = 2
@@ -209,8 +200,6 @@ text = "ONE_HAND"
 [node name="BarOneHand" type="ProgressBar" parent="SelectionPanel/ItemTypeDistribution/RowOneHand"]
 custom_minimum_size = Vector2(150, 18)
 layout_mode = 2
-max_value = 100.0
-value = 0.0
 
 [node name="RowTwoHands" type="HBoxContainer" parent="SelectionPanel/ItemTypeDistribution"]
 layout_mode = 2
@@ -223,8 +212,6 @@ text = "TWO_HANDS"
 [node name="BarTwoHands" type="ProgressBar" parent="SelectionPanel/ItemTypeDistribution/RowTwoHands"]
 custom_minimum_size = Vector2(150, 18)
 layout_mode = 2
-max_value = 100.0
-value = 0.0
 
 [node name="StartDungeonButton" type="Button" parent="SelectionPanel"]
 custom_minimum_size = Vector2(240, 40)

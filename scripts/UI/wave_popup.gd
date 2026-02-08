@@ -18,7 +18,9 @@ func show_popup(wave_index: int) -> void:
 	visible = true
 	z_index = 250
 	if title_label:
-		title_label.text = "Wave %d" % wave_index
+		title_label.text = tr("WAVE_POPUP_TITLE").format({
+			"value": wave_index
+		})
 
 func hide_popup() -> void:
 	visible = false

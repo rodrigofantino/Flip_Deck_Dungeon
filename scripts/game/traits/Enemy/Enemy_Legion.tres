@@ -6,6 +6,6 @@
 script = ExtResource("1_65ir1")
 trait_id = "Enemy_Legion"
 display_name = "TRAIT_ENEMY_LEGION_NAME"
-description = "Daño x1.3."
+description = "TRAIT_ENEMY_LEGION_DESCRIPTION"
 trait_type = 1
 enemy_damage_multiplier = 1.3

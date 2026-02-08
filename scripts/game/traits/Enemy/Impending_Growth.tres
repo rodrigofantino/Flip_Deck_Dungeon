@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_81oov")
 trait_id = "Impending_Growth"
-display_name = "TRAIT_IMPENDING_GROUWTH_NAME"
-description = "Vida máxima x1.8."
+display_name = "TRAIT_IMPENDING_GROWTH_NAME"
+description = "TRAIT_IMPENDING_GROWTH_DESCRIPTION"
 trait_type = 1
 enemy_hp_multiplier = 1.8

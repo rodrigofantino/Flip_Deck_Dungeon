@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="ItemArchetypeCatalog" load_steps=26 format=3]
+[gd_resource type="Resource" script_class="ItemArchetypeCatalog" load_steps=27 format=3 uid="uid://buqgi43bj70fo"]
 
-[ext_resource type="Script" path="res://data/item_archetype_catalog.gd" id="1_catalog"]
+[ext_resource type="Script" uid="uid://bg2ilp44kttux" path="res://data/item_archetype.gd" id="1_2mcho"]
+[ext_resource type="Script" uid="uid://clr8pston0pdo" path="res://data/item_archetype_catalog.gd" id="1_catalog"]
 [ext_resource type="Resource" path="res://data/items/archetypes/knight/open_helm.tres" id="2_open_helm"]
 [ext_resource type="Resource" path="res://data/items/archetypes/knight/visored_helm.tres" id="3_visored_helm"]
 [ext_resource type="Resource" path="res://data/items/archetypes/knight/great_helm.tres" id="4_great_helm"]
@@ -28,29 +29,4 @@
 
 [resource]
 script = ExtResource("1_catalog")
-archetypes = [
-	ExtResource("2_open_helm"),
-	ExtResource("3_visored_helm"),
-	ExtResource("4_great_helm"),
-	ExtResource("5_chapel_de_fer"),
-	ExtResource("6_leather_armour"),
-	ExtResource("7_chainmail"),
-	ExtResource("8_brigandine"),
-	ExtResource("9_plate_armour"),
-	ExtResource("10_duel_gloves"),
-	ExtResource("11_grip_wraps"),
-	ExtResource("12_steel_gauntlets"),
-	ExtResource("13_quick_bracers"),
-	ExtResource("14_leather_boots"),
-	ExtResource("15_greaves"),
-	ExtResource("16_sabatons"),
-	ExtResource("17_trail_runners"),
-	ExtResource("18_rapier"),
-	ExtResource("19_arming_sword"),
-	ExtResource("20_mace"),
-	ExtResource("21_kite_shield"),
-	ExtResource("22_greatsword"),
-	ExtResource("23_halberd"),
-	ExtResource("24_maul"),
-	ExtResource("25_long_spear")
-]
+archetypes = Array[ExtResource("1_2mcho")]([ExtResource("2_open_helm"), ExtResource("3_visored_helm"), ExtResource("4_great_helm"), ExtResource("5_chapel_de_fer"), ExtResource("6_leather_armour"), ExtResource("7_chainmail"), ExtResource("8_brigandine"), ExtResource("9_plate_armour"), ExtResource("10_duel_gloves"), ExtResource("11_grip_wraps"), ExtResource("12_steel_gauntlets"), ExtResource("13_quick_bracers"), ExtResource("14_leather_boots"), ExtResource("15_greaves"), ExtResource("16_sabatons"), ExtResource("17_trail_runners"), ExtResource("18_rapier"), ExtResource("19_arming_sword"), ExtResource("20_mace"), ExtResource("21_kite_shield"), ExtResource("22_greatsword"), ExtResource("23_halberd"), ExtResource("24_maul"), ExtResource("25_long_spear")])

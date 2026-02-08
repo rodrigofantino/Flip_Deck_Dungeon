@@ -26,7 +26,7 @@ func hide_overlay() -> void:
 func _build_list(traits: Array[TraitResource]) -> void:
 	_clear_list()
 	var title := Label.new()
-	title.text = "Traits"
+	title.text = tr("TRAIT_OVERLAY_TITLE")
 	title.add_theme_color_override("font_color", Color(0.95, 0.95, 0.95, 1))
 	vbox.add_child(title)
 

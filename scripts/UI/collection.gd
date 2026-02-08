@@ -141,7 +141,7 @@ func _wire_ui() -> void:
 	if page_label:
 		_update_page_label()
 	if upgrades_button:
-		upgrades_button.text = "Upgrades"
+		upgrades_button.text = tr("COLLECTION_UPGRADES_BUTTON")
 		upgrades_button.pressed.connect(_on_upgrades_pressed)
 	if back_button:
 		back_button.pressed.connect(func() -> void:
@@ -412,7 +412,9 @@ func _set_enemy_selected(enemy_id: String, selected: bool) -> void:
 		return
 	if selected:
 		if selected_enemy_weights.size() >= MAX_ENEMY_SELECTION:
-			_selection_error_override = "Máximo %d enemigos." % MAX_ENEMY_SELECTION
+			_selection_error_override = tr("COLLECTION_ERROR_MAX_ENEMIES").format({
+				"value": MAX_ENEMY_SELECTION
+			})
 			return
 		if not selected_enemy_weights.has(enemy_id):
 			selected_enemy_weights[enemy_id] = MIN_ENEMY_WEIGHT
@@ -434,9 +436,13 @@ func _get_selection_error() -> String:
 		return _selection_error_override
 	var count := selected_enemy_weights.size()
 	if count < MIN_ENEMY_SELECTION:
-		return "Seleccioná al menos %d enemigos." % MIN_ENEMY_SELECTION
+		return tr("COLLECTION_ERROR_MIN_ENEMIES").format({
+			"value": MIN_ENEMY_SELECTION
+		})
 	if count > MAX_ENEMY_SELECTION:
-		return "Máximo %d enemigos." % MAX_ENEMY_SELECTION
+		return tr("COLLECTION_ERROR_MAX_ENEMIES").format({
+			"value": MAX_ENEMY_SELECTION
+		})
 	return ""
 
 func _build_item_type_scores() -> Dictionary:
@@ -483,7 +489,7 @@ func _update_distribution_row(label: Label, bar: ProgressBar, item_type: int, sc
 	var percent: int = 0
 	if total > 0:
 		percent = int(round((float(score) / float(total)) * 100.0))
-	label.text = "%s %d%%" % [CardDefinition.get_item_type_name(item_type), percent]
+	label.text = "%s %d%%" % [tr(CardDefinition.get_item_type_name(item_type)), percent]
 	bar.value = percent
 	bar.tooltip_text = "%d%%" % percent
 
@@ -499,11 +505,13 @@ func _build_enemy_item_type_overlay(def_id: String, spawn_weight: int) -> String
 		total = 1
 
 	var lines: Array[String] = []
-	lines.append("Peso (spawn): %d" % spawn_weight)
+	lines.append(tr("COLLECTION_SPAWN_WEIGHT").format({
+		"value": spawn_weight
+	}))
 	for item_type in ITEM_TYPE_ORDER:
 		var weight := int(weights.get(item_type, 0))
 		var percent := int(round((float(weight) / float(total)) * 100.0))
-		var name := CardDefinition.get_item_type_name(item_type)
+		var name := tr(CardDefinition.get_item_type_name(item_type))
 		lines.append("%s: %d (%d%%)" % [name, weight, percent])
 
 	return "\n".join(lines)

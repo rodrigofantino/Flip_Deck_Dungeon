@@ -64,9 +64,6 @@ offset_top = 60.0
 offset_right = -20.0
 offset_bottom = 95.0
 grow_horizontal = 0
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 25
 text = "Development: Reset Progress"
 
@@ -80,9 +77,6 @@ offset_top = 100.0
 offset_right = -20.0
 offset_bottom = 135.0
 grow_horizontal = 0
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 25
 text = "Development: Add Gold"
 
@@ -103,57 +97,36 @@ grow_vertical = 2
 [node name="ContinueButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
 text = "Continue"
 
 [node name="PlayButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
 text = "PLay"
 
 [node name="EndlessButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
 text = "Endless"
 
 [node name="TutorialButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
 text = "Tutorial"
 
 [node name="ShopButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
 text = "Shop"
 
 [node name="CollectionButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
 text = "Collection"
 
 [node name="SettingsButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
 text = "Settings"
 
 [connection signal="pressed" from="VBoxContainer/ContinueButton" to="." method="_on_continue_pressed"]

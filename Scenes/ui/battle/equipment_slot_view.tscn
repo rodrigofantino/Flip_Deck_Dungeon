@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=3 format=3 uid="uid://b6qbjibwmbn1u"]
 
-[ext_resource type="Script" path="res://scripts/UI/equipment_slot_view.gd" id="1_slot_script"]
-[ext_resource type="PackedScene" path="res://Scenes/cards/item_card.tscn" id="2_item_card"]
+[ext_resource type="Script" uid="uid://de3d23fnl5kxg" path="res://scripts/UI/equipment_slot_view.gd" id="1_slot_script"]
+[ext_resource type="PackedScene" uid="uid://c5bbf25qofvfd" path="res://Scenes/cards/item_card.tscn" id="2_item_card"]
 
 [node name="EquipmentSlotView" type="Panel"]
 custom_minimum_size = Vector2(60, 120)
@@ -15,6 +15,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
-mouse_filter = 2

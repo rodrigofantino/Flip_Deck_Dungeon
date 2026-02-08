@@ -43,7 +43,7 @@ theme/custom="res://data/game_theme.tres"
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://assets/localization/cards_enemy.en.translation", "res://assets/localization/cards_enemy.es.translation", "res://assets/localization/cards_hero.en.translation", "res://assets/localization/cards_hero.es.translation", "res://assets/localization/game_text.en.translation", "res://assets/localization/game_text.es.translation", "res://assets/localization/items.en.translation", "res://assets/localization/items.es.translation", "res://assets/localization/traits_enemy.en.translation", "res://assets/localization/traits_enemy.es.translation", "res://assets/localization/traits_hero.en.translation", "res://assets/localization/traits_hero.es.translation")
+locale/translations=PackedStringArray("res://assets/localization/cards_enemy.en.translation", "res://assets/localization/cards_enemy.es.translation", "res://assets/localization/cards_Hero.en.translation", "res://assets/localization/cards_Hero.es.translation", "res://assets/localization/game_text.en.translation", "res://assets/localization/game_text.es.translation", "res://assets/localization/items.en.translation", "res://assets/localization/items.es.translation", "res://assets/localization/traits_enemy.en.translation", "res://assets/localization/traits_enemy.es.translation", "res://assets/localization/traits_hero.en.translation", "res://assets/localization/traits_hero.es.translation")
 
 [rendering]
 

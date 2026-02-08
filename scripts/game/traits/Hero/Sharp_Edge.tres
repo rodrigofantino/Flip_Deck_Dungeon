@@ -6,5 +6,5 @@
 script = ExtResource("1_ueco1")
 trait_id = "Sharp_Edge"
 display_name = "TRAIT_SHARP_EDGE_NAME"
-description = "Daño +2."
+description = "TRAIT_SHARP_EDGE_DESCRIPTION"
 hero_damage_bonus = 2

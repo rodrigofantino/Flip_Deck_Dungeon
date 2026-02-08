@@ -25,62 +25,62 @@ const _PERCENT_CAP: float = 0.70
 static func get_stat_name(stat: int) -> String:
 	match stat:
 		UpgradeStat.MAX_HP:
-			return "Max HP"
+			return "HERO_UPGRADE_STAT_MAX_HP_NAME"
 		UpgradeStat.DAMAGE:
-			return "Damage"
+			return "HERO_UPGRADE_STAT_DAMAGE_NAME"
 		UpgradeStat.ARMOUR:
-			return "Armour"
+			return "HERO_UPGRADE_STAT_ARMOUR_NAME"
 		UpgradeStat.BLOCK_CHANCE:
-			return "Block Chance"
+			return "HERO_UPGRADE_STAT_BLOCK_CHANCE_NAME"
 		UpgradeStat.HP_REGEN:
-			return "HP Regen"
+			return "HERO_UPGRADE_STAT_HP_REGEN_NAME"
 		UpgradeStat.LIFE_STEAL:
-			return "Life Steal"
+			return "HERO_UPGRADE_STAT_LIFE_STEAL_NAME"
 		UpgradeStat.EVASION:
-			return "Evasion"
+			return "HERO_UPGRADE_STAT_EVASION_NAME"
 		UpgradeStat.INITIATIVE:
-			return "Initiative"
+			return "HERO_UPGRADE_STAT_INITIATIVE_NAME"
 		UpgradeStat.HEALING_POWER:
-			return "Healing Power"
+			return "HERO_UPGRADE_STAT_HEALING_POWER_NAME"
 		UpgradeStat.RESIST_STATUS:
-			return "Status Resist"
+			return "HERO_UPGRADE_STAT_RESIST_STATUS_NAME"
 		UpgradeStat.GOLD_GAIN:
-			return "Gold Gain"
+			return "HERO_UPGRADE_STAT_GOLD_GAIN_NAME"
 		UpgradeStat.LOOT_CHANCE:
-			return "Loot Chance"
+			return "HERO_UPGRADE_STAT_LOOT_CHANCE_NAME"
 		UpgradeStat.RARITY_CHANCE:
-			return "Rarity Chance"
+			return "HERO_UPGRADE_STAT_RARITY_CHANCE_NAME"
 		_:
-			return "Unknown"
+			return "UNKNOWN"
 
 static func get_stat_desc(stat: int) -> String:
 	match stat:
 		UpgradeStat.MAX_HP:
-			return "Adds flat max HP."
+			return "HERO_UPGRADE_STAT_MAX_HP_DESC"
 		UpgradeStat.DAMAGE:
-			return "Adds flat damage."
+			return "HERO_UPGRADE_STAT_DAMAGE_DESC"
 		UpgradeStat.ARMOUR:
-			return "Adds flat armour."
+			return "HERO_UPGRADE_STAT_ARMOUR_DESC"
 		UpgradeStat.BLOCK_CHANCE:
-			return "Chance to block incoming attacks (no block amount stat)."
+			return "HERO_UPGRADE_STAT_BLOCK_CHANCE_DESC"
 		UpgradeStat.HP_REGEN:
-			return "Flat regen applied per combat round."
+			return "HERO_UPGRADE_STAT_HP_REGEN_DESC"
 		UpgradeStat.LIFE_STEAL:
-			return "Percent of damage returned as health."
+			return "HERO_UPGRADE_STAT_LIFE_STEAL_DESC"
 		UpgradeStat.EVASION:
-			return "Chance to evade incoming attacks."
+			return "HERO_UPGRADE_STAT_EVASION_DESC"
 		UpgradeStat.INITIATIVE:
-			return "Adds flat initiative."
+			return "HERO_UPGRADE_STAT_INITIATIVE_DESC"
 		UpgradeStat.HEALING_POWER:
-			return "Increases healing done by percent."
+			return "HERO_UPGRADE_STAT_HEALING_POWER_DESC"
 		UpgradeStat.RESIST_STATUS:
-			return "Chance to resist status effects."
+			return "HERO_UPGRADE_STAT_RESIST_STATUS_DESC"
 		UpgradeStat.GOLD_GAIN:
-			return "Percent bonus to gold earned."
+			return "HERO_UPGRADE_STAT_GOLD_GAIN_DESC"
 		UpgradeStat.LOOT_CHANCE:
-			return "Chance that an item drops at all."
+			return "HERO_UPGRADE_STAT_LOOT_CHANCE_DESC"
 		UpgradeStat.RARITY_CHANCE:
-			return "Shifts item rarity upward when a drop happens."
+			return "HERO_UPGRADE_STAT_RARITY_CHANCE_DESC"
 		_:
 			return ""
 

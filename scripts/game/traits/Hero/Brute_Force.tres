@@ -6,5 +6,5 @@
 script = ExtResource("1_wp87q")
 trait_id = "Brute_Force"
 display_name = "TRAIT_BRUTE_FORCE_NAME"
-description = "Daño +1."
+description = "TRAIT_BRUTE_FORCE_DESCRIPTION"
 hero_damage_bonus = 1

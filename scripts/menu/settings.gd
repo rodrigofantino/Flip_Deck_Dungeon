@@ -24,9 +24,9 @@ func _refresh_texts() -> void:
 	language_label.text = tr("SETTINGS_LANGUAGE_LABEL")
 	language_button.text = tr("SETTINGS_LANGUAGE_BUTTON")
 	back_button.text = tr("SETTINGS_BACK_BUTTON")
-	master_label.text = "Master"
-	sfx_label.text = "SFX"
-	music_label.text = "Music"
+	master_label.text = tr("SETTINGS_MASTER_LABEL")
+	sfx_label.text = tr("SETTINGS_SFX_LABEL")
+	music_label.text = tr("SETTINGS_MUSIC_LABEL")
 
 func _on_language_pressed() -> void:
 	LocalizationManager.next_language()

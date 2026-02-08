@@ -1,29 +1,29 @@
 ﻿id,en,es
-FOREST_SLIME_NAME,Slime,Slime
+FOREST_SLIME_NAME,Slime,Baba
 FOREST_SLIME_DESCRIPTION,A disgusting goo,Una baba asquerosa
-FOREST_SPIDER_NAME,Forest Spider,AraÃ±a del Bosque
-FOREST_SPIDER_DESCRIPTION,A giant spider,Una araÃ±a gigante
-FOREST_WOLF_NAME,Lone Wolf,Lobo Solitario
-FOREST_WOLF_DESCRIPTION,A big lone wolf with sharp teeth,Un gran lobo solitario con dientes filosos
-FOREST_SPIRIT_NAME,Forest Spirit,EspÃ­ritu del Bosque
-FOREST_SPIRIT_DESCRIPTION,An enraged spirit,Un espÃ­ritu del bosque enojado por tu presencia
-DARK_FOREST_SLIME_NAME,Slime,Slime
-DARK_FOREST_SLIME_DESCRIPTION,,
-DARK_FOREST_SPIDER_NAME,Spider,AraÃ±a
-DARK_FOREST_SPIDER_DESCRIPTION,,
+FOREST_SPIDER_NAME,Forest Spider,Araña del Bosque
+FOREST_SPIDER_DESCRIPTION,A giant spider,Una araña gigante
+FOREST_WOLF_NAME,Lone Wolf,Lobo solitario
+FOREST_WOLF_DESCRIPTION,A big lone wolf with sharp teeth,Un gran lobo solitario con dientes afilados
+FOREST_SPIRIT_NAME,Forest Spirit,Espíritu del Bosque
+FOREST_SPIRIT_DESCRIPTION,An enraged spirit,Un espíritu del bosque enfurecido
+DARK_FOREST_SLIME_NAME,Slime,Baba
+DARK_FOREST_SLIME_DESCRIPTION,A dark corrosive slime,Una baba oscura y corrosiva
+DARK_FOREST_SPIDER_NAME,Spider,Araña
+DARK_FOREST_SPIDER_DESCRIPTION,A spider from the dark forest,Una araña del bosque oscuro
 DARK_FOREST_WOLF_NAME,Wolf,Lobo
-DARK_FOREST_WOLF_DESCRIPTION,,
-DARK_FOREST_CORRUPTED_BAT_NAME,Corrupted Bat,MurciÃ©lago Corrupto
-DARK_FOREST_CORRUPTED_BAT_DESCRIPTION,,
+DARK_FOREST_WOLF_DESCRIPTION,A wolf twisted by the dark forest,Un lobo retorcido por el bosque oscuro
+DARK_FOREST_CORRUPTED_BAT_NAME,Corrupted Bat,Murciélago corrupto
+DARK_FOREST_CORRUPTED_BAT_DESCRIPTION,A bat warped by corruption,Un murciélago corrompido
 DARK_FOREST_ROOTLING_NAME,Rootling,Raicillo
-DARK_FOREST_ROOTLING_DESCRIPTION,,
+DARK_FOREST_ROOTLING_DESCRIPTION,A walking root that hungers for life,Una raíz viviente hambrienta de vida
 DARK_FOREST_SHADE_NAME,Shade,Sombra
-DARK_FOREST_SHADE_DESCRIPTION,,
-DARK_FOREST_THORN_BEAST_NAME,Thorn Beast,Bestia Espinosa
-DARK_FOREST_THORN_BEAST_DESCRIPTION,,
+DARK_FOREST_SHADE_DESCRIPTION,A living shadow,Una sombra viviente
+DARK_FOREST_THORN_BEAST_NAME,Thorn Beast,Bestia espinosa
+DARK_FOREST_THORN_BEAST_DESCRIPTION,A beast covered in thorns,Una bestia cubierta de espinas
 DARK_FOREST_SPORELING_NAME,Sporeling,Esporilla
-DARK_FOREST_SPORELING_DESCRIPTION,,
-DARK_FOREST_FALLEN_STAG_NAME,Fallen Stag,Ciervo CaÃ­do
-DARK_FOREST_FALLEN_STAG_DESCRIPTION,,
-DARK_FOREST_CORRUPTED_SPIRIT_NAME,Corrupted Spirit,EspÃ­ritu Corrupto
-DARK_FOREST_CORRUPTED_SPIRIT_DESCRIPTION,,
+DARK_FOREST_SPORELING_DESCRIPTION,A small spore creature,Una pequeña criatura de esporas
+DARK_FOREST_FALLEN_STAG_NAME,Fallen Stag,Ciervo caído
+DARK_FOREST_FALLEN_STAG_DESCRIPTION,A fallen stag warped by corruption,Un ciervo caído corrompido
+DARK_FOREST_CORRUPTED_SPIRIT_NAME,Corrupted Spirit,Espíritu corrupto
+DARK_FOREST_CORRUPTED_SPIRIT_DESCRIPTION,A spirit twisted by corruption,Un espíritu corrompido

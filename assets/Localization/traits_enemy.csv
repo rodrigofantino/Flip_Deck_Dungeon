@@ -1,11 +1,19 @@
-id,en,es
-TRAIT_ABYSS_SHELL_NAME,Abys Shell,Caparazón Abisal
-TRAIT_ABYSS_SHELL_DESCRIPTION,*,*
-TRAIT_CURSED_GROWTH_NAME,Cursed Growth,Crecimiento Maldito
-TRAIT__CURSED_GROWTH_DESCRIPTION,*,*
-TRAIT_ENEMY_LEGION_NAME,Enemy Legion,Legión Enemiga
-TRAIT_ENEMY_LEGION_DESRIPTION,*,*
-TRAIT_IMPENDING_GROUWTH_NAME,Impending Growth,Crecimiento Inminente
-TRAIT_IMPENDING_GROUWTH_DESCRIPTION,*,*
-TRAIT_SHADOW_PRESENCE_NAME,Shadow Presence,Presencia Sombría
-TRAIT_SHADOW_PRESENCE_DESCRIPTION,*,*
+﻿id,en,es
+TRAIT_ABYSS_SHELL_NAME,Abyss Shell,Caparazón abisal
+TRAIT_ABYSS_SHELL_DESCRIPTION,Max HP x1.5 and +2.,Vida máxima x1.5 y +2.
+TRAIT_CURSED_GROWTH_NAME,Cursed Growth,Crecimiento maldito
+TRAIT_CURSED_GROWTH_DESCRIPTION,Damage x1.5.,Daño x1.5.
+TRAIT_ENEMY_LEGION_NAME,Enemy Legion,Legión enemiga
+TRAIT_ENEMY_LEGION_DESCRIPTION,Damage x1.3.,Daño x1.3.
+TRAIT_IMPENDING_GROWTH_NAME,Impending Growth,Crecimiento inminente
+TRAIT_IMPENDING_GROWTH_DESCRIPTION,Max HP x1.8.,Vida máxima x1.8.
+TRAIT_SHADOW_PRESENCE_NAME,Shadow Presence,Presencia sombría
+TRAIT_SHADOW_PRESENCE_DESCRIPTION,Initiative +3.,Iniciativa +3.
+TRAIT_GORE_CHARGE_NAME,Gore Charge,Carga sangrienta
+TRAIT_GORE_CHARGE_DESCRIPTION,If it acts first in the round its attack deals +2 DMG.,Si actúa primero en la ronda su ataque hace +2 de daño.
+TRAIT_RAGE_TUSK_NAME,Rage Tusk,Colmillo furioso
+TRAIT_RAGE_TUSK_DESCRIPTION,The first time it drops below 60% HP it gains +1 DMG for the rest of the fight.,La primera vez que baja de 60% de vida gana +1 de daño hasta el final del combate.
+TRAIT_SPORE_RENEWAL_NAME,Spore Renewal,Renovación de esporas
+TRAIT_SPORE_RENEWAL_DESCRIPTION,At the end of its turn it heals 1 HP.,Al final de su turno cura 1 PV.
+TRAIT_PRETERNATURAL_INITIATIVE_NAME,Preternatural Initiative,Iniciativa preternatural
+TRAIT_PRETERNATURAL_INITIATIVE_DESCRIPTION,Always takes the first turn each round (ignores initiative for order).,Siempre toma el primer turno de cada ronda (ignora la iniciativa para el orden).

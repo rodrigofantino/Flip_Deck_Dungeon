@@ -1,10 +1,10 @@
-[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://b1c5cn5ml3i25"]
 
-[ext_resource type="Script" path="res://scripts/game/traits/trait_resource.gd" id="1_trait"]
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_trait"]
 
 [resource]
 script = ExtResource("1_trait")
 trait_id = "preternatural_initiative"
-display_name = "Preternatural Initiative"
-description = "Siempre toma el primer turno de cada ronda (ignora iniciativa para el orden)."
+display_name = "TRAIT_PRETERNATURAL_INITIATIVE_NAME"
+description = "TRAIT_PRETERNATURAL_INITIATIVE_DESCRIPTION"
 trait_type = 1

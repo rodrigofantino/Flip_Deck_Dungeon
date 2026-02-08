@@ -6,6 +6,6 @@
 script = ExtResource("1_g3xck")
 trait_id = "Shadow_Presence"
 display_name = "TRAIT_SHADOW_PRESENCE_NAME"
-description = "Iniciativa +3."
+description = "TRAIT_SHADOW_PRESENCE_DESCRIPTION"
 trait_type = 1
 enemy_add_initiative = 3
