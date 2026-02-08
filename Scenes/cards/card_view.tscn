@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://dtt1b34yncqy2"]
+[gd_scene load_steps=16 format=3 uid="uid://dtt1b34yncqy2"]
 
 [ext_resource type="Theme" uid="uid://csalfsfxb4l4i" path="res://data/card_theme.tres" id="1_1glvy"]
 [ext_resource type="Script" uid="uid://cw4ptkrjbqbu3" path="res://scripts/game/card_view.gd" id="2_6x6fe"]
@@ -8,6 +8,41 @@
 [ext_resource type="Shader" uid="uid://xlrjtlyatv7" path="res://shaders/shader_platinadomuyblanco.gdshader" id="5_f0mpd"]
 [ext_resource type="Texture2D" uid="uid://08ow6h6j0rfn" path="res://assets/cards/frame/card_back_final.png" id="5_nus5u"]
 [ext_resource type="Script" uid="uid://c3kl6cgmpigjq" path="res://scripts/UI/MotionTiltDriver.gd" id="6_by25d"]
+
+[sub_resource type="Gradient" id="Gradient_vo232"]
+colors = PackedColorArray(0, 0.735357, 0.6384077, 0.8627451, 0.735357, 0.1330963, 0.4415713, 0.8627451)
+metadata/_snap_enabled = true
+metadata/_snap_count = 3
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_fjknv"]
+gradient = SubResource("Gradient_vo232")
+fill = 1
+fill_from = Vector2(0.43589744, 0.35897437)
+fill_to = Vector2(0, 1)
+
+[sub_resource type="Gradient" id="Gradient_nus5u"]
+colors = PackedColorArray(0.7089163, 0.591402, 0, 1, 0.30349198, 0.37693846, 0.735357, 1)
+metadata/_snap_enabled = true
+metadata/_snap_count = 5
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_f5tfn"]
+gradient = SubResource("Gradient_nus5u")
+width = 124
+height = 124
+fill = 1
+fill_from = Vector2(0.06837607, 0.081196584)
+fill_to = Vector2(0.47008547, 0.974359)
+
+[sub_resource type="Gradient" id="Gradient_f5tfn"]
+colors = PackedColorArray(0.44450918, 0.0019607844, 0.735357, 1, 0.29761627, 0.49445274, 0, 1)
+metadata/_snap_enabled = true
+metadata/_snap_count = 3
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_4ael1"]
+gradient = SubResource("Gradient_f5tfn")
+fill = 1
+fill_from = Vector2(0.54273504, 0.36752138)
+fill_to = Vector2(1, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_nus5u"]
 shader = ExtResource("5_f0mpd")
@@ -103,7 +138,6 @@ offset_right = 565.5
 offset_bottom = 899.0
 theme = ExtResource("4_liruf")
 theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5294118)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 60
 horizontal_alignment = 1
@@ -144,7 +178,30 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
+[node name="Node2D" type="Node2D" parent="Front"]
+
+[node name="PointLight2D3" type="PointLight2D" parent="Front/Node2D"]
+position = Vector2(311.5, 429)
+scale = Vector2(9.84375, 13.5625)
+energy = 0.4
+texture = SubResource("GradientTexture2D_fjknv")
+
+[node name="PointLight2D" type="PointLight2D" parent="Front/Node2D"]
+position = Vector2(309, 463.53348)
+scale = Vector2(5.0546875, 6.882812)
+energy = 0.4
+range_layer_max = 2765
+texture = SubResource("GradientTexture2D_f5tfn")
+offset = Vector2(0, -4.944713)
+
+[node name="PointLight2D2" type="PointLight2D" parent="Front/Node2D"]
+position = Vector2(311, 429)
+scale = Vector2(9.859375, 13.750001)
+energy = 0.4
+texture = SubResource("GradientTexture2D_4ael1")
+
 [node name="Back" type="Control" parent="."]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

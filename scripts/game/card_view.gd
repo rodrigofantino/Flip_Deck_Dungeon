@@ -18,6 +18,9 @@ class_name CardView
 @onready var hp_label: Label = $Front/Stats/HPLabel
 @onready var damage_label: Label = $Front/Stats/DamageLabel
 @onready var heal_effect: AnimatedSprite2D = $Front/Stats/HealEffect
+@onready var holo_light: PointLight2D = $Front/Node2D/PointLight2D
+@onready var holo_light_2: PointLight2D = get_node_or_null("Front/Node2D/PointLight2D2")
+@onready var holo_light_3: PointLight2D = get_node_or_null("Front/Node2D/PointLight2D3")
 
 @export var display_name: String
 @export var description: String
@@ -25,6 +28,13 @@ class_name CardView
 
 const FLIP_SFX_PATH: String = "res://audio/sfx/card_flip.mp3"
 const FLIP_SFX_BUS: String = "SFX"
+const HOLO_AREA_X_MIN: float = 0.0
+const HOLO_AREA_X_MAX: float = 1.0
+const HOLO_AREA_Y_MIN: float = 0.5
+const HOLO_AREA_Y_MAX: float = 1.0
+const HOLO_TARGET_MIN_TIME: float = 0.80
+const HOLO_TARGET_MAX_TIME: float = 1.90
+const HOLO_MOVE_SPEED: float = 4
 
 # ==========================================
 # IDENTIDAD DE LA CARTA (RunManager)
@@ -34,6 +44,16 @@ var card_id: String = ""
 var flip_sfx: AudioStreamPlayer = null
 var run_manager: RunManager = null
 var trait_overlay: TraitOverlayView = null
+var _is_boss_card: bool = false
+var _holo_states: Array[HoloState] = []
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
+class HoloState:
+	var light: PointLight2D = null
+	var tex: GradientTexture2D = null
+	var pos: Vector2 = Vector2(0.0, 0.5)
+	var target: Vector2 = Vector2(0.0, 0.5)
+	var target_time_remaining: float = 0.0
 
 # =========================
 # INIT
@@ -44,8 +64,16 @@ func _ready() -> void:
 	if not is_in_group("card_view"):
 		add_to_group("card_view")
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	set_process(true)
+	_rng.seed = Time.get_ticks_usec() + int(get_instance_id())
+	_holo_init()
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
+
+func _process(delta: float) -> void:
+	if _holo_states.is_empty():
+		return
+	holo_animation(delta)
 
 func _setup_flip_sfx() -> void:
 	if flip_sfx != null:
@@ -63,6 +91,7 @@ func _setup_flip_sfx() -> void:
 func setup_from_definition(definition: CardDefinition, upgrade_level: int = 0) -> void:
 	if definition == null:
 		return
+	_is_boss_card = false
 
 	_fit_art(Vector2(200, 120))
 	_refresh_all_labels(definition, upgrade_level)
@@ -75,6 +104,7 @@ func setup_from_definition(definition: CardDefinition, upgrade_level: int = 0) -
 func setup_from_boss_definition(definition: BossDefinition) -> void:
 	if definition == null:
 		return
+	_is_boss_card = true
 
 	_fit_art(Vector2(200, 120))
 	_refresh_boss_labels(definition)
@@ -243,6 +273,66 @@ func _on_mouse_exited() -> void:
 	if trait_overlay == null:
 		return
 	trait_overlay.hide_overlay()
+
+# =========================
+# HOLO ANIMATION
+# =========================
+
+func holo_animation(delta: float) -> void:
+	for state in _holo_states:
+		if state.tex == null:
+			continue
+		state.target_time_remaining = max(0.0, state.target_time_remaining - delta)
+		if state.target_time_remaining <= 0.0:
+			_pick_holo_target(state)
+
+		var to_target: Vector2 = state.target - state.pos
+		var alpha: float = 1.0 - exp(-delta * HOLO_MOVE_SPEED)
+		state.pos += to_target * alpha
+
+		var new_from: Vector2 = state.tex.fill_from
+		new_from.x = state.pos.x
+		new_from.y = state.pos.y
+		state.tex.fill_from = new_from
+
+func _holo_init() -> void:
+	_holo_states.clear()
+	_try_add_holo_light(holo_light)
+	_try_add_holo_light(holo_light_2)
+	_try_add_holo_light(holo_light_3)
+
+func _try_add_holo_light(light: PointLight2D) -> void:
+	if light == null:
+		return
+	var tex := light.texture
+	if tex == null or not (tex is GradientTexture2D):
+		return
+	var state := HoloState.new()
+	state.light = light
+	state.tex = tex as GradientTexture2D
+
+	var start: Vector2 = state.tex.fill_from
+	var start_x: float = clamp(start.x, HOLO_AREA_X_MIN, HOLO_AREA_X_MAX)
+	var start_y: float = clamp(start.y, HOLO_AREA_Y_MIN, HOLO_AREA_Y_MAX)
+	state.pos = Vector2(start_x, start_y)
+	state.target = state.pos
+	state.target_time_remaining = 0.0
+	_pick_holo_target(state)
+
+	_holo_states.append(state)
+
+func _pick_holo_target(state: HoloState) -> void:
+	var candidate: Vector2 = state.pos
+	for i in range(3):
+		candidate = Vector2(
+			_rng.randf_range(HOLO_AREA_X_MIN, HOLO_AREA_X_MAX),
+			_rng.randf_range(HOLO_AREA_Y_MIN, HOLO_AREA_Y_MAX)
+		)
+		if candidate.distance_to(state.pos) >= 0.05:
+			break
+	state.target = candidate
+	state.target_time_remaining = _rng.randf_range(HOLO_TARGET_MIN_TIME, HOLO_TARGET_MAX_TIME)
+
 
 # =========================
 # ARTE

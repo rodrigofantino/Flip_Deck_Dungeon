@@ -38,7 +38,7 @@ operator = 2
 input_name = "time"
 
 [sub_resource type="VisualShaderNodeFrame" id="VisualShaderNodeFrame_ny0p3"]
-size = Vector2(244.00002, 462)
+size = Vector2(244, 461.99994)
 title = "texture2"
 tint_color_enabled = true
 tint_color = Color(0.64038086, 0.9384651, 0.953125, 0.75)
@@ -97,14 +97,14 @@ tint_color = Color(0.64038086, 0.9384651, 0.953125, 0.75)
 attached_nodes = PackedInt32Array(7, 8)
 
 [sub_resource type="VisualShaderNodeFrame" id="VisualShaderNodeFrame_lv6lg"]
-size = Vector2(264.00012, 442)
+size = Vector2(264, 441.99994)
 title = "texture4"
 tint_color_enabled = true
 tint_color = Color(0.64038086, 0.9384651, 0.953125, 0.75)
 attached_nodes = PackedInt32Array(11, 12)
 
 [sub_resource type="VisualShaderNodeFrame" id="VisualShaderNodeFrame_nm0hh"]
-size = Vector2(284, 482)
+size = Vector2(284, 481.99994)
 title = "texture5"
 tint_color_enabled = true
 tint_color = Color(0.64038086, 0.9384651, 0.953125, 0.75)
