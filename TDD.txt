@@ -21,6 +21,8 @@ Responsable de:
 - XP y level up
 - Items (mano, equipamiento, sets)
 - Traits activos
+- Aplicar upgrades de heroe a stats runtime (HP, damage, armour, initiative, regen, block, evasion, lifesteal%, healing power)
+- Modificadores de economia (bono de oro, chance de drop y rareza)
 - Guardado/carga de run (user://save/save_run.json)
 - Guardado/carga de run_deck (user://save/run_deck.json)
 
@@ -31,7 +33,7 @@ Archivo: scripts/combat/combat_context.gd
 - Orquestador logico del combate
 - No conoce UI ni animaciones
 - Resuelve iniciativa y orden de turnos
-- Aplica damage, armour, lifesteal y thorns
+- Aplica damage, armour, lifesteal (flat + %), evasion, block (con escudo), regen y healing power
 - Comunica por senales (attack_started, damage_applied, card_died, combat_finished)
 
 ========================
@@ -81,3 +83,4 @@ Archivo: data/save_system.gd
 ========================
 - MusicManager global con playlists y crossfade
 - audio_bus_layout.tres con buses Master/Music/SFX
+- Settings mutea buses Music/SFX cuando slider = 0

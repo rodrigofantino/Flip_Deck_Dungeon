@@ -70,7 +70,9 @@ Nota:
 - Combate por turnos
 - Iniciativa por enemigo vs heroe para decidir el orden
 - Si el primero mata, el segundo no ataca
-- Armour mitiga dano; lifesteal y thorns se aplican en combate
+- Armour mitiga dano; lifesteal (flat + %) y thorns se aplican en combate
+- Evasion se chequea antes del bloqueo; bloqueo solo si hay escudo
+- Regen aplicada por ronda; healing power multiplica curaciones
 
 ========================
 8. ITEMS Y EQUIPAMIENTO (V1)
@@ -104,3 +106,9 @@ Nota:
 - Shop vende packs Forest y Dark Forest
 - Abrir pack da 5 cartas de enemigos por bioma (no tutorial)
 - Upgrade de carta: gastar 5 copias para +1 nivel (impacta stats en combate)
+
+========================
+12. OPCIONES (UI)
+========================
+- Sliders de volumen Master/Music/SFX
+- Opciones de video: modo pantalla, resolucion, VSync y limite de FPS

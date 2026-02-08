@@ -11,7 +11,8 @@ Este documento lista lo que YA esta implementado en el proyecto.
 - CombatManager orquesta turnos con iniciativa por enemigo
 - Formula de iniciativa: clamp(0.15, 0.85, 0.5 + (hero_init - enemy_init) * 0.05)
 - Orden de ataque respeta iniciativa; si el primero mata, el segundo no ataca
-- Mitigacion por armour, lifesteal y thorns aplicados en combate
+- Mitigacion por armour, lifesteal (flat + %), evasion y block (solo con escudo) aplicados en combate
+- Regen aplicada por ronda de combate y healing power amplifica curaciones
 - Recompensas por enemigo: oro + XP segun nivel
 - Level up: cura al maximo, escala stats (heroe +20%, enemigos +25%), actualiza niveles visibles
 - Traits activos se limpian al subir de nivel
@@ -75,7 +76,9 @@ Este documento lista lo que YA esta implementado en el proyecto.
 - Battle HUD con oro, danger y chance de atacar primero
 - VFX de victoria (rays, confetti, motes, mini cards, coins, shine)
 - MusicManager con playlists de menu y batalla + crossfade
-- Settings con sliders de volumen Master, Music y SFX
+- Settings con sliders de volumen Master, Music y SFX (mute real en 0)
+- Settings con opciones de video (modo pantalla, resolucion, VSync, limite FPS)
+- Popups de coleccion bloquean input en elementos de fondo (hero upgrades y upgrades de carta)
 
 ========================
 8. LOCALIZACION Y ASSETS
