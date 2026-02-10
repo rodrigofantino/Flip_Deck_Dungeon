@@ -148,6 +148,8 @@ static func get_persistent_gold() -> int:
 
 
 static func reset_progress() -> void:
+	if ProfileService:
+		ProfileService.reset_profile()
 	if FileAccess.file_exists(PROFILE_SAVE_PATH):
 		DirAccess.remove_absolute(PROFILE_SAVE_PATH)
 	if FileAccess.file_exists(COLLECTION_SAVE_PATH):

@@ -383,10 +383,7 @@ func _on_page_slot_clicked(slot: CollectionSlot) -> void:
 	if slot.current_def_id == "":
 		return
 	if slot.current_card_type == "hero":
-		if selected_hero_def_id == slot.current_def_id:
-			selected_hero_def_id = ""
-		else:
-			selected_hero_def_id = slot.current_def_id
+		selected_hero_def_id = slot.current_def_id
 	elif slot.current_card_type == "enemy":
 		_cycle_enemy_weight(slot.current_def_id, 1)
 	_update_selection_state()

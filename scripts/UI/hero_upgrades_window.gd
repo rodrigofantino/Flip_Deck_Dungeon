@@ -21,6 +21,9 @@ var _selected_hero_id: StringName = &""
 var _stat_rows: Dictionary = {}
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	if close_button:
+		close_button.process_mode = Node.PROCESS_MODE_ALWAYS
 	if dimmer:
 		dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
 		dimmer.gui_input.connect(_on_dimmer_gui_input)
@@ -360,8 +363,14 @@ func _get_display_stat_value(stat: int, stats: Dictionary) -> float:
 func _get_hero_display_name(hero_id: StringName) -> String:
 	var id_str: String = String(hero_id)
 	var def: CardDefinition = CardDatabase.get_definition(id_str)
+	if def == null and id_str.begins_with("hero_"):
+		def = CardDatabase.get_definition(id_str.substr(5))
+	if def == null and id_str == "hero":
+		def = CardDatabase.get_definition("knight_aprentice")
 	if def != null and not def.display_name.is_empty():
-		return def.display_name
+		return tr(def.display_name)
+	if id_str.begins_with("hero_"):
+		return id_str.substr(5)
 	return id_str
 
 func _get_hero_index(hero_id: StringName) -> int:

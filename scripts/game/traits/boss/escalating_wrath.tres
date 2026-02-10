@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://ua14wxa1grx77"]
+
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_trait"]
+
+[resource]
+script = ExtResource("1_trait")
+trait_id = "escalating_wrath"
+display_name = "TRAIT_ESCALATING_WRATH_NAME"
+description = "TRAIT_ESCALATING_WRATH_DESCRIPTION"
+trait_type = 1

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://dxq0wjllnysf8"]
+
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_trait"]
+
+[resource]
+script = ExtResource("1_trait")
+trait_id = "scorching_opener"
+display_name = "TRAIT_SCORCHING_OPENER_NAME"
+description = "TRAIT_SCORCHING_OPENER_DESCRIPTION"
+trait_type = 1

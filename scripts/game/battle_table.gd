@@ -23,6 +23,7 @@ var run_initialized: bool = false
 var suppress_level_up_popup: bool = false
 var victory_gold_awarded: bool = false
 var end_of_wave_pending: bool = false
+var pending_hero_upgrades: bool = false
 
 # =========================
 # VICTORY POPUP
@@ -33,6 +34,8 @@ var victory_popup: VictoryPopup = null
 var wave_popup: WavePopup = null
 var wave_popup_open: bool = false
 var suppress_wave_popup_once: bool = false
+var pending_wave_popup: bool = false
+var pending_trait_popup: bool = false
 
 # ==========================================
 # REGISTRO DE CARD VIEWS (UI)
@@ -377,6 +380,7 @@ func _handle_enemy_defeated(card_id: String) -> void:
 		combat_manager.clear_preferred_target()
 	var enemy_data: Dictionary = RunState.get_card(card_id)
 	suppress_wave_popup_once = _is_final_boss_enemy(enemy_data)
+	var is_miniboss := _is_mini_boss_enemy(enemy_data)
 	RunState.active_enemy_ids = _get_active_enemy_ids()
 	var victory_after_defeat: bool = not RunState.has_remaining_enemies(card_id)
 	suppress_level_up_popup = victory_after_defeat
@@ -403,7 +407,8 @@ func _handle_enemy_defeated(card_id: String) -> void:
 	if run_completed:
 		_show_victory()
 		return
-	if _is_mini_boss_enemy(enemy_data):
+	if is_miniboss:
+		pending_trait_popup = true
 		_show_level_up_popup(RunState.hero_level)
 	if wave_popup_open:
 		return
@@ -447,6 +452,12 @@ func _on_wave_completed(_wave_index: int) -> void:
 	if suppress_wave_popup_once:
 		suppress_wave_popup_once = false
 		return
+	if pending_hero_upgrades or (hero_upgrades_window != null and hero_upgrades_window.visible):
+		pending_wave_popup = true
+		return
+	if pending_trait_popup:
+		pending_wave_popup = true
+		return
 	if RunState.current_wave >= RunState.waves_per_run and RunState.is_current_wave_boss():
 		return
 	_show_wave_popup()
@@ -470,6 +481,20 @@ func _show_wave_popup() -> void:
 	get_tree().paused = true
 	wave_popup.show_popup(RunState.current_wave)
 
+func _try_show_pending_wave_popup() -> void:
+	if not pending_wave_popup:
+		return
+	if wave_popup_open:
+		return
+	if pending_hero_upgrades:
+		return
+	if level_up_popup != null and level_up_popup.visible:
+		return
+	if hero_upgrades_window != null and hero_upgrades_window.visible:
+		return
+	pending_wave_popup = false
+	_show_wave_popup()
+
 func _on_wave_continue() -> void:
 	if wave_popup == null:
 		return
@@ -481,6 +506,7 @@ func _on_wave_continue() -> void:
 		setup_enemy_deck()
 	current_phase = BattlePhase.IDLE
 	_update_hud_state()
+	_try_show_pending_hero_upgrades()
 
 func _on_wave_retreat() -> void:
 	if wave_popup != null:
@@ -501,12 +527,11 @@ func _on_pause_pressed() -> void:
 func _on_hero_level_up(new_level: int) -> void:
 	if suppress_level_up_popup:
 		return
-	if not _has_remaining_enemies():
-		return
 	RunState.save_run()
 	if hero_card_view != null:
 		hero_card_view.play_heal_effect()
-	_show_hero_upgrades_popup()
+	pending_hero_upgrades = true
+	_try_show_pending_hero_upgrades()
 
 # ==========================================
 # CREAR + POSICIONAR + ESCALAR
@@ -622,7 +647,7 @@ func _show_level_up_popup(new_level: int) -> void:
 	if level_up_popup == null:
 		level_up_popup = level_up_popup_scene.instantiate()
 		add_child(level_up_popup)
-		level_up_popup.z_index = 200
+		level_up_popup.z_index = 260
 
 		level_up_popup.trait_selected.connect(_on_trait_selected)
 
@@ -648,12 +673,34 @@ func _show_hero_upgrades_popup() -> void:
 	get_tree().paused = true
 	hero_upgrades_window.visible = true
 	hero_upgrades_window.show_for_hero(StringName(RunState.selected_hero_def_id))
+	pending_hero_upgrades = false
+
+func _is_modal_popup_open() -> bool:
+	if wave_popup_open or crossroads_open or pause_open:
+		return true
+	if level_up_popup != null and level_up_popup.visible:
+		return true
+	if hero_upgrades_window != null and hero_upgrades_window.visible:
+		return true
+	if victory_popup != null and victory_popup.visible:
+		return true
+	if defeat_popup != null and defeat_popup.visible:
+		return true
+	return false
+
+func _try_show_pending_hero_upgrades() -> void:
+	if not pending_hero_upgrades:
+		return
+	if _is_modal_popup_open():
+		return
+	_show_hero_upgrades_popup()
 
 func _on_hero_upgrades_closed() -> void:
 	get_tree().paused = false
 	if current_phase == BattlePhase.UI_LOCKED:
 		current_phase = BattlePhase.IDLE
 	_update_hud_state()
+	_try_show_pending_hero_upgrades()
 func _on_trait_selected(hero_trait_res: TraitResource) -> void:
 	print("ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Âª CONFIRMED TRAIT")
 	print("   hero:", hero_trait_res)
@@ -678,6 +725,9 @@ func _on_trait_selected(hero_trait_res: TraitResource) -> void:
 	get_tree().paused = false
 	current_phase = BattlePhase.IDLE
 	_update_hud_state()
+	pending_trait_popup = false
+	_try_show_pending_wave_popup()
+	_try_show_pending_hero_upgrades()
 
 
 # ==========================================
@@ -744,12 +794,14 @@ func _on_crossroads_closed() -> void:
 			setup_enemy_deck()
 			current_phase = BattlePhase.IDLE
 			_update_hud_state()
+			_try_show_pending_hero_upgrades()
 		else:
 			_show_victory()
 		return
 	if current_phase == BattlePhase.UI_LOCKED:
 		current_phase = BattlePhase.IDLE
 		_update_hud_state()
+	_try_show_pending_hero_upgrades()
 
 
 func _on_draw_pressed() -> void:
@@ -1385,6 +1437,7 @@ func _close_pause() -> void:
 	get_tree().paused = false
 	current_phase = phase_before_pause
 	_update_hud_state()
+	_try_show_pending_hero_upgrades()
 
 func _on_pause_menu_pressed() -> void:
 	RunState.save_run()

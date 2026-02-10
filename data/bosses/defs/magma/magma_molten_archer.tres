@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BossDefinition" load_steps=6 format=3 uid="uid://sr01sh5vc3xpl"]
+
+[ext_resource type="Script" uid="uid://u22tlmowy2cb" path="res://data/boss_definition.gd" id="1_def"]
+[ext_resource type="Texture2D" uid="uid://cevxtg48lxscq" path="res://assets/cards/art/boss/magma_cavern_Molten_Archer.png" id="2_art"]
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="2_trait_script"]
+[ext_resource type="Texture2D" uid="uid://i2wuc44n8s8c" path="res://assets/cards/frame/card_dark_forest_front.png" id="3_frame"]
+[ext_resource type="Resource" uid="uid://jrdntkilsv6m0" path="res://scripts/game/traits/boss/rapid_volley_fixed_2.tres" id="4_trait"]
+
+[resource]
+script = ExtResource("1_def")
+boss_id = "magma_molten_archer"
+boss_name = "Molten Archer"
+art = ExtResource("2_art")
+frame_texture = ExtResource("3_frame")
+biome_id = "magma_cavern"
+base_max_hp = 10
+base_damage = 5
+base_initiative = 8
+boss_traits = Array[ExtResource("2_trait_script")]([ExtResource("4_trait")])

@@ -25,12 +25,14 @@ func _ready() -> void:
 		(bg as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if grid:
 		grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	visibility_changed.connect(_on_visibility_changed)
 	_build_slots()
 	_load_collection()
 	_refresh()
 	_fit_slots()
 	if grid:
 		grid.resized.connect(_fit_slots)
+	call_deferred("_request_pageflip_control")
 
 func set_page_index(page_index: int) -> void:
 	if page_index < 0:
@@ -69,6 +71,14 @@ func _on_enemy_selected_toggled(slot: CollectionSlot, selected: bool) -> void:
 
 func _on_enemy_weight_changed(slot: CollectionSlot, weight: int) -> void:
 	get_tree().call_group("collection_root", "_on_page_enemy_weight_changed", slot, weight)
+
+func _on_visibility_changed() -> void:
+	if is_visible_in_tree():
+		_request_pageflip_control()
+
+func _request_pageflip_control() -> void:
+	if has_signal("manage_pageflip"):
+		manage_pageflip.emit(false)
 
 func _load_collection() -> void:
 	if CardDatabase.definitions.is_empty():

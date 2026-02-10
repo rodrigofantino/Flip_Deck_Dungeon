@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BossDefinition" load_steps=6 format=3 uid="uid://eb2gglnf5xzjc"]
+
+[ext_resource type="Script" uid="uid://u22tlmowy2cb" path="res://data/boss_definition.gd" id="1_def"]
+[ext_resource type="Texture2D" uid="uid://b2cbg7t6rmj3d" path="res://assets/cards/art/boss/magma_cavern_Furnace_Drake.png" id="2_art"]
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="2_trait_script"]
+[ext_resource type="Texture2D" uid="uid://i2wuc44n8s8c" path="res://assets/cards/frame/card_dark_forest_front.png" id="3_frame"]
+[ext_resource type="Resource" uid="uid://cnp1thm2xgcep" path="res://scripts/game/traits/boss/heat_aura.tres" id="4_trait"]
+
+[resource]
+script = ExtResource("1_def")
+boss_id = "magma_furnace_drake"
+boss_name = "Furnace Drake"
+art = ExtResource("2_art")
+frame_texture = ExtResource("3_frame")
+biome_id = "magma_cavern"
+base_max_hp = 14
+base_damage = 4
+base_initiative = 7
+boss_traits = Array[ExtResource("2_trait_script")]([ExtResource("4_trait")])

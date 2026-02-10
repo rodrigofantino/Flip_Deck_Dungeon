@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://kqxo7p9b4hk6h"]
+
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_trait"]
+
+[resource]
+script = ExtResource("1_trait")
+trait_id = "frostbite_strike_on_hit_taken"
+display_name = "TRAIT_FROSTBITE_STRIKE_ON_HIT_TAKEN_NAME"
+description = "TRAIT_FROSTBITE_STRIKE_ON_HIT_TAKEN_DESCRIPTION"
+trait_type = 1

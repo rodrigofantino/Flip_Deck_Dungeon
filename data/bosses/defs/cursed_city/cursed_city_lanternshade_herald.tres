@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BossDefinition" load_steps=6 format=3 uid="uid://09usto8ys28ev"]
+
+[ext_resource type="Script" uid="uid://u22tlmowy2cb" path="res://data/boss_definition.gd" id="1_def"]
+[ext_resource type="Texture2D" uid="uid://dpcy8l6cfmm5u" path="res://assets/cards/art/boss/cursed_city_Lanternshade_Herald.png" id="2_art"]
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="2_trait_script"]
+[ext_resource type="Texture2D" uid="uid://i2wuc44n8s8c" path="res://assets/cards/frame/card_dark_forest_front.png" id="3_frame"]
+[ext_resource type="Resource" uid="uid://pcvg1gs3xc4wp" path="res://scripts/game/traits/boss/grasping_darkness.tres" id="4_trait"]
+
+[resource]
+script = ExtResource("1_def")
+boss_id = "cursed_city_lanternshade_herald"
+boss_name = "Lanternshade Herald"
+art = ExtResource("2_art")
+frame_texture = ExtResource("3_frame")
+biome_id = "cursed_city"
+base_max_hp = 16
+base_damage = 3
+base_initiative = 5
+boss_traits = Array[ExtResource("2_trait_script")]([ExtResource("4_trait")])

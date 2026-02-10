@@ -1180,6 +1180,10 @@ func _apply_equipment_to_hero() -> void:
 	var add_regen: int = 0
 	var add_crit: int = 0
 	var has_shield: bool = false
+	var trait_flat_hp: int = 0
+	var trait_flat_damage: int = 0
+	var trait_hp_mult: float = 1.0
+	var trait_damage_mult: float = 1.0
 
 	var upgrade_mods := _get_hero_upgrade_modifiers()
 	var flat_mods: Dictionary = upgrade_mods.get("flat_int_mods", {})
@@ -1225,8 +1229,18 @@ func _apply_equipment_to_hero() -> void:
 	add_armour += upgrade_armour
 	add_regen += upgrade_regen
 
-	var new_max_hp := base_hp + add_hp
-	var new_damage := base_damage + add_damage
+	for trait_res in active_hero_traits:
+		if trait_res == null:
+			continue
+		if trait_res.trait_type != TraitResource.TraitType.HERO:
+			continue
+		trait_flat_hp += trait_res.hero_max_hp_bonus
+		trait_flat_damage += trait_res.hero_damage_bonus
+		trait_hp_mult *= trait_res.hero_hp_multiplier
+		trait_damage_mult *= trait_res.hero_damage_multiplier
+
+	var new_max_hp := int((base_hp + add_hp + trait_flat_hp) * trait_hp_mult)
+	var new_damage := int((base_damage + add_damage + trait_flat_damage) * trait_damage_mult)
 	var new_initiative := base_initiative + add_initiative
 
 	hero["max_hp"] = new_max_hp
@@ -2202,6 +2216,8 @@ func apply_hero_trait(trait_res: TraitResource) -> void:
 		return
 
 	recalc_card_stats(hero, active_hero_traits)
+	_apply_equipment_to_hero()
+	hero_stats_changed.emit()
 
 
 

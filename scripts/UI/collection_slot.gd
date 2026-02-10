@@ -42,7 +42,7 @@ const WEIGHT_COLORS := {
 	3: Color(0.98, 0.55, 0.2, 1.0)
 }
 
-const WEIGHT_BADGE_SIZE: Vector2 = Vector2(52, 20)
+const WEIGHT_BADGE_SIZE: Vector2 = Vector2(78, 30)
 const WEIGHT_BADGE_PADDING: Vector2 = Vector2(6, 6)
 
 signal slot_clicked(slot: CollectionSlot)

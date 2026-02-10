@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://4v4rv6rxhtl72"]
+
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_trait"]
+
+[resource]
+script = ExtResource("1_trait")
+trait_id = "cryo_shell"
+display_name = "TRAIT_CRYO_SHELL_NAME"
+description = "TRAIT_CRYO_SHELL_DESCRIPTION"
+trait_type = 1

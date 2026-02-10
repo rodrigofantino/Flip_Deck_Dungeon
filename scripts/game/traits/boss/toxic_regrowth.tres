@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TraitResource" load_steps=2 format=3 uid="uid://pzncses1e184n"]
+
+[ext_resource type="Script" uid="uid://bf4pgk48m3wu6" path="res://scripts/game/traits/trait_resource.gd" id="1_trait"]
+
+[resource]
+script = ExtResource("1_trait")
+trait_id = "toxic_regrowth"
+display_name = "TRAIT_TOXIC_REGROWTH_NAME"
+description = "TRAIT_TOXIC_REGROWTH_DESCRIPTION"
+trait_type = 1

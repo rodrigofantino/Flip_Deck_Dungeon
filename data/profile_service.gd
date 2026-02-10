@@ -20,6 +20,11 @@ func save_profile(profile: PlayerProfile) -> void:
 	if err != OK:
 		push_error("[ProfileService] Failed to save profile. Error=%s path=%s" % [str(err), PROFILE_PATH])
 
+func reset_profile() -> void:
+	_cached_profile = null
+	if ResourceLoader.exists(PROFILE_PATH):
+		DirAccess.remove_absolute(PROFILE_PATH)
+
 func load_profile() -> PlayerProfile:
 	return get_profile()
 
