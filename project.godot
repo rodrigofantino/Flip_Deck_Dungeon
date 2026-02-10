@@ -30,6 +30,7 @@ MusicManager="*res://scripts/audio/music_manager.gd"
 SaveSystem="*res://data/save_system.gd"
 SceneTransition="*res://scripts/UI/scene_transition.gd"
 ProfileService="*res://data/profile_service.gd"
+GameState="*res://autoload/game_state.gd"
 
 [display]
 

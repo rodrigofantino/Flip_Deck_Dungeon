@@ -1,4 +1,4 @@
-extends Control
+﻿extends Control
 
 @export var design_resolution: Vector2 = Vector2(1280, 720)
 
@@ -8,8 +8,31 @@ extends Control
 @onready var title_label: Label = $TopBar/TitleLabel
 @onready var page_label: Label = $TopBar/PageLabel
 @onready var upgrades_button: Button = $TopBar/UpgradesButton
+@onready var quest_button: Button = $QuestButton
+@onready var quest_popup: Control = $QuestPopup
+@onready var quest_popup_dimmer: ColorRect = $QuestPopup/Dimmer
+@onready var quest_popup_close: Button = $QuestPopup/Panel/Content/CloseButton
+@onready var quest_selector: QuestSelector = $QuestPopup/Panel/Content/QuestSelector
+@onready var quest_selected_label: Label = $QuestSelectedLabel
 @onready var selection_panel: VBoxContainer = $SelectionPanel
+@onready var select_hero_label: Label = $SelectionPanel/SelectHeroLabel
+@onready var select_enemies_label: Label = $SelectionPanel/SelectEnemiesLabel
+@onready var selection_error_label: Label = $SelectionPanel/SelectionErrorLabel
+@onready var start_dungeon_button: Button = $SelectionPanel/StartDungeonButton
 @onready var back_button: Button = $SelectionPanel/BackButton
+@onready var item_type_panel: VBoxContainer = $SelectionPanel/ItemTypeDistribution
+@onready var label_helmet: Label = $SelectionPanel/ItemTypeDistribution/RowHelmet/LabelHelmet
+@onready var label_armour: Label = $SelectionPanel/ItemTypeDistribution/RowArmour/LabelArmour
+@onready var label_gloves: Label = $SelectionPanel/ItemTypeDistribution/RowGloves/LabelGloves
+@onready var label_boots: Label = $SelectionPanel/ItemTypeDistribution/RowBoots/LabelBoots
+@onready var label_one_hand: Label = $SelectionPanel/ItemTypeDistribution/RowOneHand/LabelOneHand
+@onready var label_two_hands: Label = $SelectionPanel/ItemTypeDistribution/RowTwoHands/LabelTwoHands
+@onready var bar_helmet: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowHelmet/BarHelmet
+@onready var bar_armour: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowArmour/BarArmour
+@onready var bar_gloves: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowGloves/BarGloves
+@onready var bar_boots: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowBoots/BarBoots
+@onready var bar_one_hand: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowOneHand/BarOneHand
+@onready var bar_two_hands: ProgressBar = $SelectionPanel/ItemTypeDistribution/RowTwoHands/BarTwoHands
 @onready var booster_area: Control = $BoosterArea
 @onready var booster_list: VBoxContainer = $BoosterArea/BoosterList
 @onready var booster_popup: Control = $BoosterPopup
@@ -56,13 +79,38 @@ class PackView:
 	var name_key: String
 	var color: Color
 
+var selection_mode: bool = false
+var selected_hero_def_id: String = ""
+var selected_enemy_weights: Dictionary = {}
 var selected_pack: PackView = null
 var open_defs: Array[CardDefinition] = []
 var open_cards: Array[CardView] = []
 var open_collection: PlayerCollection = null
 var _pending_book_refresh: bool = false
 var _popup_def: CardDefinition = null
+var _selection_error_override: String = ""
 var hero_upgrades_window: HeroUpgradesWindow = null
+var _last_weight_click_ms: Dictionary = {}
+
+const MIN_ENEMY_SELECTION: int = 2
+const MAX_ENEMY_SELECTION: int = 5
+const MIN_ENEMY_WEIGHT: int = 1
+const MAX_ENEMY_WEIGHT: int = 3
+const WEIGHT_CLICK_DEBOUNCE_MS: int = 80
+
+const ITEM_TYPE_ORDER: Array[int] = [
+	CardDefinition.ItemType.HELMET,
+	CardDefinition.ItemType.ARMOUR,
+	CardDefinition.ItemType.GLOVES,
+	CardDefinition.ItemType.BOOTS,
+	CardDefinition.ItemType.ONE_HAND,
+	CardDefinition.ItemType.TWO_HANDS
+]
+
+func _enter_tree() -> void:
+	if RunState:
+		# Ensure selection mode is active before child nodes run _ready().
+		RunState.selection_pending = true
 
 func _ready() -> void:
 	_configure_design_layout()
@@ -71,7 +119,7 @@ func _ready() -> void:
 	_wire_ui()
 	_setup_book_view()
 	_refresh_boosters()
-	_hide_selection_ui()
+	_init_selection_ui()
 	_set_booster_interactivity(true)
 	_refresh_book_content()
 	_update_book_input_block()
@@ -99,7 +147,7 @@ func _apply_design_layout() -> void:
 
 func _wire_ui() -> void:
 	if title_label:
-		title_label.text = tr("COLLECTION_TITLE")
+		title_label.text = "Guild"
 	if prev_button:
 		prev_button.text = tr("COLLECTION_PREV")
 		prev_button.pressed.connect(_on_prev_pressed)
@@ -111,10 +159,23 @@ func _wire_ui() -> void:
 	if upgrades_button:
 		upgrades_button.text = tr("COLLECTION_UPGRADES_BUTTON")
 		upgrades_button.pressed.connect(_on_upgrades_pressed)
+	if quest_button:
+		quest_button.text = "Quest Selection"
+		quest_button.pressed.connect(_open_quest_popup)
+	if quest_selector:
+		quest_selector.quest_changed.connect(_on_quest_changed)
+	_update_selected_quest_label()
 	if back_button:
 		back_button.pressed.connect(func() -> void:
 			SceneTransition.change_scene("res://Scenes/ui/main_menu.tscn")
 		)
+	if quest_popup:
+		quest_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+	if quest_popup_dimmer:
+		quest_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+		quest_popup_dimmer.gui_input.connect(_on_quest_dimmer_gui_input)
+	if quest_popup_close:
+		quest_popup_close.pressed.connect(_close_quest_popup)
 	if booster_popup and booster_popup_title:
 		booster_popup_title.text = tr("COLLECTION_BOOSTER_POPUP_TITLE")
 	if booster_popup_open:
@@ -167,6 +228,8 @@ func _is_click_blocked_by_ui(global_pos: Vector2) -> bool:
 	var blockers: Array[Control] = []
 	if selection_panel and selection_panel.visible:
 		blockers.append(selection_panel)
+	if quest_popup and quest_popup.visible:
+		blockers.append(quest_popup)
 	if booster_popup and booster_popup.visible:
 		blockers.append(booster_popup)
 	if open_popup and open_popup.visible:
@@ -182,7 +245,8 @@ func _is_click_blocked_by_ui(global_pos: Vector2) -> bool:
 
 func _is_modal_popup_visible() -> bool:
 	return (
-		(booster_popup and booster_popup.visible)
+		(quest_popup and quest_popup.visible)
+		or (booster_popup and booster_popup.visible)
 		or (open_popup and open_popup.visible)
 		or (card_popup and card_popup.visible)
 		or (hero_upgrades_window and hero_upgrades_window.visible)
@@ -208,6 +272,35 @@ func _on_popup_dimmer_gui_input(event: InputEvent) -> void:
 		var vp := get_viewport()
 		if vp:
 			vp.set_input_as_handled()
+
+func _on_quest_dimmer_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		accept_event()
+		_close_quest_popup()
+
+func _open_quest_popup() -> void:
+	if quest_popup == null:
+		return
+	quest_popup.visible = true
+	quest_popup.z_index = 240
+	_update_book_input_block()
+
+func _on_quest_changed(_quest_id: StringName, _quest_name: String) -> void:
+	_update_selected_quest_label()
+
+func _update_selected_quest_label() -> void:
+	if quest_selected_label == null:
+		return
+	var quest_name: String = "Forest"
+	if quest_selector != null:
+		quest_name = quest_selector.get_selected_quest_name()
+	quest_selected_label.text = "Selected Quest: %s" % quest_name
+
+func _close_quest_popup() -> void:
+	if quest_popup == null:
+		return
+	quest_popup.visible = false
+	_update_book_input_block()
 
 func _setup_book_view() -> void:
 	if book_view == null:
@@ -279,33 +372,307 @@ func _update_navigation_state() -> void:
 	if next_button:
 		next_button.disabled = book == null or book.is_animating or book.current_spread >= book.total_spreads
 
-func _hide_selection_ui() -> void:
+func _init_selection_ui() -> void:
+	selection_mode = RunState.selection_pending
+	print("[Guild] selection_pending=", RunState.selection_pending)
+	if selection_panel:
+		selection_panel.visible = true
+		_configure_selection_panel_input()
+	if selection_mode:
+		_reset_selection_state()
+	_set_booster_interactivity(true)
+	if select_hero_label:
+		select_hero_label.text = tr("COLLECTION_SELECT_HERO")
+		select_hero_label.visible = selection_mode
+	if select_enemies_label:
+		select_enemies_label.text = tr("COLLECTION_SELECT_ENEMIES")
+		select_enemies_label.visible = selection_mode
+	if start_dungeon_button:
+		start_dungeon_button.text = tr("COLLECTION_START_DUNGEON")
+		start_dungeon_button.pressed.connect(_on_start_dungeon_pressed)
+		start_dungeon_button.visible = selection_mode
+	if item_type_panel:
+		item_type_panel.visible = selection_mode
+	if selection_error_label:
+		selection_error_label.text = ""
+		selection_error_label.visible = selection_mode
+	_update_selection_state()
+	if not selection_mode:
+		_clear_selection_visuals()
+
+func _configure_selection_panel_input() -> void:
 	if selection_panel == null:
 		return
 	_set_mouse_filter_recursive(selection_panel, Control.MOUSE_FILTER_IGNORE)
-	var hide_paths := [
-		"SelectHeroLabel",
-		"SelectEnemiesLabel",
-		"SelectionErrorLabel",
-		"ItemTypeDistribution",
-		"StartDungeonButton"
-	]
-	for path in hide_paths:
-		var node := selection_panel.get_node_or_null(path)
-		if node and node is CanvasItem:
-			(node as CanvasItem).visible = false
+	if start_dungeon_button:
+		start_dungeon_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	if back_button:
 		back_button.mouse_filter = Control.MOUSE_FILTER_STOP
+
+func _clear_selection_visuals() -> void:
+	for slot in get_tree().get_nodes_in_group("collection_slots"):
+		if slot is CollectionSlot:
+			(slot as CollectionSlot).set_selected(false)
+			(slot as CollectionSlot).configure_run_controls(false, false, false, MIN_ENEMY_WEIGHT)
+
+func _reset_selection_state() -> void:
+	selected_hero_def_id = ""
+	selected_enemy_weights.clear()
+	_selection_error_override = ""
+	_last_weight_click_ms.clear()
+	if selection_error_label:
+		selection_error_label.text = ""
 
 func _on_page_slot_clicked(slot: CollectionSlot) -> void:
 	if slot == null:
 		return
+	if RunState.selection_pending and not selection_mode:
+		selection_mode = true
+	if not selection_mode:
+		if slot.current_card_type == "hero":
+			_open_hero_upgrades()
+		else:
+			_open_card_popup(slot)
+		return
+	if not slot.is_obtained:
+		return
 	if slot.current_def_id == "":
 		return
 	if slot.current_card_type == "hero":
-		_open_hero_upgrades()
+		selected_hero_def_id = slot.current_def_id
+	elif slot.current_card_type == "enemy":
+		_cycle_enemy_weight(slot.current_def_id, 1)
+	_update_selection_state()
+
+func _on_page_slot_right_clicked(slot: CollectionSlot) -> void:
+	if slot == null:
+		return
+	if RunState.selection_pending and not selection_mode:
+		selection_mode = true
+	if not selection_mode:
+		return
+	if not slot.is_obtained:
+		return
+	if slot.current_def_id == "":
+		return
+	if slot.current_card_type != "enemy":
+		return
+	_cycle_enemy_weight(slot.current_def_id, -1)
+	_update_selection_state()
+
+func _on_page_enemy_selected(slot: CollectionSlot, selected: bool) -> void:
+	if not selection_mode or slot == null:
+		return
+	if slot.current_card_type != "enemy":
+		return
+	_set_enemy_selected(slot.current_def_id, selected)
+	_update_selection_state()
+
+func _on_page_enemy_weight_changed(slot: CollectionSlot, weight: int) -> void:
+	if not selection_mode or slot == null:
+		return
+	if slot.current_card_type != "enemy":
+		return
+	_set_enemy_weight(slot.current_def_id, weight)
+	_update_selection_state()
+
+func _update_slot_selection(slot: CollectionSlot) -> void:
+	if slot == null:
+		return
+	var selected := false
+	if slot.current_card_type == "hero":
+		selected = slot.current_def_id == selected_hero_def_id
+	elif slot.current_card_type == "enemy":
+		selected = selected_enemy_weights.has(slot.current_def_id)
+	print("[Guild] slot select:", slot.current_def_id, " type=", slot.current_card_type, " selected=", selected)
+	slot.set_selected(selected)
+	var show_controls := selection_mode and slot.current_card_type == "enemy" and slot.is_obtained
+	var weight := int(selected_enemy_weights.get(slot.current_def_id, 0))
+	slot.configure_run_controls(show_controls, selection_mode, selected, weight)
+	if show_controls:
+		var spawn_weight := int(selected_enemy_weights.get(slot.current_def_id, 0))
+		var overlay_text := _build_enemy_item_type_overlay(slot.current_def_id, spawn_weight)
+		slot.configure_item_type_overlay(true, overlay_text)
 	else:
-		_open_card_popup(slot)
+		slot.configure_item_type_overlay(false, "")
+
+func _update_selection_state() -> void:
+	if not selection_mode:
+		if select_hero_label:
+			select_hero_label.visible = false
+		if select_enemies_label:
+			select_enemies_label.visible = false
+		if item_type_panel:
+			item_type_panel.visible = false
+		if start_dungeon_button:
+			start_dungeon_button.visible = false
+		_clear_selection_visuals()
+		return
+	var has_hero := selected_hero_def_id != ""
+	var enemy_count := selected_enemy_weights.size()
+	var has_enemies := enemy_count >= MIN_ENEMY_SELECTION
+	if select_hero_label:
+		_set_hint_visible(select_hero_label, not has_hero)
+	if select_enemies_label:
+		_set_hint_visible(select_enemies_label, not has_enemies)
+	if start_dungeon_button:
+		start_dungeon_button.disabled = not (has_hero and has_enemies and enemy_count <= MAX_ENEMY_SELECTION)
+	if selection_error_label:
+		selection_error_label.text = _get_selection_error()
+		selection_error_label.visible = selection_mode and selection_error_label.text != ""
+	for slot in get_tree().get_nodes_in_group("collection_slots"):
+		if slot is CollectionSlot:
+			_update_slot_selection(slot)
+	_update_item_type_distribution()
+
+func _set_enemy_selected(enemy_id: String, selected: bool) -> void:
+	if enemy_id == "":
+		return
+	if selected:
+		if selected_enemy_weights.size() >= MAX_ENEMY_SELECTION:
+			_selection_error_override = tr("COLLECTION_ERROR_MAX_ENEMIES").format({
+				"value": MAX_ENEMY_SELECTION
+			})
+			return
+		if not selected_enemy_weights.has(enemy_id):
+			selected_enemy_weights[enemy_id] = MIN_ENEMY_WEIGHT
+	else:
+		if selected_enemy_weights.has(enemy_id):
+			selected_enemy_weights.erase(enemy_id)
+	_selection_error_override = ""
+
+func _set_enemy_weight(enemy_id: String, weight: int) -> void:
+	if enemy_id == "":
+		return
+	if not selected_enemy_weights.has(enemy_id):
+		return
+	var clamped := clampi(weight, MIN_ENEMY_WEIGHT, MAX_ENEMY_WEIGHT)
+	selected_enemy_weights[enemy_id] = clamped
+
+func _cycle_enemy_weight(enemy_id: String, direction: int) -> void:
+	if enemy_id == "":
+		return
+	var now := Time.get_ticks_msec()
+	var last := int(_last_weight_click_ms.get(enemy_id, -999999))
+	if (now - last) < WEIGHT_CLICK_DEBOUNCE_MS:
+		return
+	_last_weight_click_ms[enemy_id] = now
+	var current := int(selected_enemy_weights.get(enemy_id, 0))
+	var next := current
+	if current == 0:
+		if selected_enemy_weights.size() >= MAX_ENEMY_SELECTION:
+			_selection_error_override = tr("COLLECTION_ERROR_MAX_ENEMIES").format({
+				"value": MAX_ENEMY_SELECTION
+			})
+			return
+		next = MAX_ENEMY_WEIGHT if direction < 0 else MIN_ENEMY_WEIGHT
+		selected_enemy_weights[enemy_id] = next
+		_selection_error_override = ""
+		return
+
+	if direction > 0:
+		if current >= MAX_ENEMY_WEIGHT:
+			selected_enemy_weights.erase(enemy_id)
+		else:
+			selected_enemy_weights[enemy_id] = current + 1
+	else:
+		if current <= MIN_ENEMY_WEIGHT:
+			selected_enemy_weights.erase(enemy_id)
+		else:
+			selected_enemy_weights[enemy_id] = current - 1
+	_selection_error_override = ""
+
+func _get_selection_error() -> String:
+	if _selection_error_override != "":
+		return _selection_error_override
+	var count := selected_enemy_weights.size()
+	if count < MIN_ENEMY_SELECTION:
+		return tr("COLLECTION_ERROR_MIN_ENEMIES").format({
+			"value": MIN_ENEMY_SELECTION
+		})
+	if count > MAX_ENEMY_SELECTION:
+		return tr("COLLECTION_ERROR_MAX_ENEMIES").format({
+			"value": MAX_ENEMY_SELECTION
+		})
+	return ""
+
+func _build_item_type_scores() -> Dictionary:
+	var scores: Dictionary = {}
+	for item_type in ITEM_TYPE_ORDER:
+		scores[item_type] = 0
+
+	for enemy_id in selected_enemy_weights.keys():
+		var spawn_weight := int(selected_enemy_weights.get(enemy_id, 0))
+		if spawn_weight <= 0:
+			continue
+		var def: CardDefinition = CardDatabase.get_definition(String(enemy_id))
+		if def == null:
+			continue
+		var weights: Dictionary = def.get_allowed_item_type_weights()
+		for item_type in ITEM_TYPE_ORDER:
+			var weight := int(weights.get(item_type, 0))
+			if weight <= 0:
+				continue
+			var current := int(scores.get(item_type, 0))
+			scores[item_type] = current + (spawn_weight * weight)
+
+	return scores
+
+func _update_item_type_distribution() -> void:
+	if item_type_panel == null:
+		return
+	var scores: Dictionary = _build_item_type_scores()
+	var total: int = 0
+	for item_type in ITEM_TYPE_ORDER:
+		total += int(scores.get(item_type, 0))
+
+	_update_distribution_row(label_helmet, bar_helmet, CardDefinition.ItemType.HELMET, scores, total)
+	_update_distribution_row(label_armour, bar_armour, CardDefinition.ItemType.ARMOUR, scores, total)
+	_update_distribution_row(label_gloves, bar_gloves, CardDefinition.ItemType.GLOVES, scores, total)
+	_update_distribution_row(label_boots, bar_boots, CardDefinition.ItemType.BOOTS, scores, total)
+	_update_distribution_row(label_one_hand, bar_one_hand, CardDefinition.ItemType.ONE_HAND, scores, total)
+	_update_distribution_row(label_two_hands, bar_two_hands, CardDefinition.ItemType.TWO_HANDS, scores, total)
+
+func _update_distribution_row(label: Label, bar: ProgressBar, item_type: int, scores: Dictionary, total: int) -> void:
+	if label == null or bar == null:
+		return
+	var score := int(scores.get(item_type, 0))
+	var percent: int = 0
+	if total > 0:
+		percent = int(round((float(score) / float(total)) * 100.0))
+	label.text = "%s %d%%" % [tr(CardDefinition.get_item_type_name(item_type)), percent]
+	bar.value = percent
+	bar.tooltip_text = "%d%%" % percent
+
+func _build_enemy_item_type_overlay(def_id: String, spawn_weight: int) -> String:
+	var def: CardDefinition = CardDatabase.get_definition(def_id)
+	if def == null:
+		return ""
+	var weights: Dictionary = def.get_allowed_item_type_weights()
+	var total: int = 0
+	for item_type in ITEM_TYPE_ORDER:
+		total += int(weights.get(item_type, 0))
+	if total <= 0:
+		total = 1
+
+	var lines: Array[String] = []
+	lines.append(tr("COLLECTION_SPAWN_WEIGHT").format({
+		"value": spawn_weight
+	}))
+	for item_type in ITEM_TYPE_ORDER:
+		var weight := int(weights.get(item_type, 0))
+		var percent := int(round((float(weight) / float(total)) * 100.0))
+		var name := tr(CardDefinition.get_item_type_name(item_type))
+		lines.append("%s: %d (%d%%)" % [name, weight, percent])
+
+	return "\n".join(lines)
+
+func _set_hint_visible(label: Label, show: bool) -> void:
+	if label == null:
+		return
+	label.visible = true
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.modulate.a = 1.0 if show else 0.0
 
 func _set_booster_interactivity(enabled: bool) -> void:
 	if booster_area:
@@ -316,6 +683,83 @@ func _set_booster_interactivity(enabled: bool) -> void:
 	if booster_popup:
 		booster_popup.visible = enabled and booster_popup.visible
 
+func _on_start_dungeon_pressed() -> void:
+	print("[Guild] StartDungeon pressed. hero=", selected_hero_def_id, " enemies=", selected_enemy_weights.size())
+	var error_msg := _get_selection_error()
+	if selected_hero_def_id == "" or error_msg != "":
+		push_warning("[Guild] StartDungeon blocked. hero or enemies missing/invalid.")
+		return
+	if quest_selector and GameState != null:
+		GameState.selected_quest_id = quest_selector.get_selected_quest_id()
+		GameState.selected_quest_level = quest_selector.get_selected_quest_level()
+	var scene_path := "res://Scenes/battle_table.tscn"
+	print("[Guild] checking scene exists:", scene_path)
+	if not ResourceLoader.exists(scene_path):
+		push_error("[Guild] battle_table.tscn no existe en %s" % scene_path)
+		return
+	print("[Guild] scene exists OK")
+	var file := FileAccess.open(scene_path, FileAccess.READ)
+	if file == null:
+		push_error("[Guild] No se pudo abrir battle_table.tscn. Error=%s" % str(FileAccess.get_open_error()))
+	else:
+		var first_line := file.get_line()
+		file.close()
+		print("[Guild] battle_table first line:", first_line)
+	var weights: Dictionary = {}
+	for key in selected_enemy_weights.keys():
+		weights[String(key)] = int(selected_enemy_weights.get(key, MIN_ENEMY_WEIGHT))
+	print("[Guild] enemies list size=", weights.size())
+	RunState.reset_run()
+	print("[Guild] RunState.reset_run OK")
+	RunState.set_run_selection(selected_hero_def_id, weights)
+	print("[Guild] RunState.set_run_selection OK")
+	RunState.build_run_deck_from_selection()
+	print("[Guild] RunState.build_run_deck_from_selection OK")
+	RunState.selection_pending = false
+	print("[Guild] selection_pending=false")
+	var err := SceneTransition.change_scene(scene_path)
+	print("[Guild] change_scene_to_file err=", err)
+	if err != OK:
+		_debug_battle_table_deps()
+		var packed = ResourceLoader.load(scene_path, "PackedScene", ResourceLoader.CACHE_MODE_IGNORE)
+		var is_null: bool = packed == null
+		var is_valid: bool = is_instance_valid(packed)
+		var class_name_str: String = ""
+		if is_valid:
+			class_name_str = packed.get_class()
+		print(
+			"[Guild] ResourceLoader.load(scene_path)=",
+			packed,
+			" typeof=",
+			typeof(packed),
+			" null=",
+			is_null,
+			" valid=",
+			is_valid,
+			" class=",
+			class_name_str
+		)
+		if is_null or not is_valid:
+			push_error("[Guild] battle_table.tscn no cargo o es invalido")
+
+func _debug_battle_table_deps() -> void:
+	var deps := [
+		"res://scripts/UI/crossroads_popup.gd",
+		"res://scripts/game/battle_table.gd",
+		"res://Scenes/cards/card_view.tscn",
+		"res://assets/stonefglordark.png",
+		"res://Scenes/ui/battle_hud.tscn",
+		"res://Scenes/ui/defeat_popup.tscn",
+		"res://Scenes/ui/victory_popup.tscn",
+		"res://Scenes/ui/xp_hud.tscn",
+		"res://Scenes/ui/level_up_popup.tscn",
+		"res://Scenes/ui/crossroads_popup_fixed.tscn",
+		"res://Scenes/ui/pause_popup.tscn",
+	]
+	for path in deps:
+		var res = ResourceLoader.load(path)
+		var ok := res != null and is_instance_valid(res)
+		print("[Guild] dep load:", path, " ok=", ok, " type=", typeof(res))
 
 func _on_prev_pressed() -> void:
 	_change_book_page(false)
@@ -867,7 +1311,7 @@ func _get_display_upgrade_level(def: CardDefinition, base_upgrade: int) -> int:
 	var progression: HeroProgression = profile.get_or_create_progression(StringName(def.definition_id))
 	return base_upgrade + max(0, progression.level - 1)
 
-func _get_ordered_def_ids() -> Array[String]:
+func _get_ordered_def_ids(is_play_mode: bool) -> Array[String]:
 	var hero_ids: Array[String] = []
 	var forest_ids: Array[String] = []
 	var dark_forest_ids: Array[String] = []
@@ -956,19 +1400,25 @@ func _go_to_card_page(definition_id: String) -> void:
 	if collection == null:
 		collection = SaveSystem.ensure_collection()
 	var types: Array[String] = []
-	var order := _get_ordered_def_ids()
-	var all_ids: Array[String] = []
-	var seen_ids: Dictionary = {}
-	for def_key in CardDatabase.definitions.keys():
-		var def: CardDefinition = CardDatabase.get_definition(String(def_key))
-		if def == null:
-			continue
-		var def_id := String(def.definition_id)
-		if def_id == "" or seen_ids.has(def_id):
-			continue
-		seen_ids[def_id] = true
-		all_ids.append(def_id)
-	types = _sort_ids_by_order(all_ids, order)
+	var order := _get_ordered_def_ids(RunState.selection_pending)
+	if RunState.selection_pending:
+		var ids: Array[String] = []
+		for def_id in collection.get_all_types():
+			ids.append(String(def_id))
+		types = _sort_ids_by_order(ids, order)
+	else:
+		var all_ids: Array[String] = []
+		var seen_ids: Dictionary = {}
+		for def_key in CardDatabase.definitions.keys():
+			var def: CardDefinition = CardDatabase.get_definition(String(def_key))
+			if def == null:
+				continue
+			var def_id := String(def.definition_id)
+			if def_id == "" or seen_ids.has(def_id):
+				continue
+			seen_ids[def_id] = true
+			all_ids.append(def_id)
+		types = _sort_ids_by_order(all_ids, order)
 	if types.is_empty():
 		return
 	var slots_per_page: int = 9

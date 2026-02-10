@@ -151,8 +151,6 @@ const TRAIT_DB_PATH := "res://data/traits/trait_database_default.tres"
 # BOSSES
 # =========================
 const BOSS_DEFS_FOLDER := "res://data/bosses/defs"
-const MINI_BOSS_WAVES: Array[int] = [5, 10, 15]
-const FINAL_BOSS_WAVES: Array[int] = [20]
 const MINI_BOSS_IDS: Array[String] = [
 	"forest_stag_king",
 	"forest_boar_warden",
@@ -161,6 +159,30 @@ const MINI_BOSS_IDS: Array[String] = [
 const FINAL_BOSS_ID: String = "forest_fallen_elf"
 
 @export var boss_catalog: BossCatalog
+
+# =========================
+# QUESTS
+# =========================
+const QUEST_DEFS_FOLDER: String = "res://data/quests"
+const MINI_BOSS_INTERVAL: int = 5
+
+enum QuestPhase {
+	WAVES,
+	MINIBOSS,
+	FINAL_BOSS
+}
+
+var current_quest_id: String = "forest"
+var current_quest_level: int = 1
+var quest_phase: int = QuestPhase.WAVES
+var quest_use_legacy_schedule: bool = true
+var quest_miniboss_queue: Array[String] = []
+var quest_miniboss_ids_base: Array[String] = []
+var quest_final_boss_id: String = ""
+var quest_completion_gold: int = 0
+var quest_completion_gold_awarded: bool = false
+
+@export var quest_catalog: QuestCatalog
 
 
 
@@ -174,6 +196,7 @@ func _ready() -> void:
 		equipment_layout_knight = load(EQUIPMENT_LAYOUT_KNIGHT_PATH)
 	_ensure_equipment_manager()
 	_ensure_boss_catalog()
+	_ensure_quest_catalog()
 	_load_upgrade_levels()
 	_apply_equipment_to_hero()
 
@@ -195,6 +218,19 @@ func get_boss_definition(boss_id: String) -> BossDefinition:
 	if boss_catalog == null:
 		return null
 	return boss_catalog.get_by_id(boss_id)
+
+func _ensure_quest_catalog() -> void:
+	if quest_catalog == null:
+		quest_catalog = QuestCatalog.new()
+		quest_catalog.quests_folder = QUEST_DEFS_FOLDER
+	quest_catalog.load_all()
+
+func get_quest_definition(quest_id: String) -> QuestDefinition:
+	if quest_catalog == null:
+		_ensure_quest_catalog()
+	if quest_catalog == null:
+		return null
+	return quest_catalog.get_by_id(quest_id)
 
 ######################################
 # INIT RUN
@@ -267,6 +303,89 @@ func set_run_selection(hero_def_id: String, weights: Dictionary) -> void:
 	item_instance_counter = 0
 	hand_items.clear()
 	equipped_items = ["", "", "", "", "", "", ""]
+	apply_selected_quest()
+
+func apply_selected_quest() -> void:
+	var desired_id: String = "forest"
+	var desired_level: int = 1
+	if GameState != null and run_mode != "tutorial":
+		desired_id = String(GameState.selected_quest_id)
+		desired_level = int(GameState.selected_quest_level)
+	desired_level = clampi(desired_level, 1, 6)
+
+	current_quest_id = desired_id
+	current_quest_level = desired_level
+	quest_phase = QuestPhase.WAVES
+	quest_completion_gold_awarded = false
+	quest_miniboss_queue.clear()
+	quest_miniboss_ids_base.clear()
+	quest_final_boss_id = ""
+	quest_use_legacy_schedule = (current_quest_id == "forest") or (run_mode == "tutorial")
+
+	_ensure_quest_catalog()
+	var quest_def: QuestDefinition = get_quest_definition(current_quest_id)
+	if quest_def == null:
+		if current_quest_id != "forest":
+			push_warning("[RunManager] QuestDefinition no encontrada: " + current_quest_id + ". Usando Forest.")
+		current_quest_id = "forest"
+		quest_use_legacy_schedule = true
+		quest_def = get_quest_definition(current_quest_id)
+
+	if quest_def == null:
+		waves_per_run = 20
+		enemies_per_wave = 5
+		quest_completion_gold = _calc_completion_gold_fallback(desired_level)
+		quest_miniboss_ids_base = MINI_BOSS_IDS.duplicate()
+		quest_miniboss_queue = quest_miniboss_ids_base.duplicate()
+		quest_final_boss_id = FINAL_BOSS_ID
+		return
+
+	_apply_quest_definition(quest_def, desired_level)
+
+func _apply_quest_definition(quest_def: QuestDefinition, level: int) -> void:
+	if quest_def == null:
+		return
+	var waves: int = quest_def.get_waves(level)
+	waves = max(1, waves)
+	waves_per_run = waves
+	if quest_use_legacy_schedule:
+		if enemies_per_wave <= 0:
+			var base_enemies: int = quest_def.base_enemies_per_wave
+			enemies_per_wave = max(1, base_enemies)
+		quest_completion_gold = quest_def.get_completion_gold(level)
+		quest_miniboss_ids_base = quest_def.miniboss_ids.duplicate()
+		if quest_miniboss_ids_base.is_empty():
+			quest_miniboss_ids_base = MINI_BOSS_IDS.duplicate()
+		quest_miniboss_queue = quest_miniboss_ids_base.duplicate()
+		quest_final_boss_id = quest_def.boss_id if not quest_def.boss_id.strip_edges().is_empty() else FINAL_BOSS_ID
+		return
+
+	var enemies: int = quest_def.get_enemies_per_wave(level)
+	enemies_per_wave = max(1, enemies)
+	quest_miniboss_ids_base = quest_def.miniboss_ids.duplicate()
+	quest_miniboss_queue = quest_miniboss_ids_base.duplicate()
+	quest_final_boss_id = quest_def.boss_id
+	quest_completion_gold = quest_def.get_completion_gold(level)
+
+func _calc_completion_gold_fallback(level: int) -> int:
+	var clamped_level := clampi(level, 1, 6)
+	var factor: float = pow(1.5, float(clamped_level - 1))
+	return int(round(50.0 * factor))
+
+func get_current_waves() -> int:
+	return waves_per_run
+
+func get_current_enemies_per_wave() -> int:
+	return enemies_per_wave
+
+func get_current_miniboss_ids() -> Array[String]:
+	return quest_miniboss_queue.duplicate()
+
+func get_current_boss_id() -> String:
+	return quest_final_boss_id
+
+func get_current_completion_gold() -> int:
+	return quest_completion_gold
 
 func set_enemy_selected(enemy_id: String, selected: bool) -> void:
 	if enemy_id.is_empty():
@@ -882,6 +1001,15 @@ func _add_gold(amount: int) -> void:
 			final_amount = int(round(float(amount) * (1.0 + bonus)))
 	gold += max(0, final_amount)
 	gold_changed.emit(gold)
+
+func apply_quest_completion_reward() -> void:
+	if quest_completion_gold_awarded:
+		return
+	if quest_completion_gold <= 0:
+		quest_completion_gold_awarded = true
+		return
+	_add_gold(quest_completion_gold)
+	quest_completion_gold_awarded = true
 
 func get_run_gold() -> int:
 	return gold
@@ -1578,6 +1706,14 @@ func save_run():
 		"waves_per_run": waves_per_run,
 		"enemies_per_wave": enemies_per_wave,
 		"enemies_defeated_in_wave": enemies_defeated_in_wave,
+		"current_quest_id": current_quest_id,
+		"current_quest_level": current_quest_level,
+		"quest_phase": quest_phase,
+		"quest_use_legacy_schedule": quest_use_legacy_schedule,
+		"quest_miniboss_queue": quest_miniboss_queue,
+		"quest_final_boss_id": quest_final_boss_id,
+		"quest_completion_gold": quest_completion_gold,
+		"quest_completion_gold_awarded": quest_completion_gold_awarded,
 		"hero_level": hero_level,
 		"hero_xp": hero_xp,
 		"run_xp_earned": run_xp_earned,
@@ -1652,6 +1788,28 @@ func load_run():
 	waves_per_run = int(data.get("waves_per_run", 20))
 	enemies_per_wave = int(data.get("enemies_per_wave", 5))
 	enemies_defeated_in_wave = int(data.get("enemies_defeated_in_wave", 0))
+	_ensure_quest_catalog()
+	current_quest_id = String(data.get("current_quest_id", "forest"))
+	current_quest_level = int(data.get("current_quest_level", 1))
+	current_quest_level = clampi(current_quest_level, 1, 6)
+	quest_phase = int(data.get("quest_phase", QuestPhase.WAVES))
+	quest_phase = clampi(quest_phase, QuestPhase.WAVES, QuestPhase.FINAL_BOSS)
+	quest_use_legacy_schedule = bool(data.get("quest_use_legacy_schedule", current_quest_id == "forest"))
+	quest_miniboss_queue = _to_string_array(data.get("quest_miniboss_queue", []))
+	quest_final_boss_id = String(data.get("quest_final_boss_id", ""))
+	quest_completion_gold = int(data.get("quest_completion_gold", 0))
+	quest_completion_gold_awarded = bool(data.get("quest_completion_gold_awarded", false))
+	var quest_def: QuestDefinition = get_quest_definition(current_quest_id)
+	if quest_def != null:
+		quest_miniboss_ids_base = quest_def.miniboss_ids.duplicate()
+		if quest_use_legacy_schedule and quest_miniboss_ids_base.is_empty():
+			quest_miniboss_ids_base = MINI_BOSS_IDS.duplicate()
+		if quest_miniboss_queue.is_empty() and not quest_miniboss_ids_base.is_empty():
+			quest_miniboss_queue = quest_miniboss_ids_base.duplicate()
+		if quest_final_boss_id.strip_edges().is_empty():
+			quest_final_boss_id = quest_def.boss_id if not quest_def.boss_id.strip_edges().is_empty() else FINAL_BOSS_ID
+		if quest_completion_gold <= 0:
+			quest_completion_gold = quest_def.get_completion_gold(current_quest_level)
 	hero_level = int(data.get("hero_level", 1))
 	hero_xp = int(data.get("hero_xp", 0))
 	run_xp_earned = int(data.get("run_xp_earned", 0))
@@ -1890,7 +2048,7 @@ func _build_cards_from_run_deck() -> void:
 
 func start_wave_encounter() -> void:
 	if current_wave > waves_per_run:
-		return
+		current_wave = waves_per_run
 	_clear_enemy_cards()
 	enemy_draw_queues_by_deck.clear()
 	_ensure_deck_arrays(1)
@@ -1900,8 +2058,19 @@ func start_wave_encounter() -> void:
 
 	wave_started.emit(current_wave, waves_per_run)
 
-	if _is_mini_boss_wave(current_wave):
-		var mini_def := _pick_mini_boss_def()
+	if quest_phase == QuestPhase.FINAL_BOSS:
+		var final_def := _pick_quest_final_boss_def()
+		if final_def == null:
+			push_warning("[RunManager] Final boss no disponible para quest: " + current_quest_id)
+			return
+		create_boss_instance(final_def, 0)
+		final_boss_started.emit(final_def.boss_id)
+		prepare_progressive_deck()
+		wave_progress_changed.emit(current_wave, 0, 0)
+		return
+
+	if _is_interval_miniboss_wave(current_wave):
+		var mini_def := _pick_next_quest_miniboss_def()
 		if mini_def != null:
 			create_boss_instance(mini_def, 0)
 			mini_boss_started.emit(mini_def.boss_id)
@@ -1909,16 +2078,6 @@ func start_wave_encounter() -> void:
 			wave_progress_changed.emit(current_wave, 0, 0)
 			return
 		push_warning("[RunManager] Mini boss wave sin boss disponible. Continuando con enemigos normales.")
-
-	if _is_final_boss_wave(current_wave):
-		var final_def := _pick_final_boss_def()
-		if final_def != null:
-			create_boss_instance(final_def, 0)
-			final_boss_started.emit(final_def.boss_id)
-			prepare_progressive_deck()
-			wave_progress_changed.emit(current_wave, 0, 0)
-			return
-		push_warning("[RunManager] Final boss wave sin boss disponible. Continuando con enemigos normales.")
 
 	if selected_enemy_types.is_empty():
 		return
@@ -1938,39 +2097,46 @@ func handle_enemy_defeated_for_wave(enemy_data: Dictionary) -> bool:
 	var is_boss: bool = bool(enemy_data.get("is_boss", false)) or enemy_data.has("boss_id")
 	if is_boss:
 		var boss_kind := int(enemy_data.get("boss_kind", BossDefinition.BossKind.MINI_BOSS))
+		var is_final := boss_kind == BossDefinition.BossKind.FINAL_BOSS or quest_phase == QuestPhase.FINAL_BOSS
+		if not is_final and current_wave >= waves_per_run:
+			quest_phase = QuestPhase.FINAL_BOSS
 		wave_completed.emit(current_wave)
-		if boss_kind == BossDefinition.BossKind.FINAL_BOSS:
+		if is_final:
 			return true
 		_enemy_level_up()
-		current_wave += 1
 		enemies_defeated_in_wave = 0
-		if current_wave > waves_per_run:
-			return true
+		if current_wave < waves_per_run:
+			current_wave += 1
 		return false
 
 	enemies_defeated_in_wave += 1
 	wave_progress_changed.emit(current_wave, enemies_defeated_in_wave, enemies_per_wave)
 	if enemies_defeated_in_wave >= enemies_per_wave:
+		if current_wave >= waves_per_run:
+			quest_phase = QuestPhase.FINAL_BOSS
 		wave_completed.emit(current_wave)
 		_enemy_level_up()
-		current_wave += 1
 		enemies_defeated_in_wave = 0
-		if current_wave > waves_per_run:
-			return true
-
+		if current_wave < waves_per_run:
+			current_wave += 1
 	return false
 
 func is_wave_boss(wave_index: int) -> bool:
-	return _is_mini_boss_wave(wave_index) or _is_final_boss_wave(wave_index)
+	if quest_phase == QuestPhase.FINAL_BOSS:
+		return true
+	return _is_interval_miniboss_wave(wave_index)
 
 func is_current_wave_boss() -> bool:
 	return is_wave_boss(current_wave)
 
+func is_current_wave_final_boss() -> bool:
+	return quest_phase == QuestPhase.FINAL_BOSS
+
 func _is_mini_boss_wave(wave_index: int) -> bool:
-	return MINI_BOSS_WAVES.has(wave_index)
+	return _is_interval_miniboss_wave(wave_index)
 
 func _is_final_boss_wave(wave_index: int) -> bool:
-	return wave_index == waves_per_run or FINAL_BOSS_WAVES.has(wave_index)
+	return quest_phase == QuestPhase.FINAL_BOSS
 
 func _pick_random_enemy_type() -> String:
 	if selected_enemy_types.is_empty():
@@ -1980,12 +2146,19 @@ func _pick_random_enemy_type() -> String:
 	var idx := rng.randi_range(0, selected_enemy_types.size() - 1)
 	return selected_enemy_types[idx]
 
+func _is_interval_miniboss_wave(wave_index: int) -> bool:
+	if wave_index <= 0:
+		return false
+	if MINI_BOSS_INTERVAL <= 0:
+		return false
+	return wave_index <= waves_per_run and (wave_index % MINI_BOSS_INTERVAL) == 0
+
 func _maybe_add_wave_boss() -> void:
-	if MINI_BOSS_WAVES.has(current_wave):
-		_spawn_mini_boss()
-		return
-	if FINAL_BOSS_WAVES.has(current_wave):
+	if quest_phase == QuestPhase.FINAL_BOSS:
 		_spawn_final_boss()
+		return
+	if _is_interval_miniboss_wave(current_wave):
+		_spawn_mini_boss()
 
 func _spawn_mini_boss() -> void:
 	var boss_id := _pick_mini_boss_id()
@@ -2044,6 +2217,38 @@ func _pick_final_boss_def() -> BossDefinition:
 	rng.seed = run_seed + (current_wave * 911) + 47
 	return finals[rng.randi_range(0, finals.size() - 1)]
 
+func _pick_next_quest_miniboss_def() -> BossDefinition:
+	_ensure_boss_catalog()
+	if quest_miniboss_queue.is_empty() and not quest_miniboss_ids_base.is_empty():
+		quest_miniboss_queue = quest_miniboss_ids_base.duplicate()
+	while not quest_miniboss_queue.is_empty():
+		var boss_id := String(quest_miniboss_queue.pop_front())
+		if boss_id.strip_edges().is_empty():
+			continue
+		var def := get_boss_definition(boss_id)
+		if def != null:
+			return def
+		push_warning("[RunManager] Quest miniboss no encontrado: " + boss_id)
+	return null
+
+func _pick_quest_final_boss_def() -> BossDefinition:
+	_ensure_boss_catalog()
+	if quest_final_boss_id.strip_edges().is_empty() and quest_use_legacy_schedule:
+		quest_final_boss_id = FINAL_BOSS_ID
+	if not quest_final_boss_id.strip_edges().is_empty():
+		var def := get_boss_definition(quest_final_boss_id)
+		if def != null:
+			return def
+		push_warning("[RunManager] Quest final boss no encontrado: " + quest_final_boss_id)
+	if boss_catalog == null:
+		return null
+	var finals := boss_catalog.get_by_kind(BossDefinition.BossKind.FINAL_BOSS)
+	if finals.is_empty():
+		return null
+	var rng := RandomNumberGenerator.new()
+	rng.seed = run_seed + (current_wave * 911) + 71
+	return finals[rng.randi_range(0, finals.size() - 1)]
+
 func reset_run(new_mode: String = "normal") -> void:
 	run_mode = new_mode
 	is_temporary_run = false
@@ -2066,6 +2271,15 @@ func reset_run(new_mode: String = "normal") -> void:
 	waves_per_run = 20
 	enemies_per_wave = 5
 	enemies_defeated_in_wave = 0
+	current_quest_id = "forest"
+	current_quest_level = 1
+	quest_phase = QuestPhase.WAVES
+	quest_use_legacy_schedule = true
+	quest_miniboss_queue.clear()
+	quest_miniboss_ids_base.clear()
+	quest_final_boss_id = ""
+	quest_completion_gold = 0
+	quest_completion_gold_awarded = false
 	hero_level = 1
 	hero_xp = 0
 	xp_to_next_level = _calc_xp_to_next_level(hero_level)

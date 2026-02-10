@@ -1,11 +1,18 @@
-[gd_scene load_steps=5 format=3 uid="uid://d3ddts4gppkmx"]
+[gd_scene load_steps=8 format=3 uid="uid://g4u1i7l2d8h9p"]
 
-[ext_resource type="Script" uid="uid://b0v24hehn8yh2" path="res://scripts/UI/collection.gd" id="1_1kq8g"]
+[ext_resource type="Script" uid="uid://b6tfpphck20ef" path="res://scripts/UI/guild.gd" id="1_1kq8g"]
 [ext_resource type="PackedScene" uid="uid://wyjiokspuqjw" path="res://Scenes/shaders_and_particles/candle_fire.tscn" id="3_e3jig"]
 [ext_resource type="PackedScene" uid="uid://blg50faekwh8p" path="res://Scenes/ui/book_view.tscn" id="4_book"]
 [ext_resource type="Texture2D" uid="uid://ckorh78mxu17p" path="res://assets/card_book/colection_background.png" id="5_bg"]
+[ext_resource type="Script" path="res://scripts/UI/guild/quest_selector.gd" id="6_quest"]
+[ext_resource type="Shader" path="res://assets/shaders/rounded_rect_clip.gdshader" id="7_round_shader"]
 
-[node name="Collection" type="Control"]
+[sub_resource type="ShaderMaterial" id="1_round_mat"]
+shader = ExtResource("7_round_shader")
+shader_parameter/radius = 0.08
+shader_parameter/aa = 0.01
+
+[node name="Guild" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -87,7 +94,7 @@ text = "Prev"
 [node name="TitleLabel" type="Label" parent="TopBar"]
 custom_minimum_size = Vector2(200, 36)
 layout_mode = 2
-text = "Collection"
+text = "Guild"
 horizontal_alignment = 1
 
 [node name="PageLabel" type="Label" parent="TopBar"]
@@ -105,6 +112,153 @@ text = "Next"
 custom_minimum_size = Vector2(110, 36)
 layout_mode = 2
 text = "Upgrades"
+
+[node name="QuestButton" type="Button" parent="."]
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 0.0
+anchor_top = 0.5
+anchor_right = 0.0
+anchor_bottom = 0.5
+offset_left = 24.0
+offset_top = -22.0
+offset_right = 224.0
+offset_bottom = 22.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "Quest Selection"
+
+[node name="QuestSelectedLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 0.0
+anchor_top = 0.5
+anchor_right = 0.0
+anchor_bottom = 0.5
+offset_left = 24.0
+offset_top = 30.0
+offset_right = 324.0
+offset_bottom = 58.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "Selected Quest: Forest"
+theme_override_font_sizes/font_size = 18
+
+[node name="QuestPopup" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="QuestPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="Panel" parent="QuestPopup"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -600.0
+offset_top = -360.0
+offset_right = 600.0
+offset_bottom = 360.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Content" type="VBoxContainer" parent="QuestPopup/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="QuestSelector" type="VBoxContainer" parent="QuestPopup/Panel/Content"]
+layout_mode = 2
+script = ExtResource("6_quest")
+
+[node name="Row" type="HBoxContainer" parent="QuestPopup/Panel/Content/QuestSelector"]
+layout_mode = 2
+alignment = 1
+
+[node name="LeftArrow" type="Button" parent="QuestPopup/Panel/Content/QuestSelector/Row"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+text = "←"
+focus_mode = 2
+theme_override_font_sizes/font_size = 28
+
+[node name="QuestArt" type="TextureRect" parent="QuestPopup/Panel/Content/QuestSelector/Row"]
+custom_minimum_size = Vector2(760, 440)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+material = SubResource("1_round_mat")
+
+[node name="RightArrow" type="Button" parent="QuestPopup/Panel/Content/QuestSelector/Row"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+text = "→"
+focus_mode = 2
+theme_override_font_sizes/font_size = 28
+
+[node name="QuestName" type="Label" parent="QuestPopup/Panel/Content/QuestSelector"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+text = "Forest"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 26
+
+[node name="DifficultyRow" type="HBoxContainer" parent="QuestPopup/Panel/Content"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+alignment = 1
+
+[node name="DifficultyLabel" type="Label" parent="QuestPopup/Panel/Content/DifficultyRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Difficulty"
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 22
+
+[node name="DifficultySpin" type="SpinBox" parent="QuestPopup/Panel/Content/DifficultyRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+min_value = 1.0
+max_value = 6.0
+step = 1.0
+value = 1.0
+allow_greater = false
+allow_lesser = false
+rounded = true
+
+[node name="Spacer" type="Control" parent="QuestPopup/Panel/Content"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CloseButton" type="Button" parent="QuestPopup/Panel/Content"]
+custom_minimum_size = Vector2(140, 36)
+layout_mode = 2
+text = "Close"
 
 [node name="SelectionPanel" type="VBoxContainer" parent="."]
 layout_mode = 1

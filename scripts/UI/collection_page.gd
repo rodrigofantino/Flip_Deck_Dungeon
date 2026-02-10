@@ -64,12 +64,18 @@ func _on_slot_clicked(slot: CollectionSlot) -> void:
 	get_tree().call_group("collection_root", "_on_page_slot_clicked", slot)
 
 func _on_slot_right_clicked(slot: CollectionSlot) -> void:
+	if not _is_play_mode:
+		return
 	get_tree().call_group("collection_root", "_on_page_slot_right_clicked", slot)
 
 func _on_enemy_selected_toggled(slot: CollectionSlot, selected: bool) -> void:
+	if not _is_play_mode:
+		return
 	get_tree().call_group("collection_root", "_on_page_enemy_selected", slot, selected)
 
 func _on_enemy_weight_changed(slot: CollectionSlot, weight: int) -> void:
+	if not _is_play_mode:
+		return
 	get_tree().call_group("collection_root", "_on_page_enemy_weight_changed", slot, weight)
 
 func _on_visibility_changed() -> void:

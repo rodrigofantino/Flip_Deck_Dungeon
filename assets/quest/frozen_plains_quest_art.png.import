@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cu127bngh4wsw"
-path="res://.godot/imported/petrid_swamp_quest_art.png-1450c3d7bb1f28c7e8084aee7cc9eacd.ctex"
+uid="uid://bdbybmcv2d63"
+path="res://.godot/imported/frozen_plains_quest_art.png-37e8709138890f85d2b528762d55296d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/quests/petrid_swamp_quest_art.png"
-dest_files=["res://.godot/imported/petrid_swamp_quest_art.png-1450c3d7bb1f28c7e8084aee7cc9eacd.ctex"]
+source_file="res://assets/quest/frozen_plains_quest_art.png"
+dest_files=["res://.godot/imported/frozen_plains_quest_art.png-37e8709138890f85d2b528762d55296d.ctex"]
 
 [params]
 

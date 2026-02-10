@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b358uxywjwwo4"
-path="res://.godot/imported/cursed_city_quest_art.png-5ac51eb05b8e011ca9a0fa1a200882f2.ctex"
+uid="uid://ckoe4cckwkawf"
+path="res://.godot/imported/dark_forest_quest_art.png-889a513af15b843a4d7f63aa5a53244d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/quests/cursed_city_quest_art.png"
-dest_files=["res://.godot/imported/cursed_city_quest_art.png-5ac51eb05b8e011ca9a0fa1a200882f2.ctex"]
+source_file="res://assets/quest/dark_forest_quest_art.png"
+dest_files=["res://.godot/imported/dark_forest_quest_art.png-889a513af15b843a4d7f63aa5a53244d.ctex"]
 
 [params]
 

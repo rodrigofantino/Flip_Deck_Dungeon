@@ -60,7 +60,7 @@ func _process(delta: float) -> void:
 	
 func _on_p_lay_pressed() -> void:
 	RunState.selection_pending = true
-	SceneTransition.change_scene("res://Scenes/ui/collection.tscn")
+	SceneTransition.change_scene("res://Scenes/ui/guild.tscn")
 
 func _on_continue_pressed() -> void:
 	RunState.load_run()

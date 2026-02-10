@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3 uid="uid://qstf0r3s7t9a"]
+
+[ext_resource type="Script" uid="uid://qstdef7n6p0x9a" path="res://data/quest_definition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+quest_id = "forest"
+display_name = "Forest"
+base_waves = 20
+base_enemies_per_wave = 5
+decks_per_wave = 1
+base_completion_gold = 50
+miniboss_ids = ["forest_stag_king", "forest_boar_warden", "forest_fungus_patriarch"]
+boss_id = "forest_fallen_elf"

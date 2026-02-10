@@ -458,7 +458,7 @@ func _on_wave_completed(_wave_index: int) -> void:
 	if pending_trait_popup:
 		pending_wave_popup = true
 		return
-	if RunState.current_wave >= RunState.waves_per_run and RunState.is_current_wave_boss():
+	if RunState.current_wave >= RunState.waves_per_run and RunState.is_current_wave_final_boss():
 		return
 	_show_wave_popup()
 
@@ -1121,8 +1121,10 @@ func _show_victory() -> void:
 	_update_hud_state()
 	get_tree().paused = true
 
-	if not victory_gold_awarded and not RunState.is_temporary_run:
-		SaveSystem.add_persistent_gold(RunState.gold)
+	if not victory_gold_awarded:
+		RunState.apply_quest_completion_reward()
+		if not RunState.is_temporary_run:
+			SaveSystem.add_persistent_gold(RunState.gold)
 		victory_gold_awarded = true
 	SaveSystem.clear_run_save()
 
