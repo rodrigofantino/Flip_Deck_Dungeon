@@ -1,11 +1,11 @@
-[gd_scene load_steps=8 format=3 uid="uid://g4u1i7l2d8h9p"]
+[gd_scene load_steps=8 format=3 uid="uid://dag5w5oss1mix"]
 
 [ext_resource type="Script" uid="uid://b6tfpphck20ef" path="res://scripts/UI/guild.gd" id="1_1kq8g"]
 [ext_resource type="PackedScene" uid="uid://wyjiokspuqjw" path="res://Scenes/shaders_and_particles/candle_fire.tscn" id="3_e3jig"]
 [ext_resource type="PackedScene" uid="uid://blg50faekwh8p" path="res://Scenes/ui/book_view.tscn" id="4_book"]
 [ext_resource type="Texture2D" uid="uid://ckorh78mxu17p" path="res://assets/card_book/colection_background.png" id="5_bg"]
-[ext_resource type="Script" path="res://scripts/UI/guild/quest_selector.gd" id="6_quest"]
-[ext_resource type="Shader" path="res://assets/shaders/rounded_rect_clip.gdshader" id="7_round_shader"]
+[ext_resource type="Script" uid="uid://bmju4iadkelu0" path="res://scripts/UI/guild/quest_selector.gd" id="6_quest"]
+[ext_resource type="Shader" uid="uid://bw6h2jb1a33s" path="res://assets/shaders/rounded_rect_clip.gdshader" id="7_round_shader"]
 
 [sub_resource type="ShaderMaterial" id="1_round_mat"]
 shader = ExtResource("7_round_shader")
@@ -30,7 +30,6 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("5_bg")
 expand_mode = 2
-stretch_mode = 3
 
 [node name="CandleFire" parent="CollectionBackground" instance=ExtResource("3_e3jig")]
 layout_mode = 0
@@ -116,34 +115,30 @@ text = "Upgrades"
 [node name="QuestButton" type="Button" parent="."]
 custom_minimum_size = Vector2(200, 44)
 layout_mode = 1
-anchors_preset = 6
-anchor_left = 0.0
+anchors_preset = 4
 anchor_top = 0.5
-anchor_right = 0.0
 anchor_bottom = 0.5
 offset_left = 24.0
 offset_top = -22.0
 offset_right = 224.0
 offset_bottom = 22.0
-grow_horizontal = 0
 grow_vertical = 2
 text = "Quest Selection"
 
 [node name="QuestSelectedLabel" type="Label" parent="."]
 layout_mode = 1
-anchors_preset = 6
-anchor_left = 0.0
+anchors_preset = 4
 anchor_top = 0.5
-anchor_right = 0.0
 anchor_bottom = 0.5
-offset_left = 24.0
+offset_left = 25.0
 offset_top = 30.0
-offset_right = 324.0
+offset_right = 256.0
 offset_bottom = 58.0
-grow_horizontal = 0
 grow_vertical = 2
-text = "Selected Quest: Forest"
 theme_override_font_sizes/font_size = 18
+text = "Selected Quest: Forest"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="QuestPopup" type="Control" parent="."]
 visible = false
@@ -201,31 +196,29 @@ alignment = 1
 [node name="LeftArrow" type="Button" parent="QuestPopup/Panel/Content/QuestSelector/Row"]
 custom_minimum_size = Vector2(72, 72)
 layout_mode = 2
-text = "←"
-focus_mode = 2
 theme_override_font_sizes/font_size = 28
+text = "←"
 
 [node name="QuestArt" type="TextureRect" parent="QuestPopup/Panel/Content/QuestSelector/Row"]
+material = SubResource("1_round_mat")
 custom_minimum_size = Vector2(760, 440)
 layout_mode = 2
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
-material = SubResource("1_round_mat")
 
 [node name="RightArrow" type="Button" parent="QuestPopup/Panel/Content/QuestSelector/Row"]
 custom_minimum_size = Vector2(72, 72)
 layout_mode = 2
-text = "→"
-focus_mode = 2
 theme_override_font_sizes/font_size = 28
+text = "→"
 
 [node name="QuestName" type="Label" parent="QuestPopup/Panel/Content/QuestSelector"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Forest"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 26
 
 [node name="DifficultyRow" type="HBoxContainer" parent="QuestPopup/Panel/Content"]
 custom_minimum_size = Vector2(0, 36)
@@ -235,19 +228,16 @@ alignment = 1
 [node name="DifficultyLabel" type="Label" parent="QuestPopup/Panel/Content/DifficultyRow"]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
+theme_override_font_sizes/font_size = 22
 text = "Difficulty"
 horizontal_alignment = 2
-theme_override_font_sizes/font_size = 22
 
 [node name="DifficultySpin" type="SpinBox" parent="QuestPopup/Panel/Content/DifficultyRow"]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 min_value = 1.0
 max_value = 6.0
-step = 1.0
 value = 1.0
-allow_greater = false
-allow_lesser = false
 rounded = true
 
 [node name="Spacer" type="Control" parent="QuestPopup/Panel/Content"]
@@ -265,25 +255,23 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -260.0
+offset_left = -381.0
 offset_top = 90.0
-offset_right = -24.0
-offset_bottom = 240.0
-grow_horizontal = 2
+offset_right = -25.0
+offset_bottom = 687.0
+grow_horizontal = 0
 
 [node name="SelectHeroLabel" type="Label" parent="SelectionPanel"]
 custom_minimum_size = Vector2(240, 28)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.2, 0.2, 1)
 text = "Select hero"
-horizontal_alignment = 2
 
 [node name="SelectEnemiesLabel" type="Label" parent="SelectionPanel"]
 custom_minimum_size = Vector2(240, 28)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.2, 0.2, 1)
 text = "Select enemies"
-horizontal_alignment = 2
 
 [node name="SelectionErrorLabel" type="Label" parent="SelectionPanel"]
 custom_minimum_size = Vector2(240, 28)
@@ -394,6 +382,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 2.0
+offset_right = 2.0
 grow_horizontal = 2
 grow_vertical = 2
 

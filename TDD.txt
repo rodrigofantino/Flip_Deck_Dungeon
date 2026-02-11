@@ -9,6 +9,9 @@ Separacion estricta entre:
 - Logica
 - Datos
 - UI
+Autoloads principales:
+- RunState (run_manager.gd)
+- GameState (seleccion de quest y dificultad)
 
 ========================
 2. RUNMANAGER (SOURCE OF TRUTH)
@@ -16,6 +19,7 @@ Separacion estricta entre:
 Archivo: data/run_manager.gd (autoload RunState)
 Responsable de:
 - Estado de la run (modo, oleada, mazos activos)
+- Estado de quest (quest_id, nivel, fase, reward final)
 - Cartas runtime y colas de robo por mazo
 - Economia (oro de run, danger level)
 - XP y level up
@@ -59,6 +63,8 @@ Archivo: scripts/game/card_view.gd
 - CardDefinition (heroes y enemigos)
 - ItemCardDefinition (items de run)
 - TraitResource + TraitDatabase
+- BossDefinition + BossCatalog
+- QuestDefinition + QuestCatalog
 - BoosterPackDefinition
 - PlayerCollection + Serialization
 - ItemCatalog (res://data/item_catalog_default.tres)

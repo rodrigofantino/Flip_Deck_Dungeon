@@ -31,16 +31,19 @@ Los enemigos tambien son cartas que se enfrentan en combates rapidos y letales.
 4. LOOP PRINCIPAL (ACTUAL)
 ========================
 - Inicio de run
-  - Eleccion de heroe
-  - Eleccion de 1+ tipos de enemigo
-  - Construccion de mazos de run
-- Oleadas (max 5)
+- Seleccion de quest y dificultad
+- Eleccion de heroe
+- Eleccion de 1+ tipos de enemigo
+- Construccion de mazos de run
+- Oleadas (cantidad variable por quest)
   - Robo de enemigos desde 1 a 5 mazos activos
   - Combate, drops y limpieza de estado
+- Miniboss cada 5 oleadas
+- Boss final al terminar todas las oleadas y limpiar enemigos
 - Crossroads al limpiar todos los mazos
-  - Agregar mazo (max 5)
-  - Retirar 25% del oro de la run (a oro persistente)
-  - Elegir traits (heroe + enemigo)
+- Agregar mazo (max 5)
+- Retirar 25% del oro de la run (a oro persistente)
+- Elegir traits (heroe + enemigo)
 - Victoria al completar la ultima oleada
 - Derrota cuando el heroe muere
 
@@ -53,7 +56,16 @@ Los enemigos tambien son cartas que se enfrentan en combates rapidos y letales.
 - Danger level = suma del poder de todos los enemigos vivos.
 
 ========================
-6. SISTEMA DE CARTAS (ACTUAL)
+6. SISTEMA DE QUESTS (ACTUAL)
+========================
+- 6 quests seleccionables: Forest, Dark Forest, Frozen Plains, Petrid Swamp, Cursed City, Magma Cavern
+- Dificultad 1..6 con escalado:
+- Enemigos por oleada +25% por nivel
+- Recompensa final +50% por nivel
+- La run actual sigue usando el contenido de Forest, pero la seleccion queda registrada
+
+========================
+7. SISTEMA DE CARTAS (ACTUAL)
 ========================
 Tipos de carta:
 - Heroe (CardDefinition)
@@ -65,7 +77,7 @@ Nota:
 - El flag de boss existe en definiciones, pero el boss no es garantizado; se usa un outlier por poder.
 
 ========================
-7. SISTEMA DE COMBATE
+8. SISTEMA DE COMBATE
 ========================
 - Combate por turnos
 - Iniciativa por enemigo vs heroe para decidir el orden
@@ -75,7 +87,7 @@ Nota:
 - Regen aplicada por ronda; healing power multiplica curaciones
 
 ========================
-8. ITEMS Y EQUIPAMIENTO (V1)
+9. ITEMS Y EQUIPAMIENTO (V1)
 ========================
 - Drops con 50% de chance al morir enemigo
 - Mano de items max 6 (FIFO)
@@ -85,7 +97,7 @@ Nota:
 - Sets tematicos consumen items y dan bonus permanentes; repetibles
 
 ========================
-9. TRAITS (V1)
+10. TRAITS (V1)
 ========================
 - Traits de heroe y enemigo con bonus flat y multiplicadores
 - Seleccion en Crossroads (1 trait heroe + 1 trait enemigo)
@@ -93,14 +105,14 @@ Nota:
 - Traits se limpian al subir de nivel
 
 ========================
-10. ECONOMIA (ACTUAL)
+11. ECONOMIA (ACTUAL)
 ========================
 - Oro de run se obtiene por enemigos
 - Crossroads permite retirar 25% a oro persistente
 - Oro persistente se usa en Shop
 
 ========================
-11. COLECCION Y BOOSTERS
+12. COLECCION Y BOOSTERS
 ========================
 - Binder con PageFlip (prototipo 3D)
 - Shop vende packs Forest y Dark Forest
@@ -108,7 +120,7 @@ Nota:
 - Upgrade de carta: gastar 5 copias para +1 nivel (impacta stats en combate)
 
 ========================
-12. OPCIONES (UI)
+13. OPCIONES (UI)
 ========================
 - Sliders de volumen Master/Music/SFX
 - Opciones de video: modo pantalla, resolucion, VSync y limite de FPS

@@ -22,10 +22,12 @@ Este documento lista lo que YA esta implementado en el proyecto.
 ========================
 2. WAVES Y CROSSROADS
 ========================
-- Run en oleadas (max 5)
+- Run en oleadas (cantidad variable por quest, Forest = 20)
 - Al limpiar todos los enemigos de los mazos activos se abre Crossroads
 - Opciones Crossroads: agregar mazo (max 5), retirar 25% del oro de run, elegir traits
-- Tras la ultima oleada se dispara victoria
+- Cada 5 oleadas hay un miniboss (cicla por lista de minibosses)
+- Tras la ultima oleada y sin enemigos activos aparece el boss final
+- Tras el boss final se dispara victoria (con recompensa final de oro)
 
 ========================
 3. TRAITS (V1)
@@ -53,6 +55,8 @@ Este documento lista lo que YA esta implementado en el proyecto.
 ========================
 - Boton Play abre coleccion en modo seleccion (selection_pending)
 - El jugador elige 1 heroe y 1+ enemigos; Start Dungeon se habilita al cumplir
+- En Guild hay selector de quest (popup) con arte y dificultad (1..6)
+- La quest seleccionada se guarda en GameState (selected_quest_id y selected_quest_level)
 - RunManager construye cartas runtime desde run_deck
 - run_deck se guarda en user://save/run_deck.json (por mazos)
 - save_run.json guarda estado de run (cartas, ordenes, mano/equip, traits, oro, etc.)
