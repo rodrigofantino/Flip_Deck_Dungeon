@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3 uid="uid://qstd4rkf9a2b"]
+[gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3 uid="uid://qstd4rkgaa2b"]
 
-[ext_resource type="Script" path="res://data/quest_definition.gd" id="1_def"]
+[ext_resource type="Script" uid="uid://d3dngkbqbeedl" path="res://data/quest_definition.gd" id="1_def"]
 
 [resource]
 script = ExtResource("1_def")
@@ -8,7 +8,6 @@ quest_id = "dark_forest"
 display_name = "Dark Forest"
 base_waves = 20
 base_enemies_per_wave = 5
-decks_per_wave = 1
 base_completion_gold = 100
-miniboss_ids = ["dark_forest_briarback_porcupine", "dark_forest_fallen_stag", "dark_forest_wolf"]
+miniboss_ids = Array[String](["dark_forest_briarback_porcupine", "dark_forest_fallen_stag", "dark_forest_wolf"])
 boss_id = "dark_forest_thornmaw_bear"

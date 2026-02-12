@@ -58,7 +58,9 @@
 const PACK_STACK_OFFSET_X: float = 2.0
 const PACK_STACK_OFFSET_Y: float = 2.0
 const PACK_STACK_MAX: int = 12
-const PACK_PREVIEW_SIZE: Vector2 = Vector2(140, 80)
+const PACK_PREVIEW_SIZE: Vector2 = Vector2(190, 116)
+const PACK_STACK_ITEM_MIN_SIZE: Vector2 = Vector2(220, 150)
+const PACK_STACK_CONTAINER_MIN_SIZE: Vector2 = Vector2(220, 138)
 const PACK_FOREST_COLOR: Color = Color(0.6, 0.85, 0.6, 1.0)
 const PACK_DARK_FOREST_COLOR: Color = Color(0.12, 0.35, 0.2, 1.0)
 const PACK_FOREST_PATH: String = "res://data/booster_packs/booster_pack_forest.tres"
@@ -120,7 +122,7 @@ func _ready() -> void:
 	_setup_book_view()
 	_refresh_boosters()
 	_init_selection_ui()
-	_set_booster_interactivity(true)
+	_set_booster_interactivity(false)
 	_refresh_book_content()
 	_update_book_input_block()
 
@@ -171,10 +173,17 @@ func _wire_ui() -> void:
 		)
 	if quest_popup:
 		quest_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+		var quest_panel: Control = quest_popup.get_node_or_null("Panel")
+		if quest_panel:
+			quest_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+		var quest_content: Control = quest_popup.get_node_or_null("Panel/Content")
+		if quest_content:
+			quest_content.mouse_filter = Control.MOUSE_FILTER_STOP
 	if quest_popup_dimmer:
 		quest_popup_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
 		quest_popup_dimmer.gui_input.connect(_on_quest_dimmer_gui_input)
 	if quest_popup_close:
+		quest_popup_close.text = "Select"
 		quest_popup_close.pressed.connect(_close_quest_popup)
 	if booster_popup and booster_popup_title:
 		booster_popup_title.text = tr("COLLECTION_BOOSTER_POPUP_TITLE")
@@ -253,9 +262,10 @@ func _is_modal_popup_visible() -> bool:
 	)
 
 func _update_book_input_block() -> void:
+	var modal := _is_modal_popup_visible()
+	_set_selection_panel_input_enabled(not modal)
 	if book_view == null:
 		return
-	var modal := _is_modal_popup_visible()
 	if book_view.has_method("set_input_blocked"):
 		book_view.call("set_input_blocked", modal)
 	_set_slots_input_enabled(not modal)
@@ -276,6 +286,9 @@ func _on_popup_dimmer_gui_input(event: InputEvent) -> void:
 func _on_quest_dimmer_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		accept_event()
+		var vp := get_viewport()
+		if vp:
+			vp.set_input_as_handled()
 		_close_quest_popup()
 
 func _open_quest_popup() -> void:
@@ -380,7 +393,7 @@ func _init_selection_ui() -> void:
 		_configure_selection_panel_input()
 	if selection_mode:
 		_reset_selection_state()
-	_set_booster_interactivity(true)
+	_set_booster_interactivity(false)
 	if select_hero_label:
 		select_hero_label.text = tr("COLLECTION_SELECT_HERO")
 		select_hero_label.visible = selection_mode
@@ -408,6 +421,14 @@ func _configure_selection_panel_input() -> void:
 		start_dungeon_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	if back_button:
 		back_button.mouse_filter = Control.MOUSE_FILTER_STOP
+
+func _set_selection_panel_input_enabled(enabled: bool) -> void:
+	if selection_panel == null:
+		return
+	if enabled:
+		_configure_selection_panel_input()
+	else:
+		_set_mouse_filter_recursive(selection_panel, Control.MOUSE_FILTER_IGNORE)
 
 func _clear_selection_visuals() -> void:
 	for slot in get_tree().get_nodes_in_group("collection_slots"):
@@ -843,6 +864,8 @@ func _on_booster_open_pressed() -> void:
 	var collection := SaveSystem.load_collection()
 	if collection == null:
 		collection = SaveSystem.ensure_collection()
+	if selected_pack == null:
+		return
 	if not collection.remove_booster(selected_pack.pack_type, 1):
 		_close_booster_popup()
 		return
@@ -1255,7 +1278,7 @@ func _add_booster_stack(pack: PackView, count: int) -> void:
 	if booster_list == null:
 		return
 	var item := VBoxContainer.new()
-	item.custom_minimum_size = Vector2(220, 110)
+	item.custom_minimum_size = PACK_STACK_ITEM_MIN_SIZE
 	item.alignment = BoxContainer.ALIGNMENT_BEGIN
 	booster_list.add_child(item)
 	var label := Label.new()
@@ -1265,7 +1288,7 @@ func _add_booster_stack(pack: PackView, count: int) -> void:
 	label.text = tr("COLLECTION_PACK_COUNT") % [display_name, count]
 	item.add_child(label)
 	var stack := Control.new()
-	stack.custom_minimum_size = Vector2(220, 90)
+	stack.custom_minimum_size = PACK_STACK_CONTAINER_MIN_SIZE
 	item.add_child(stack)
 	var visible_count: int = min(count, PACK_STACK_MAX)
 	for i in range(visible_count):

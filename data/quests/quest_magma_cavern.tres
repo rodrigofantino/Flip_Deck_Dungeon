@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3 uid="uid://qstm4gm4c8v"]
 
-[ext_resource type="Script" path="res://data/quest_definition.gd" id="1_def"]
+[ext_resource type="Script" uid="uid://d3dngkbqbeedl" path="res://data/quest_definition.gd" id="1_def"]
 
 [resource]
 script = ExtResource("1_def")
@@ -8,7 +8,6 @@ quest_id = "magma_cavern"
 display_name = "Magma Cavern"
 base_waves = 30
 base_enemies_per_wave = 10
-decks_per_wave = 1
 base_completion_gold = 500
-miniboss_ids = ["magma_cinder_imp", "magma_furnace_drake", "magma_magma_brute", "magma_ashbrand_gladiator", "magma_molten_archer"]
+miniboss_ids = Array[String](["magma_cinder_imp", "magma_furnace_drake", "magma_magma_brute", "magma_ashbrand_gladiator", "magma_molten_archer"])
 boss_id = "magma_inferno_tyrant"

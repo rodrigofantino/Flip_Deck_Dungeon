@@ -19,8 +19,9 @@ enum UpgradeStat {
 	RARITY_CHANCE
 }
 
-const _PERCENT_PER_POINT: float = 0.10
-const _PERCENT_CAP: float = 0.70
+const _PERCENT_PER_POINT: float = 0.05
+const _PERCENT_CAP: float = 0.50
+const _DEFENSE_PERCENT_CAP: float = 0.35
 
 static func get_stat_name(stat: int) -> String:
 	match stat:
@@ -124,6 +125,8 @@ static func get_per_point_percent(stat: int) -> float:
 	return 0.0
 
 static func get_percent_cap(stat: int) -> float:
+	if stat == UpgradeStat.BLOCK_CHANCE or stat == UpgradeStat.EVASION:
+		return _DEFENSE_PERCENT_CAP
 	if is_percent_stat(stat):
 		return _PERCENT_CAP
 	return -1.0

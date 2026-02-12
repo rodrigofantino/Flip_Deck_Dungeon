@@ -128,7 +128,7 @@ var enemy_level: int = 1
 
 const XP_GROWTH_FACTOR: float = 2.0
 const HERO_LEVEL_UP_STAT_MULT: float = 1.2
-const ENEMY_LEVEL_UP_STAT_MULT: float = 1.25
+const ENEMY_LEVEL_UP_STAT_MULT: float = 1.15
 var hero_level_multiplier: float = 1.0
 var enemy_level_multiplier: float = 1.0
 var _upgrade_level_map: Dictionary = {}
@@ -138,8 +138,14 @@ var _upgrade_level_map: Dictionary = {}
 # =========================
 const XP_PER_COMMON_KILL: int = 1
 const XP_PER_MINI_BOSS: int = 3
+const XP_COMMON_LEVEL_STEP: int = 8
+const XP_MINI_BOSS_LEVEL_STEP: int = 6
+const XP_FINAL_BOSS_BASE: int = 8
+const XP_FINAL_BOSS_LEVEL_STEP: int = 4
 const BASE_XP_TO_LEVEL: int = 6
 const XP_PER_LEVEL_STEP: int = 4
+const GOLD_MINI_BOSS_MULT: float = 2.0
+const GOLD_FINAL_BOSS_MULT: float = 4.0
 
 # =========================
 # BASE DE DATOS DE TRAITS
@@ -181,6 +187,8 @@ var quest_miniboss_ids_base: Array[String] = []
 var quest_final_boss_id: String = ""
 var quest_completion_gold: int = 0
 var quest_completion_gold_awarded: bool = false
+var quest_enemy_level_boost: int = 0
+var quest_item_drop_chance_mult: float = 1.0
 
 @export var quest_catalog: QuestCatalog
 
@@ -320,7 +328,7 @@ func apply_selected_quest() -> void:
 	quest_miniboss_queue.clear()
 	quest_miniboss_ids_base.clear()
 	quest_final_boss_id = ""
-	quest_use_legacy_schedule = (current_quest_id == "forest") or (run_mode == "tutorial")
+	quest_use_legacy_schedule = (run_mode == "tutorial")
 
 	_ensure_quest_catalog()
 	var quest_def: QuestDefinition = get_quest_definition(current_quest_id)
@@ -338,6 +346,8 @@ func apply_selected_quest() -> void:
 		quest_miniboss_ids_base = MINI_BOSS_IDS.duplicate()
 		quest_miniboss_queue = quest_miniboss_ids_base.duplicate()
 		quest_final_boss_id = FINAL_BOSS_ID
+		quest_enemy_level_boost = 0
+		quest_item_drop_chance_mult = 1.0
 		return
 
 	_apply_quest_definition(quest_def, desired_level)
@@ -345,6 +355,8 @@ func apply_selected_quest() -> void:
 func _apply_quest_definition(quest_def: QuestDefinition, level: int) -> void:
 	if quest_def == null:
 		return
+	quest_enemy_level_boost = max(0, int(quest_def.enemy_level_boost))
+	quest_item_drop_chance_mult = maxf(0.0, float(quest_def.item_drop_chance_mult))
 	var waves: int = quest_def.get_waves(level)
 	waves = max(1, waves)
 	waves_per_run = waves
@@ -549,7 +561,7 @@ func create_card_instance(
 	if id == "th":
 		card_level = hero_level + upgrade_level
 	else:
-		card_level = def.level + max(0, enemy_level - 1) + upgrade_level
+		card_level = def.level + max(0, _get_effective_enemy_level() - 1) + upgrade_level
 
 	var card: Dictionary = {
 		"id": id,
@@ -608,7 +620,7 @@ func create_boss_instance(
 	var scaled_damage: int = int(round(float(boss_def.base_damage) * level_mult))
 	var scaled_initiative: int = int(round(float(boss_def.base_initiative) * level_mult))
 	var scaled_armour: int = int(round(float(boss_def.base_armour) * level_mult))
-	var scaled_level: int = boss_def.base_level + max(0, enemy_level - 1)
+	var scaled_level: int = boss_def.base_level + max(0, _get_effective_enemy_level() - 1)
 
 	var card: Dictionary = {
 		"id": id,
@@ -797,8 +809,15 @@ func recalculate_danger_level() -> void:
 # RECOMPENSAS
 #############################
 func apply_enemy_rewards(enemy: Dictionary) -> void:
-	var enemy_level: int = int(enemy.get("level", 1))
+	var enemy_level: int = max(1, int(enemy.get("level", 1)))
+	var is_boss: bool = bool(enemy.get("is_boss", false)) or enemy.has("boss_id")
+	var boss_kind: int = int(enemy.get("boss_kind", BossDefinition.BossKind.MINI_BOSS))
 	var gold_reward: int = max(1, enemy_level)
+	if is_boss:
+		if boss_kind == BossDefinition.BossKind.FINAL_BOSS:
+			gold_reward = max(gold_reward, int(round(float(enemy_level) * GOLD_FINAL_BOSS_MULT)))
+		else:
+			gold_reward = max(gold_reward, int(round(float(enemy_level) * GOLD_MINI_BOSS_MULT)))
 	var xp_reward: int = _calc_xp_reward(enemy)
 
 	_add_gold(gold_reward)
@@ -807,13 +826,14 @@ func apply_enemy_rewards(enemy: Dictionary) -> void:
 func _calc_xp_reward(enemy: Dictionary) -> int:
 	if enemy.is_empty():
 		return 0
+	var enemy_level: int = max(1, int(enemy.get("level", 1)))
 	var is_boss: bool = bool(enemy.get("is_boss", false)) or enemy.has("boss_id")
 	if is_boss:
 		var boss_kind := int(enemy.get("boss_kind", BossDefinition.BossKind.MINI_BOSS))
 		if boss_kind == BossDefinition.BossKind.FINAL_BOSS:
-			return 0
-		return XP_PER_MINI_BOSS
-	return XP_PER_COMMON_KILL
+			return XP_FINAL_BOSS_BASE + int((enemy_level - 1) / XP_FINAL_BOSS_LEVEL_STEP)
+		return XP_PER_MINI_BOSS + int((enemy_level - 1) / XP_MINI_BOSS_LEVEL_STEP)
+	return XP_PER_COMMON_KILL + int((enemy_level - 1) / XP_COMMON_LEVEL_STEP)
 
 func apply_enemy_dust(enemy: Dictionary) -> void:
 	var enemy_level: int = int(enemy.get("level", 1))
@@ -830,6 +850,7 @@ func try_drop_item_from_enemy(enemy_data: Dictionary) -> void:
 	var hero: Dictionary = cards.get("th", {})
 	if not hero.is_empty():
 		drop_chance += float(hero.get("loot_chance", 0.0))
+	drop_chance *= quest_item_drop_chance_mult
 	drop_chance = clampf(drop_chance, 0.0, 1.0)
 	if item_drop_rng.randf() > drop_chance:
 		return
@@ -934,7 +955,8 @@ func _roll_item_rarity() -> int:
 	if not hero.is_empty():
 		var bonus := float(hero.get("rarity_chance", 0.0))
 		if bonus != 0.0:
-			roll += int(round(bonus * 100.0))
+			# Diminishing returns: rarity bonus still helps, but no longer guarantees high tiers.
+			roll += int(round(pow(maxf(0.0, bonus), 0.65) * 20.0))
 			roll = clampi(roll, 1, 100)
 	if roll <= 70:
 		return 1
@@ -1470,7 +1492,7 @@ func _sync_hero_card_level(full_heal: bool) -> void:
 		hero["current_hp"] = int(hero.get("max_hp", hero.get("current_hp", 0)))
 
 func _scale_stat(value: int, is_hero: bool, upgrade_level: int) -> int:
-	var mult := hero_level_multiplier if is_hero else enemy_level_multiplier
+	var mult := hero_level_multiplier if is_hero else _get_enemy_level_multiplier_from_level()
 	if upgrade_level > 0:
 		mult *= pow(_get_upgrade_multiplier(is_hero), upgrade_level)
 	return int(round(float(value) * mult))
@@ -1482,7 +1504,10 @@ func _get_upgrade_multiplier(is_hero: bool) -> float:
 	return HERO_LEVEL_UP_STAT_MULT if is_hero else ENEMY_LEVEL_UP_STAT_MULT
 
 func _get_enemy_level_multiplier_from_level() -> float:
-	return pow(ENEMY_LEVEL_UP_STAT_MULT, float(max(0, enemy_level - 1)))
+	return pow(ENEMY_LEVEL_UP_STAT_MULT, float(max(0, _get_effective_enemy_level() - 1)))
+
+func _get_effective_enemy_level() -> int:
+	return max(1, enemy_level + quest_enemy_level_boost)
 
 func _get_hero_level_multiplier_from_level() -> float:
 	return pow(HERO_LEVEL_UP_STAT_MULT, float(max(0, hero_level - 1)))
@@ -1552,7 +1577,7 @@ func _update_card_level_from_definition(card: Dictionary) -> void:
 		var boss_def: BossDefinition = get_boss_definition(boss_id)
 		if boss_def == null:
 			return
-		card["level"] = boss_def.base_level + max(0, enemy_level - 1)
+		card["level"] = boss_def.base_level + max(0, _get_effective_enemy_level() - 1)
 		return
 	var def_id: String = String(card.get("definition", ""))
 	if def_id.is_empty():
@@ -1564,7 +1589,7 @@ func _update_card_level_from_definition(card: Dictionary) -> void:
 	if card.get("id", "") == "th":
 		card["level"] = hero_level + upgrade_level
 	else:
-		card["level"] = def.level + max(0, enemy_level - 1) + upgrade_level
+		card["level"] = def.level + max(0, _get_effective_enemy_level() - 1) + upgrade_level
 
 func _clear_active_traits_on_level_up() -> void:
 	if active_hero_traits.is_empty() and active_enemy_traits.is_empty():
@@ -1714,6 +1739,8 @@ func save_run():
 		"quest_final_boss_id": quest_final_boss_id,
 		"quest_completion_gold": quest_completion_gold,
 		"quest_completion_gold_awarded": quest_completion_gold_awarded,
+		"quest_enemy_level_boost": quest_enemy_level_boost,
+		"quest_item_drop_chance_mult": quest_item_drop_chance_mult,
 		"hero_level": hero_level,
 		"hero_xp": hero_xp,
 		"run_xp_earned": run_xp_earned,
@@ -1799,6 +1826,8 @@ func load_run():
 	quest_final_boss_id = String(data.get("quest_final_boss_id", ""))
 	quest_completion_gold = int(data.get("quest_completion_gold", 0))
 	quest_completion_gold_awarded = bool(data.get("quest_completion_gold_awarded", false))
+	quest_enemy_level_boost = int(data.get("quest_enemy_level_boost", 0))
+	quest_item_drop_chance_mult = float(data.get("quest_item_drop_chance_mult", 1.0))
 	var quest_def: QuestDefinition = get_quest_definition(current_quest_id)
 	if quest_def != null:
 		quest_miniboss_ids_base = quest_def.miniboss_ids.duplicate()
@@ -1810,6 +1839,12 @@ func load_run():
 			quest_final_boss_id = quest_def.boss_id if not quest_def.boss_id.strip_edges().is_empty() else FINAL_BOSS_ID
 		if quest_completion_gold <= 0:
 			quest_completion_gold = quest_def.get_completion_gold(current_quest_level)
+		if not data.has("quest_enemy_level_boost"):
+			quest_enemy_level_boost = max(0, int(quest_def.enemy_level_boost))
+		if not data.has("quest_item_drop_chance_mult"):
+			quest_item_drop_chance_mult = maxf(0.0, float(quest_def.item_drop_chance_mult))
+	quest_enemy_level_boost = max(0, quest_enemy_level_boost)
+	quest_item_drop_chance_mult = maxf(0.0, quest_item_drop_chance_mult)
 	hero_level = int(data.get("hero_level", 1))
 	hero_xp = int(data.get("hero_xp", 0))
 	run_xp_earned = int(data.get("run_xp_earned", 0))
@@ -2280,6 +2315,8 @@ func reset_run(new_mode: String = "normal") -> void:
 	quest_final_boss_id = ""
 	quest_completion_gold = 0
 	quest_completion_gold_awarded = false
+	quest_enemy_level_boost = 0
+	quest_item_drop_chance_mult = 1.0
 	hero_level = 1
 	hero_xp = 0
 	xp_to_next_level = _calc_xp_to_next_level(hero_level)

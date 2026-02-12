@@ -11,6 +11,7 @@
 shader = ExtResource("7_round_shader")
 shader_parameter/radius = 0.08
 shader_parameter/aa = 0.01
+shader_parameter/tint_color = Color(1, 1, 1, 1)
 
 [node name="Guild" type="Control"]
 layout_mode = 3
@@ -219,6 +220,21 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "Forest"
 horizontal_alignment = 1
+
+[node name="QuestStats" type="Label" parent="QuestPopup/Panel/Content/QuestSelector"]
+custom_minimum_size = Vector2(0, 190)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Recompensa: 50g
+Waves: 20
+Bosses: 5
+Cartas por wave: 5
+Mazos: 1
+Enemy level boost: +0
+Item drop chance: 100%"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
 
 [node name="DifficultyRow" type="HBoxContainer" parent="QuestPopup/Panel/Content"]
 custom_minimum_size = Vector2(0, 36)

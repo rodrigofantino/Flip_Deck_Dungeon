@@ -20,6 +20,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_e23ap")
+expand_mode = 3
 
 [node name="Label" type="Label" parent="."]
 layout_mode = 1
@@ -104,16 +105,6 @@ custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 text = "PLay"
 
-[node name="EndlessButton" type="Button" parent="VBoxContainer"]
-custom_minimum_size = Vector2(300, 60)
-layout_mode = 2
-text = "Endless"
-
-[node name="TutorialButton" type="Button" parent="VBoxContainer"]
-custom_minimum_size = Vector2(300, 60)
-layout_mode = 2
-text = "Tutorial"
-
 [node name="ShopButton" type="Button" parent="VBoxContainer"]
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
@@ -129,9 +120,14 @@ custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 text = "Settings"
 
+[node name="QuitButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+text = "Quit"
+
 [connection signal="pressed" from="VBoxContainer/ContinueButton" to="." method="_on_continue_pressed"]
 [connection signal="pressed" from="VBoxContainer/PlayButton" to="." method="_on_p_lay_pressed"]
-[connection signal="pressed" from="VBoxContainer/TutorialButton" to="." method="_on_tutorial_pressed"]
 [connection signal="pressed" from="VBoxContainer/ShopButton" to="." method="_on_shop_pressed"]
 [connection signal="pressed" from="VBoxContainer/CollectionButton" to="." method="_on_collection_pressed"]
 [connection signal="pressed" from="VBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/QuitButton" to="." method="_on_quit_pressed"]

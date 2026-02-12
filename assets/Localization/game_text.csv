@@ -6,6 +6,7 @@ MAIN_MENU_BUTTON_ENDLESS,Endless,Infinito
 MAIN_MENU_BUTTON_SHOP,Shop,Tienda
 MAIN_MENU_BUTTON_SETTINGS,Settings,Opciones
 MAIN_MENU_BUTTON_COLLECTION,Collection,Colección
+MAIN_MENU_BUTTON_QUIT,Quit,Salir
 MAIN_MENU_LABEL_GOLD,Gold,Oro
 MAIN_MENU_BUTTON_DEV_RESET,Development: Reset Progress,Desarrollo: Reiniciar progreso
 MAIN_MENU_BUTTON_DEV_ADD_GOLD,Development: Add Gold,Desarrollo: Agregar oro

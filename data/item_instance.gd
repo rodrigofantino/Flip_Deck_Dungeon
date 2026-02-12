@@ -6,7 +6,7 @@ var archetype: ItemArchetype = null
 var item_level: int = 1
 var rarity: int = 1
 var mods: Array[ItemMod] = []
-const ITEM_LEVEL_MULT: float = 1.2
+const ITEM_LEVEL_MULT: float = 1.1
 
 func get_total_armour_flat() -> int:
 	var total: int = 0
@@ -43,7 +43,8 @@ func get_total_initiative_flat() -> int:
 func _apply_level_multiplier(value: int) -> int:
 	if value == 0:
 		return 0
-	var level: int = int(max(0, item_level))
+	# Level 1 is the baseline (x1.0). Scaling starts at level 2.
+	var level: int = int(max(0, item_level - 1))
 	var mult: float = pow(ITEM_LEVEL_MULT, float(level))
 	return int(round(float(value) * mult))
 

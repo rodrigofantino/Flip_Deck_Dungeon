@@ -11,11 +11,10 @@ func _ready() -> void:
 	var title_label: Label = $Label
 	var play_button: Button = $VBoxContainer/PlayButton
 	var continue_button: Button = $VBoxContainer/ContinueButton
-	var tutorial_button: Button = $VBoxContainer/TutorialButton
-	var endless_button: Button = $VBoxContainer/EndlessButton
 	var shop_button: Button = $VBoxContainer/ShopButton
 	var collection_button: Button = $VBoxContainer/CollectionButton
 	var settings_button: Button = $VBoxContainer/SettingsButton
+	var quit_button: Button = $VBoxContainer/QuitButton
 	var gold_label: Label = $GoldLabel
 	var dev_reset_button: Button = $DevResetButton
 	var dev_add_gold_button: Button = $DevAddGoldButton
@@ -24,11 +23,11 @@ func _ready() -> void:
 		title_label.text = tr("MAIN_MENU_TITLE")
 	continue_button.text = tr("MAIN_MENU_BUTTON_CONTINUE")
 	play_button.text = tr("MAIN_MENU_BUTTON_PLAY")
-	tutorial_button.text = tr("MAIN_MENU_BUTTON_TUTORIAL")
-	endless_button.text = tr("MAIN_MENU_BUTTON_ENDLESS")
 	shop_button.text = tr("MAIN_MENU_BUTTON_SHOP")
 	collection_button.text = tr("MAIN_MENU_BUTTON_COLLECTION")
 	settings_button.text = tr("MAIN_MENU_BUTTON_SETTINGS")
+	if quit_button:
+		quit_button.text = tr("MAIN_MENU_BUTTON_QUIT")
 	if dev_reset_button:
 		dev_reset_button.text = tr("MAIN_MENU_BUTTON_DEV_RESET")
 		dev_reset_button.pressed.connect(_on_dev_reset_pressed)
@@ -37,11 +36,6 @@ func _ready() -> void:
 		dev_add_gold_button.pressed.connect(_on_dev_add_gold_pressed)
 
 	continue_button.disabled = not RunState.has_saved_run()
-	if tutorial_button:
-		tutorial_button.disabled = true
-		tutorial_button.visible = false
-	if endless_button:
-		endless_button.disabled = true
 	_update_gold_label()
 
 func _notification(what: int) -> void:
@@ -67,10 +61,6 @@ func _on_continue_pressed() -> void:
 	SceneTransition.change_scene("res://Scenes/battle_table.tscn")
 
 
-func _on_tutorial_pressed() -> void:
-	print("tutorial disabled")
-
-
 func _on_settings_button_pressed() -> void:
 	SceneTransition.change_scene("res://Scenes/menu/Settings.tscn")
 
@@ -92,6 +82,9 @@ func _on_dev_reset_pressed() -> void:
 func _on_dev_add_gold_pressed() -> void:
 	SaveSystem.add_persistent_gold(500)
 	_update_gold_label()
+
+func _on_quit_pressed() -> void:
+	get_tree().quit()
 
 func _update_gold_label() -> void:
 	var gold_label: Label = $GoldLabel

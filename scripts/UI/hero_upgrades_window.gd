@@ -3,6 +3,7 @@ class_name HeroUpgradesWindow
 
 signal closed
 signal upgrades_changed(hero_id: StringName)
+const RESPEC_COST_GOLD: int = 100
 
 @onready var hero_list_label: Label = $Panel/HBox/Left/HeroListLabel
 @onready var hero_list: ItemList = $Panel/HBox/Left/HeroList
@@ -170,6 +171,8 @@ func _refresh_selected_hero() -> void:
 
 	var display_stats := _get_display_stats(_selected_hero_id, progression)
 	var can_spend: bool = progression.can_spend_point()
+	var in_run: bool = _is_run_context()
+	var can_pay_respec: bool = SaveSystem.get_persistent_gold() >= RESPEC_COST_GOLD
 	for stat: int in HeroUpgradeStats.get_all_stats():
 		var row_data: Dictionary = _stat_rows.get(stat, {})
 		if row_data.is_empty():
@@ -190,7 +193,11 @@ func _refresh_selected_hero() -> void:
 		else:
 			value_label.text = "%d" % int(round(display_value))
 		plus_button.disabled = not can_spend
-		minus_button.disabled = not progression.can_refund_point(stat)
+		minus_button.disabled = in_run or not can_pay_respec or not progression.can_refund_point(stat)
+		if in_run:
+			minus_button.tooltip_text = "Respec disabled during run."
+		else:
+			minus_button.tooltip_text = "Respec cost: %dg" % RESPEC_COST_GOLD
 
 func _on_stat_plus_pressed(stat: int) -> void:
 	if _selected_hero_id == &"":
@@ -209,11 +216,16 @@ func _on_stat_plus_pressed(stat: int) -> void:
 func _on_stat_minus_pressed(stat: int) -> void:
 	if _selected_hero_id == &"":
 		return
+	if _is_run_context():
+		return
+	if SaveSystem.get_persistent_gold() < RESPEC_COST_GOLD:
+		return
 	var profile: PlayerProfile = ProfileService.get_profile()
 	if profile == null:
 		return
 	var progression: HeroProgression = profile.get_or_create_progression(_selected_hero_id)
 	if progression.refund_point(stat):
+		SaveSystem.add_persistent_gold(-RESPEC_COST_GOLD)
 		ProfileService.save_profile(profile)
 		_apply_upgrades_to_run_if_active()
 		_refresh_selected_hero()
@@ -378,3 +390,9 @@ func _get_hero_index(hero_id: StringName) -> int:
 		if _hero_ids[i] == hero_id:
 			return i
 	return -1
+
+func _is_run_context() -> bool:
+	if RunState == null:
+		return false
+	var hero := RunState.get_card("th")
+	return not hero.is_empty()

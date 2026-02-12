@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3 uid="uid://qstcurs3d7y"]
 
-[ext_resource type="Script" path="res://data/quest_definition.gd" id="1_def"]
+[ext_resource type="Script" uid="uid://d3dngkbqbeedl" path="res://data/quest_definition.gd" id="1_def"]
 
 [resource]
 script = ExtResource("1_def")
@@ -8,7 +8,6 @@ quest_id = "cursed_city"
 display_name = "Cursed City"
 base_waves = 25
 base_enemies_per_wave = 10
-decks_per_wave = 1
 base_completion_gold = 400
-miniboss_ids = ["cursed_city_alleywraith_duelist", "cursed_city_fogbound_hexer", "cursed_city_lanternshade_herald", "cursed_city_spectre_royal_guard"]
+miniboss_ids = Array[String](["cursed_city_alleywraith_duelist", "cursed_city_fogbound_hexer", "cursed_city_lanternshade_herald", "cursed_city_spectre_royal_guard"])
 boss_id = "cursed_city_procession_shade"

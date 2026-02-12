@@ -35,7 +35,11 @@ extends Control
 const PACK_STACK_OFFSET_X: float = 2.0
 const PACK_STACK_OFFSET_Y: float = 2.0
 const PACK_STACK_MAX: int = 12
-const PACK_PREVIEW_SIZE: Vector2 = Vector2(140, 80)
+const PACK_PREVIEW_SIZE: Vector2 = Vector2(128, 192)
+const PACK_STACK_ITEM_MIN_SIZE: Vector2 = Vector2(188, 244)
+const PACK_STACK_CONTAINER_MIN_SIZE: Vector2 = Vector2(172, 214)
+const FOREST_BOOSTER_FRAME_PATH_FMT: String = "res://assets/boosterpacks/forest/forest_boosterpack_frame_%02d.png"
+const FOREST_BOOSTER_FRAME_COUNT: int = 12
 const PACK_FOREST_COLOR: Color = Color(0.6, 0.85, 0.6, 1.0)
 const PACK_DARK_FOREST_COLOR: Color = Color(0.12, 0.35, 0.2, 1.0)
 const PACK_FOREST_PATH: String = "res://data/booster_packs/booster_pack_forest.tres"
@@ -46,6 +50,7 @@ const OPEN_CARD_DISPLAY: Vector2 = Vector2(155, 215)
 const OPEN_CARDS_PER_PACK: int = 5
 const OPEN_CARD_FLY_DURATION: float = 0.45
 const OPEN_CARD_FLY_MAX_WAIT: float = 1.2
+const BOOSTER_PREVIEW_AUTO_STEP_SEC: float = 0.08
 const BIOME_FOREST: String = "Forest"
 const BIOME_DARK_FOREST: String = "Dark Forest"
 const CARD_VIEW_SCENE: PackedScene = preload("res://Scenes/cards/card_view.tscn")
@@ -56,6 +61,12 @@ class PackView:
 	var name_key: String
 	var color: Color
 
+enum OpenPopupMode {
+	NONE,
+	PREVIEW,
+	REVEAL,
+}
+
 var selected_pack: PackView = null
 var open_defs: Array[CardDefinition] = []
 var open_cards: Array[CardView] = []
@@ -63,12 +74,19 @@ var open_collection: PlayerCollection = null
 var _pending_book_refresh: bool = false
 var _popup_def: CardDefinition = null
 var hero_upgrades_window: HeroUpgradesWindow = null
+var _forest_booster_frames: Array[Texture2D] = []
+var _forest_booster_popup_frame_index: int = 0
+var _booster_open_in_progress: bool = false
+var _open_popup_preview_texture: TextureRect = null
+var _open_popup_mode: int = OpenPopupMode.NONE
+var _preview_auto_advance_active: bool = false
 
 func _ready() -> void:
 	_configure_design_layout()
 	add_to_group("collection_root")
 	set_process_input(true)
 	_wire_ui()
+	_load_forest_booster_frames()
 	_setup_book_view()
 	_refresh_boosters()
 	_hide_selection_ui()
@@ -115,18 +133,14 @@ func _wire_ui() -> void:
 		back_button.pressed.connect(func() -> void:
 			SceneTransition.change_scene("res://Scenes/ui/main_menu.tscn")
 		)
+	if booster_popup:
+		booster_popup.visible = false
 	if booster_popup and booster_popup_title:
 		booster_popup_title.text = tr("COLLECTION_BOOSTER_POPUP_TITLE")
-	if booster_popup_open:
-		booster_popup_open.text = tr("COLLECTION_BOOSTER_OPEN")
-		booster_popup_open.pressed.connect(_on_booster_open_pressed)
-	if booster_popup_back:
-		booster_popup_back.text = tr("COLLECTION_BOOSTER_BACK")
-		booster_popup_back.pressed.connect(_close_booster_popup)
 	if open_popup_title:
 		open_popup_title.text = tr("COLLECTION_OPEN_POPUP_TITLE")
 	if open_popup_add_all:
-		open_popup_add_all.text = tr("COLLECTION_OPEN_ADD_ALL")
+		open_popup_add_all.text = tr("COLLECTION_BOOSTER_OPEN")
 		open_popup_add_all.pressed.connect(_on_add_all_pressed)
 	if open_popup_back:
 		open_popup_back.text = tr("COLLECTION_BOOSTER_BACK")
@@ -368,60 +382,181 @@ func _refresh_book_change_state() -> void:
 	_update_navigation_state()
 
 func _open_booster_popup(pack: PackView) -> void:
-	if booster_popup == null:
+	if pack == null:
 		return
 	selected_pack = pack
-	booster_popup.visible = true
-	booster_popup.z_index = 150
-	_update_book_input_block()
-	if booster_popup_name:
-		var display_name := pack.pack_type
-		if pack.name_key != "":
-			display_name = tr(pack.name_key)
-		booster_popup_name.text = display_name
-	if booster_popup_preview:
-		booster_popup_preview.color = pack.color
+	_forest_booster_popup_frame_index = 0
+	_booster_open_in_progress = false
+	_open_pack_popup(pack)
 
 func _close_booster_popup() -> void:
-	if booster_popup == null:
-		return
-	var tween := create_tween()
-	tween.tween_property(booster_popup, "modulate:a", 0.0, 0.15)
-	tween.tween_callback(func():
-		booster_popup.visible = false
-		booster_popup.modulate.a = 1.0
-		_update_book_input_block()
-	)
+	_close_open_popup()
 
 func _on_booster_open_pressed() -> void:
-	if selected_pack == null:
+	_on_add_all_pressed()
+
+func _consume_selected_booster_and_open() -> void:
+	if _booster_open_in_progress:
 		return
+	_booster_open_in_progress = true
+	_consume_selected_booster_and_open_internal()
+
+func _consume_selected_booster_and_open_internal() -> void:
 	var collection := SaveSystem.load_collection()
 	if collection == null:
 		collection = SaveSystem.ensure_collection()
+	if selected_pack == null:
+		_booster_open_in_progress = false
+		return
 	if not collection.remove_booster(selected_pack.pack_type, 1):
-		_close_booster_popup()
+		_close_open_popup()
+		_booster_open_in_progress = false
 		return
 	SaveSystem.save_collection(collection)
 	_refresh_boosters()
-	_close_booster_popup_and_open(selected_pack)
+	_booster_open_in_progress = false
+	_reveal_open_pack_cards(selected_pack)
 
-func _close_booster_popup_and_open(pack: PackView) -> void:
-	if booster_popup == null:
-		_open_pack_popup(pack)
+func _on_open_popup_preview_gui_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
 		return
-	var tween := create_tween()
-	tween.tween_property(booster_popup, "modulate:a", 0.0, 0.15)
-	tween.tween_callback(func():
-		booster_popup.visible = false
-		booster_popup.modulate.a = 1.0
-		_update_book_input_block()
-		_open_pack_popup(pack)
-	)
+	if not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if _open_popup_mode != OpenPopupMode.PREVIEW:
+		return
+	accept_event()
+	_advance_open_popup_preview()
+
+func _advance_open_popup_preview() -> void:
+	if selected_pack == null:
+		return
+	if _is_forest_booster_animation_enabled(selected_pack):
+		_advance_forest_booster_popup_frame()
+		return
+	_consume_selected_booster_and_open()
+
+func _advance_forest_booster_popup_frame() -> void:
+	if selected_pack == null:
+		return
+	if not _is_forest_booster_animation_enabled(selected_pack):
+		_consume_selected_booster_and_open()
+		return
+	var last_index: int = _forest_booster_frames.size() - 1
+	if _forest_booster_popup_frame_index < last_index:
+		_forest_booster_popup_frame_index += 1
+		_update_forest_booster_popup_frame()
+	if _forest_booster_popup_frame_index >= last_index:
+		call_deferred("_consume_selected_booster_and_open")
+
+func _is_forest_booster_animation_enabled(pack: PackView) -> bool:
+	if pack == null:
+		return false
+	return pack.pack_type == "forest" and not _forest_booster_frames.is_empty()
+
+func _update_open_popup_preview(pack: PackView) -> void:
+	if open_popup_cards == null:
+		return
+	_clear_open_cards()
+	if _is_forest_booster_animation_enabled(pack):
+		_forest_booster_popup_frame_index = 0
+		_ensure_open_popup_preview_texture()
+		_update_forest_booster_popup_frame()
+		return
+	var color_preview := ColorRect.new()
+	color_preview.name = "PackColorPreview"
+	color_preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	color_preview.color = pack.color
+	color_preview.mouse_filter = Control.MOUSE_FILTER_STOP
+	color_preview.gui_input.connect(_on_open_popup_preview_gui_input)
+	open_popup_cards.add_child(color_preview)
+
+func _update_forest_booster_popup_frame() -> void:
+	if open_popup_cards == null:
+		return
+	_ensure_open_popup_preview_texture()
+	if _open_popup_preview_texture == null:
+		return
+	if _forest_booster_frames.is_empty():
+		return
+	var index: int = clampi(_forest_booster_popup_frame_index, 0, _forest_booster_frames.size() - 1)
+	_open_popup_preview_texture.texture = _forest_booster_frames[index]
+
+func _load_forest_booster_frames() -> void:
+	_forest_booster_frames.clear()
+	for i in range(1, FOREST_BOOSTER_FRAME_COUNT + 1):
+		var texture_path := FOREST_BOOSTER_FRAME_PATH_FMT % i
+		var texture := load(texture_path) as Texture2D
+		if texture == null:
+			push_warning("[Collection] Missing forest booster frame: " + texture_path)
+			continue
+		_forest_booster_frames.append(texture)
+
+func _ensure_open_popup_preview_texture() -> void:
+	if open_popup_cards == null:
+		return
+	if _open_popup_preview_texture != null:
+		if not is_instance_valid(_open_popup_preview_texture) or _open_popup_preview_texture.is_queued_for_deletion():
+			_open_popup_preview_texture = null
+	if _open_popup_preview_texture == null:
+		var existing := open_popup_cards.get_node_or_null("PackPreview") as TextureRect
+		if existing != null and existing.is_queued_for_deletion():
+			existing = null
+		_open_popup_preview_texture = existing
+	if _open_popup_preview_texture == null:
+		_open_popup_preview_texture = TextureRect.new()
+		_open_popup_preview_texture.name = "PackPreview"
+		_open_popup_preview_texture.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_open_popup_preview_texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_open_popup_preview_texture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_open_popup_preview_texture.mouse_filter = Control.MOUSE_FILTER_STOP
+		open_popup_cards.add_child(_open_popup_preview_texture)
+	var preview_click_cb := Callable(self, "_on_open_popup_preview_gui_input")
+	if not _open_popup_preview_texture.gui_input.is_connected(preview_click_cb):
+		_open_popup_preview_texture.gui_input.connect(preview_click_cb)
+
+func _set_open_popup_mode(mode: int, pack: PackView = null) -> void:
+	_open_popup_mode = mode
+	if mode != OpenPopupMode.PREVIEW:
+		_stop_preview_auto_advance()
+	var display_name := ""
+	if pack != null:
+		display_name = pack.pack_type
+		if pack.name_key != "":
+			display_name = tr(pack.name_key)
+	if open_popup_title:
+		if display_name != "":
+			open_popup_title.text = tr("COLLECTION_OPEN_POPUP_TITLE_NAME") % display_name
+		else:
+			open_popup_title.text = tr("COLLECTION_OPEN_POPUP_TITLE")
+	if open_popup_add_all:
+		open_popup_add_all.disabled = false
+		if mode == OpenPopupMode.PREVIEW:
+			open_popup_add_all.text = tr("COLLECTION_BOOSTER_OPEN")
+		elif mode == OpenPopupMode.REVEAL:
+			open_popup_add_all.text = tr("COLLECTION_OPEN_ADD_ALL")
+		else:
+			open_popup_add_all.text = tr("COLLECTION_BOOSTER_OPEN")
+
+func _reveal_open_pack_cards(pack: PackView) -> void:
+	if pack == null:
+		return
+	var pool := _get_pack_pool(pack.pack_type)
+	if pool.is_empty():
+		_close_open_popup()
+		return
+	_set_open_popup_mode(OpenPopupMode.REVEAL, pack)
+	open_defs.clear()
+	for i in range(OPEN_CARDS_PER_PACK):
+		var card_def := pool[randi() % pool.size()]
+		open_defs.append(card_def)
+	call_deferred("_add_open_cards_visual", open_defs)
 
 func _open_pack_popup(pack: PackView) -> void:
 	if open_popup == null or open_popup_cards == null:
 		return
+	selected_pack = pack
+	_forest_booster_popup_frame_index = 0
+	_booster_open_in_progress = false
 	open_popup.visible = true
 	open_popup.z_index = 200
 	open_popup.modulate.a = 0.0
@@ -432,19 +567,9 @@ func _open_pack_popup(pack: PackView) -> void:
 		open_collection = SaveSystem.ensure_collection()
 	_clear_open_cards()
 	open_defs.clear()
-	var pool := _get_pack_pool(pack.pack_type)
-	if pool.is_empty():
-		return
-	if open_popup_title:
-		var display_name := pack.pack_type
-		if pack.name_key != "":
-			display_name = tr(pack.name_key)
-		open_popup_title.text = tr("COLLECTION_OPEN_POPUP_TITLE_NAME") % display_name
+	_set_open_popup_mode(OpenPopupMode.PREVIEW, pack)
+	_update_open_popup_preview(pack)
 	_play_open_popup_in()
-	for i in range(OPEN_CARDS_PER_PACK):
-		var card_def := pool[randi() % pool.size()]
-		open_defs.append(card_def)
-	call_deferred("_add_open_cards_visual", open_defs)
 
 func _add_open_cards_visual(defs: Array[CardDefinition]) -> void:
 	if open_popup_cards == null:
@@ -728,6 +853,9 @@ func _close_card_popup() -> void:
 	)
 
 func _on_add_all_pressed() -> void:
+	if _open_popup_mode == OpenPopupMode.PREVIEW:
+		_start_preview_auto_advance()
+		return
 	for def_item in open_defs.duplicate():
 		var card_def := def_item as CardDefinition
 		if card_def == null:
@@ -738,13 +866,22 @@ func _on_add_all_pressed() -> void:
 	_close_open_popup()
 
 func _clear_open_cards() -> void:
-	for card in open_cards:
-		card.queue_free()
+	if open_popup_cards != null:
+		for child in open_popup_cards.get_children():
+			child.queue_free()
 	open_cards.clear()
+	_open_popup_preview_texture = null
 
 func _close_open_popup() -> void:
 	if open_popup == null:
 		return
+	_stop_preview_auto_advance()
+	_open_popup_mode = OpenPopupMode.NONE
+	_booster_open_in_progress = false
+	_forest_booster_popup_frame_index = 0
+	selected_pack = null
+	open_defs.clear()
+	_clear_open_cards()
 	var tween := create_tween()
 	tween.tween_property(open_popup, "modulate:a", 0.0, 0.15)
 	tween.tween_property(open_popup, "scale", Vector2(0.98, 0.98), 0.15)
@@ -770,6 +907,37 @@ func _play_open_popup_in() -> void:
 	var tween := create_tween()
 	tween.tween_property(open_popup, "modulate:a", 1.0, 0.15)
 	tween.tween_property(open_popup, "scale", Vector2(1.0, 1.0), 0.2)
+
+func _start_preview_auto_advance() -> void:
+	if _open_popup_mode != OpenPopupMode.PREVIEW:
+		return
+	if selected_pack == null:
+		return
+	if _preview_auto_advance_active:
+		return
+	_preview_auto_advance_active = true
+	_run_preview_auto_advance()
+
+func _run_preview_auto_advance() -> void:
+	while _preview_auto_advance_active:
+		if _open_popup_mode != OpenPopupMode.PREVIEW:
+			break
+		if selected_pack == null:
+			break
+		_advance_open_popup_preview()
+		if _open_popup_mode != OpenPopupMode.PREVIEW:
+			break
+		if _booster_open_in_progress:
+			break
+		if _is_forest_booster_animation_enabled(selected_pack):
+			var last_index: int = _forest_booster_frames.size() - 1
+			if _forest_booster_popup_frame_index >= last_index:
+				break
+		await get_tree().create_timer(BOOSTER_PREVIEW_AUTO_STEP_SEC).timeout
+	_preview_auto_advance_active = false
+
+func _stop_preview_auto_advance() -> void:
+	_preview_auto_advance_active = false
 
 func _refresh_boosters() -> void:
 	if booster_list == null:
@@ -811,7 +979,7 @@ func _add_booster_stack(pack: PackView, count: int) -> void:
 	if booster_list == null:
 		return
 	var item := VBoxContainer.new()
-	item.custom_minimum_size = Vector2(220, 110)
+	item.custom_minimum_size = PACK_STACK_ITEM_MIN_SIZE
 	item.alignment = BoxContainer.ALIGNMENT_BEGIN
 	booster_list.add_child(item)
 	var label := Label.new()
@@ -821,20 +989,39 @@ func _add_booster_stack(pack: PackView, count: int) -> void:
 	label.text = tr("COLLECTION_PACK_COUNT") % [display_name, count]
 	item.add_child(label)
 	var stack := Control.new()
-	stack.custom_minimum_size = Vector2(220, 90)
+	stack.custom_minimum_size = PACK_STACK_CONTAINER_MIN_SIZE
+	stack.clip_contents = true
 	item.add_child(stack)
 	var visible_count: int = min(count, PACK_STACK_MAX)
+	var forest_preview: Texture2D = null
+	if pack.pack_type == "forest" and not _forest_booster_frames.is_empty():
+		forest_preview = _forest_booster_frames[0]
 	for i in range(visible_count):
-		var rect := ColorRect.new()
-		rect.color = pack.color
-		rect.custom_minimum_size = PACK_PREVIEW_SIZE
-		rect.position = Vector2(PACK_STACK_OFFSET_X * float(i), PACK_STACK_OFFSET_Y * float(i))
-		rect.mouse_filter = Control.MOUSE_FILTER_STOP
-		rect.gui_input.connect(func(event: InputEvent) -> void:
+		var preview_slot := Control.new()
+		preview_slot.custom_minimum_size = PACK_PREVIEW_SIZE
+		preview_slot.size = PACK_PREVIEW_SIZE
+		preview_slot.clip_contents = true
+		preview_slot.mouse_filter = Control.MOUSE_FILTER_STOP
+		preview_slot.position = Vector2(PACK_STACK_OFFSET_X * float(i), PACK_STACK_OFFSET_Y * float(i))
+		if forest_preview != null:
+			var tex := TextureRect.new()
+			tex.texture = forest_preview
+			tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			preview_slot.add_child(tex)
+		else:
+			var rect := ColorRect.new()
+			rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			rect.color = pack.color
+			rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			preview_slot.add_child(rect)
+		preview_slot.gui_input.connect(func(event: InputEvent) -> void:
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 				_open_booster_popup(pack)
 		)
-		stack.add_child(rect)
+		stack.add_child(preview_slot)
 
 func _get_pack_pool(pack_type: String) -> Array[CardDefinition]:
 	var pool: Array[CardDefinition] = []

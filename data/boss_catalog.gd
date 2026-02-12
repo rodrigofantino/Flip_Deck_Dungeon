@@ -3,13 +3,47 @@ class_name BossCatalog
 
 @export_dir var bosses_folder: String
 
+const FALLBACK_BOSS_DEFINITIONS := [
+	preload("res://data/bosses/defs/cursed_city/cursed_city_alleywraith_duelist.tres"),
+	preload("res://data/bosses/defs/cursed_city/cursed_city_fogbound_hexer.tres"),
+	preload("res://data/bosses/defs/cursed_city/cursed_city_lanternshade_herald.tres"),
+	preload("res://data/bosses/defs/cursed_city/cursed_city_procession_shade.tres"),
+	preload("res://data/bosses/defs/cursed_city/cursed_city_spectre_royal_guard.tres"),
+	preload("res://data/bosses/defs/dark_forest/dark_forest_briarback_porcupine.tres"),
+	preload("res://data/bosses/defs/dark_forest/dark_forest_fallen_stag.tres"),
+	preload("res://data/bosses/defs/dark_forest/dark_forest_thornmaw_bear.tres"),
+	preload("res://data/bosses/defs/dark_forest/dark_forest_wolf.tres"),
+	preload("res://data/bosses/defs/forest/forest_boar_warden.tres"),
+	preload("res://data/bosses/defs/forest/forest_fallen_elf.tres"),
+	preload("res://data/bosses/defs/forest/forest_fungus_patriarch.tres"),
+	preload("res://data/bosses/defs/forest/forest_stag_king.tres"),
+	preload("res://data/bosses/defs/ice/ice_hoarfang_lynx.tres"),
+	preload("res://data/bosses/defs/ice/ice_mirrorice_leviathan.tres"),
+	preload("res://data/bosses/defs/ice/ice_permafrost_turtle.tres"),
+	preload("res://data/bosses/defs/ice/ice_rimeglass_beetle.tres"),
+	preload("res://data/bosses/defs/magma/magma_ashbrand_gladiator.tres"),
+	preload("res://data/bosses/defs/magma/magma_cinder_imp.tres"),
+	preload("res://data/bosses/defs/magma/magma_furnace_drake.tres"),
+	preload("res://data/bosses/defs/magma/magma_inferno_tyrant.tres"),
+	preload("res://data/bosses/defs/magma/magma_magma_brute.tres"),
+	preload("res://data/bosses/defs/magma/magma_molten_archer.tres"),
+	preload("res://data/bosses/defs/swamp/swamp_plaguecap_colossus.tres"),
+	preload("res://data/bosses/defs/swamp/swamp_rotfen_matriarch.tres"),
+	preload("res://data/bosses/defs/swamp/swamp_toxic_mire_toad.tres"),
+	preload("res://data/bosses/defs/swamp/swamp_venom_bog_serpent.tres"),
+]
+
 var bosses: Array[BossDefinition] = []
 var _boss_map: Dictionary = {}
 var _cached_count: int = -1
 
 func load_all() -> void:
-	bosses = _load_bosses_from_folder(bosses_folder)
+	var loaded: Array[BossDefinition] = _load_bosses_from_folder(bosses_folder)
+	var base_count: int = loaded.size()
+	_append_missing_fallback_bosses(loaded)
+	bosses = loaded
 	_rebuild_cache()
+	var fallback_added: int = max(0, bosses.size() - base_count)
 
 	if bosses.is_empty():
 		if bosses_folder.strip_edges().is_empty():
@@ -18,6 +52,8 @@ func load_all() -> void:
 			print("[BossCatalog] Boss folder empty. No bosses loaded.")
 	else:
 		print("[BossCatalog] Loaded bosses:", bosses.size())
+		if fallback_added > 0:
+			print("[BossCatalog] Added fallback bosses:", fallback_added)
 
 func get_by_biome(biome_id: String) -> Array[BossDefinition]:
 	return _filter_by_biome_and_kind(biome_id, -1)
@@ -103,3 +139,25 @@ func _rebuild_cache() -> void:
 		seen[boss.boss_id] = true
 		_boss_map[boss.boss_id] = boss
 	_cached_count = bosses.size()
+
+func _append_missing_fallback_bosses(result: Array[BossDefinition]) -> void:
+	var seen: Dictionary = {}
+	for boss in result:
+		if boss == null:
+			continue
+		var boss_id := boss.boss_id.strip_edges()
+		if boss_id.is_empty():
+			continue
+		seen[boss_id] = true
+
+	for fallback_variant in FALLBACK_BOSS_DEFINITIONS:
+		var fallback := fallback_variant as BossDefinition
+		if fallback == null:
+			continue
+		var fallback_id := fallback.boss_id.strip_edges()
+		if fallback_id.is_empty():
+			continue
+		if seen.has(fallback_id):
+			continue
+		result.append(fallback)
+		seen[fallback_id] = true

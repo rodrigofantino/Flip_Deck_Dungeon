@@ -8,6 +8,8 @@ class_name QuestDefinition
 @export var base_enemies_per_wave: int = 0
 @export var decks_per_wave: int = 1
 @export var base_completion_gold: int = 0
+@export var enemy_level_boost: int = 0
+@export var item_drop_chance_mult: float = 1.0
 
 @export var miniboss_ids: Array[String] = []
 @export var boss_id: String = ""
@@ -37,4 +39,8 @@ func _get_configuration_warnings() -> PackedStringArray:
 		warnings.append("decks_per_wave should be >= 1.")
 	if base_completion_gold < 0:
 		warnings.append("base_completion_gold is negative.")
+	if enemy_level_boost < 0:
+		warnings.append("enemy_level_boost is negative.")
+	if item_drop_chance_mult < 0.0:
+		warnings.append("item_drop_chance_mult is negative.")
 	return warnings

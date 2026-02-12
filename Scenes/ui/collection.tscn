@@ -224,24 +224,37 @@ layout_mode = 2
 text = "Back"
 
 [node name="BoosterArea" type="Control" parent="."]
+clip_contents = true
 layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_left = 24.0
-offset_top = -260.0
-offset_right = 264.0
-offset_bottom = 260.0
-grow_horizontal = 2
+anchors_preset = 0
+offset_left = 20.0
+offset_top = 88.0
+offset_right = 240.0
+offset_bottom = 428.0
+grow_horizontal = 0
 grow_vertical = 0
 
-[node name="BoosterList" type="VBoxContainer" parent="BoosterArea"]
+[node name="SlotPanel" type="Panel" parent="BoosterArea"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+
+[node name="BoosterList" type="VBoxContainer" parent="BoosterArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
 
 [node name="BoosterPopup" type="Control" parent="."]
 visible = false
@@ -344,10 +357,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -260.0
-offset_top = -220.0
-offset_right = 260.0
-offset_bottom = 220.0
+offset_left = -360.0
+offset_top = -280.0
+offset_right = 360.0
+offset_bottom = 280.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -371,7 +384,7 @@ text = "Open Pack"
 horizontal_alignment = 1
 
 [node name="CardsContainer" type="Control" parent="OpenPackPopup/Panel/Content"]
-custom_minimum_size = Vector2(240, 240)
+custom_minimum_size = Vector2(640, 340)
 layout_mode = 2
 
 [node name="Buttons" type="HBoxContainer" parent="OpenPackPopup/Panel/Content"]

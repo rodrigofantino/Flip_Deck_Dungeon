@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3 uid="uid://qstfr0z3n1c"]
+[gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3 uid="uid://qstfr003n1c"]
 
-[ext_resource type="Script" path="res://data/quest_definition.gd" id="1_def"]
+[ext_resource type="Script" uid="uid://d3dngkbqbeedl" path="res://data/quest_definition.gd" id="1_def"]
 
 [resource]
 script = ExtResource("1_def")
@@ -8,7 +8,6 @@ quest_id = "frozen_plains"
 display_name = "Frozen Plains"
 base_waves = 20
 base_enemies_per_wave = 7
-decks_per_wave = 1
 base_completion_gold = 200
-miniboss_ids = ["ice_hoarfang_lynx", "ice_rimeglass_beetle", "ice_permafrost_turtle"]
+miniboss_ids = Array[String](["ice_hoarfang_lynx", "ice_rimeglass_beetle", "ice_permafrost_turtle"])
 boss_id = "ice_mirrorice_leviathan"
